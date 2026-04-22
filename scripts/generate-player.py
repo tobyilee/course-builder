@@ -123,6 +123,13 @@ PLAYER_TMPL = """<!DOCTYPE html>
   .btn-cta .title{{display:block}}
   footer{{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}}
   footer a{{margin:0 10px}}
+  /* Resume banner */
+  #resume-banner{{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}}
+  #resume-banner.show{{display:flex}}
+  #resume-banner .text{{font-size:13px;color:#c4cad6}}
+  #resume-banner .text strong{{color:#fff}}
+  #resume-banner button{{padding:6px 12px;font-size:13px;margin:0}}
+  #resume-banner button.primary{{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}}
 </style>
 </head>
 <body>
@@ -167,6 +174,12 @@ PLAYER_TMPL = """<!DOCTYPE html>
   <div class="end-actions">{end_actions_html}</div>
 </section>
 
+<div id="resume-banner" role="dialog" aria-live="polite">
+  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">이어 듣기</button>
+  <button id="resume-no">처음부터</button>
+</div>
+
 <footer>
   <a href="{quiz_href}">📝 섹션 퀴즈 풀기</a>
   <a href="{back_href}">목차로</a>
@@ -193,11 +206,17 @@ SLIDES.forEach((s, i) => {{
   thumbs.appendChild(t);
 }});
 
-function loadSlide(i, autoplay) {{
+function loadSlide(i, autoplay, resumeTime) {{
   current = Math.max(0, Math.min(SLIDES.length - 1, i));
   const s = SLIDES[current];
   img.src = s.png;
   audio.src = s.mp3;
+  if (resumeTime && resumeTime > 1) {{
+    audio.addEventListener('loadedmetadata', () => {{
+      const dur = audio.duration;
+      if (isFinite(dur)) audio.currentTime = Math.min(resumeTime, Math.max(0, dur - 1));
+    }}, {{ once: true }});
+  }}
   pos.textContent = (current + 1) + ' / ' + SLIDES.length;
   btnPrev.disabled = current === 0;
   btnNext.disabled = current === SLIDES.length - 1;
@@ -214,9 +233,49 @@ function loadSlide(i, autoplay) {{
   if (cur) cur.scrollIntoView({{block:'nearest', inline:'center'}});
 
   maybeShowEnd();
+  saveState();
 
   if (autoplay) audio.play().catch(() => {{}});
 }}
+
+// localStorage resume — key = page path so each class gets its own slot
+const STORAGE_KEY = 'course-builder:' + location.pathname;
+const STATE_MAX_AGE_MS = 30 * 86400 * 1000;
+let lastSaveTs = 0;
+
+function saveState() {{
+  try {{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({{
+      slide: current,
+      time: audio.currentTime || 0,
+      ts: Date.now()
+    }}));
+  }} catch(e) {{}}
+}}
+function loadResumeState() {{
+  try {{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > STATE_MAX_AGE_MS) return null;
+    if (typeof s.slide !== 'number' || s.slide < 0 || s.slide >= SLIDES.length) return null;
+    // Don't bother prompting if they barely started
+    if (s.slide === 0 && (s.time || 0) < 3) return null;
+    return s;
+  }} catch(e) {{ return null; }}
+}}
+function clearState() {{
+  try {{ localStorage.removeItem(STORAGE_KEY); }} catch(e) {{}}
+}}
+function fmtTime(t) {{
+  const sec = Math.max(0, Math.floor(t || 0));
+  return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}}
+
+audio.addEventListener('timeupdate', () => {{
+  const now = Date.now();
+  if (now - lastSaveTs > 3000) {{ saveState(); lastSaveTs = now; }}
+}});
 
 const endPanel = document.getElementById('end-panel');
 const slideFill = document.getElementById('slide-fill');
@@ -259,7 +318,23 @@ document.addEventListener('keydown', (e) => {{
   else if (e.key === 'ArrowLeft') btnPrev.click();
 }});
 
+// Initial load — show resume banner if prior state exists, otherwise start at slide 0
+const resumeState = loadResumeState();
 loadSlide(0, false);
+if (resumeState) {{
+  document.getElementById('resume-pos').textContent =
+    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+  const banner = document.getElementById('resume-banner');
+  banner.classList.add('show');
+  document.getElementById('resume-yes').onclick = () => {{
+    banner.classList.remove('show');
+    loadSlide(resumeState.slide, true, resumeState.time);
+  }};
+  document.getElementById('resume-no').onclick = () => {{
+    banner.classList.remove('show');
+    clearState();
+  }};
+}}
 </script>
 </body>
 </html>
