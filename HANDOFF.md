@@ -1,7 +1,9 @@
 # Session Handoff — AI Course Builder
 
-**Last updated:** 2026-04-23 (session `1b0b191c`)
+**Last updated:** 2026-04-23 (sessions `1b0b191c`, `12150c38`)
 **Author:** Claude Opus 4.7 (1M context) w/ toby
+
+> **2026-04-23 update (session `12150c38`):** P1 완료 — 구 키 `sk-proj-NC2aMj...` revoke 후 재발급, `.env`의 `- ` 페이스트 artifact 수정, `source .env` 파싱 + OpenAI `models.list` live 호출로 검증. 새 키는 의도적으로 transcript 기록(Read 경유); 로컬 jsonl만 영향, 원격 노출 없음.
 
 Pick up from here in a fresh session. This file is the **single source of truth for in-flight context**. `README.md` describes what the project is; this file describes **what's left to do and why**.
 
@@ -99,11 +101,11 @@ These will be **automatically loaded** in future Claude sessions launched from t
 - GitHub CLI at `/opt/homebrew/bin/gh` (authenticated as `tobyilee`)
 - `jq`, `xmllint`, `zip`
 
-### ⚠️ Security status
-- `.env` file in repo root contains real OpenAI API key: `sk-proj-NC2aMjOB...KG8b20A`
-- Key was pasted in conversation transcript on ~2026-04-22 — **reachable in session jsonl file**
-- Key has **not been confirmed revoked** by user
-- **Highest-priority next action: rotate the key**
+### ⚠️ Security status (updated 2026-04-23)
+- Old key `sk-proj-NC2aMjOB...KG8b20A` **revoked by user** in OpenAI dashboard
+- New key issued, stored in `.env` (gitignored, not tracked) — live-verified via `models.list`
+- New key is present in session `12150c38` jsonl (Read-before-Edit flow); accepted as local-only risk
+- `.env` format gotcha: uses `export OPENAI_API_KEY=<key>` (shell-source friendly) — a paste artifact (`=- sk-proj-`) was fixed this session
 
 ### Shell gotchas observed
 - Bash tool's `cd` doesn't persist across tool calls — use absolute paths
@@ -113,11 +115,11 @@ These will be **automatically loaded** in future Claude sessions launched from t
 
 ## 6. Next steps — prioritized
 
-### Priority 1 (do before anything else)
+### Priority 1 (do before anything else) — ✅ DONE 2026-04-23
 
-- [ ] **Rotate OpenAI API key** — https://platform.openai.com/api-keys; revoke `sk-proj-NC2aMjOB...KG8b20A`
-- [ ] Update `.env` with new key
-- [ ] Verify: `source .env && echo $OPENAI_API_KEY | head -c 12` shows new prefix
+- [x] **Rotate OpenAI API key** — old key revoked in dashboard
+- [x] Update `.env` with new key (paste artifact `- ` cleaned)
+- [x] Verify: `source .env` + OpenAI `models.list` live call succeeded (128 models, `gpt-4o-mini-tts` accessible)
 
 ### Priority 2 (if continuing Phase 7 evolution)
 
