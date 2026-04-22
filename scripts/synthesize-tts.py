@@ -39,9 +39,15 @@ DEFAULT_INSTRUCTIONS_KO = (
     "딱딱하지 않게, 하지만 집중력 있게."
 )
 
+DEFAULT_INSTRUCTIONS_EN = (
+    "A friendly and clear English developer-tutorial narrator tone. "
+    "Natural breath, moderate pace. Slight inflection rise for questions, "
+    "soft emphasis. Conversational yet focused."
+)
+
 # Affect overlay — maps beat.speaker_affect substring to extra tone instruction.
-# Substring match (Korean beat sheets often use compound affects like "호기심 유발").
-AFFECT_OVERLAYS = {
+# Substring match (beat sheets may use compound phrases like "호기심 유발" / "curious and warm").
+AFFECT_OVERLAYS_KO = {
     "호기심": "호기심을 자극하는 질문형 톤. 문장 끝을 살짝 올리고 기대감을 실어라.",
     "미스터리": "약간 비밀스럽고 기대감 있는 톤. 정답을 바로 노출하지 말 것.",
     "단호": "단호하고 선언적인 톤. 결론을 분명하게, 군더더기 없이.",
@@ -61,15 +67,41 @@ AFFECT_OVERLAYS = {
     "정리": "핵심을 추리는 정리 톤.",
 }
 
+AFFECT_OVERLAYS_EN = {
+    "curious": "Curious, question-evoking tone. Raise inflection at sentence ends to imply anticipation.",
+    "mystery": "Mildly cryptic, anticipatory tone. Don't reveal the answer too soon.",
+    "firm": "Firm, declarative tone. Clear conclusions, no filler.",
+    "decisive": "Decisive tone. Minimize hedging.",
+    "friendly": "Friendly, conversational tone with natural contractions.",
+    "warm": "Warm, empathetic tone.",
+    "calm": "Calm, clear explanatory tone with steady pacing.",
+    "crisp": "Crisp, precise tone. Avoid vague qualifiers.",
+    "guide": "Patient, step-by-step guide tone.",
+    "excited": "Lively demo tone with energy.",
+    "live": "Feels like a live demo — genuinely in the moment.",
+    "demo": "As if demonstrating right in front of the learner.",
+    "question": "Questioning tone. Invite the learner to think along.",
+    "space": "Leave breathing space for the learner to think.",
+    "pause": "Patient-pause tone — room for thought.",
+    "confident": "Confident closing tone. Wrap up firmly.",
+    "serious": "Serious, weighty tone.",
+    "empathy": "Warm, empathetic tone.",
+    "summary": "Summarizing tone that distills the essentials.",
+    "emphasis": "Emphatic tone. Deliver key points with weight.",
+}
 
-def affect_to_instruction(affect: str, base: str) -> str:
-    """Overlay matching AFFECT_OVERLAYS entries onto base instructions."""
+
+def affect_to_instruction(affect: str, base: str, language: str = "ko") -> str:
+    """Overlay matching affect entries onto base instructions (language-aware)."""
     if not affect:
         return base
-    hits = [v for k, v in AFFECT_OVERLAYS.items() if k in affect]
+    overlays = AFFECT_OVERLAYS_EN if language == "en" else AFFECT_OVERLAYS_KO
+    affect_l = affect.lower()
+    hits = [v for k, v in overlays.items() if k.lower() in affect_l]
     if not hits:
         return base
-    return base + " 추가 톤 지시: " + " ".join(hits)
+    suffix = " Additional tone: " if language == "en" else " 추가 톤 지시: "
+    return base + suffix + " ".join(hits)
 
 
 def build_slide_to_affect(beats_path: Path, slide_count: int) -> dict:
@@ -226,13 +258,16 @@ def main():
     ap.add_argument("transcript", type=Path)
     ap.add_argument("out_dir", type=Path)
     ap.add_argument("--engine", choices=list(ENGINES), default="openai")
+    ap.add_argument("--language", choices=["ko", "en"], default="ko",
+                    help="course language — drives default voice, instructions, and affect overlay map")
     ap.add_argument("--model", default="gpt-4o-mini-tts",
                     help="openai only: gpt-4o-mini-tts | tts-1 | tts-1-hd")
     ap.add_argument("--voice", default=None,
-                    help="openai: nova|coral|shimmer|... ; edge: ko-KR-SunHiNeural|...")
+                    help="openai: nova|coral|shimmer|... (multilingual) ; "
+                         "edge: ko-KR-SunHiNeural (ko) | en-US-AriaNeural (en)")
     ap.add_argument("--rate", default="+0%", help="edge only")
-    ap.add_argument("--instructions", default=DEFAULT_INSTRUCTIONS_KO,
-                    help="openai gpt-4o only: tone instructions")
+    ap.add_argument("--instructions", default=None,
+                    help="openai gpt-4o only: tone instructions (defaults by --language)")
     ap.add_argument("--speed", type=float, default=1.3,
                     help="openai only: 0.25–4.0, default 1.3 (30%% faster than natural)")
     ap.add_argument("--beats", type=Path, default=None,
@@ -240,7 +275,13 @@ def main():
     args = ap.parse_args()
 
     if args.voice is None:
-        args.voice = "nova" if args.engine == "openai" else "ko-KR-SunHiNeural"
+        if args.engine == "openai":
+            args.voice = "nova"  # multilingual (handles both ko and en)
+        else:
+            args.voice = "en-US-AriaNeural" if args.language == "en" else "ko-KR-SunHiNeural"
+
+    if args.instructions is None:
+        args.instructions = DEFAULT_INSTRUCTIONS_EN if args.language == "en" else DEFAULT_INSTRUCTIONS_KO
 
     if not args.transcript.exists():
         sys.exit(f"ERROR: {args.transcript} not found")
@@ -262,14 +303,14 @@ def main():
     elif args.beats:
         print(f"⚠ --beats {args.beats} not found, using base instructions only")
 
-    print(f"Engine: {args.engine} / Voice: {args.voice}"
+    print(f"Engine: {args.engine} / Language: {args.language} / Voice: {args.voice}"
           + (f" / Model: {args.model} / Speed: {args.speed}x" if args.engine == "openai" else ""))
 
     slide_mp3s = []
     for s in slides:
         n = s["slide_no"]
         affect = slide_affect.get(n, "") if slide_affect else ""
-        slide_instructions = affect_to_instruction(affect, args.instructions)
+        slide_instructions = affect_to_instruction(affect, args.instructions, args.language)
         affect_tag = f" [{affect}]" if affect else ""
         print(f"  → slide {n}: {len(s['chunks'])} chunks{affect_tag}", flush=True)
         parts = []

@@ -21,6 +21,79 @@ SLIDE_RE = re.compile(r'^\s*\[slide\s+(\d+)\]\s*$')
 PAUSE_RE = re.compile(r'\[pause:(\d+)\]')
 
 
+# ── i18n strings for player chrome (slide-deck UI) ──────────────────────────
+# Scope: player.html only. quiz.html chrome and course index.html landing
+# remain in Korean; their i18n is follow-up work.
+_PLAYER_STRINGS = {
+    "ko": {
+        "menu_title": "목차 열기/닫기",
+        "home": "홈",
+        "slide_label": "슬라이드",
+        "slide_unit": "장",
+        "min_unit": "분",
+        "prev": "이전",
+        "play": "재생",
+        "pause": "일시정지",
+        "next": "다음",
+        "transcript_h2": "발화 스크립트",
+        "end_title": "수업을 완료했어요!",
+        "end_sub": "다음으로 이동하거나 배운 내용을 점검해보세요.",
+        "resume_prefix": "이전 위치",
+        "resume_yes": "이어 듣기",
+        "resume_no": "처음부터",
+        "quiz_cta_footer": "섹션 퀴즈 풀기",
+        "back_to_toc": "목차로",
+        "cta_this_section": "이 섹션",
+        "cta_final_quiz": "마지막 퀴즈 풀기",
+        "cta_done": "완료",
+        "cta_course_toc": "코스 목차로",
+        "cta_check_section": "이 섹션 점검",
+        "cta_section_quiz": "섹션 퀴즈 풀기",
+        "cta_next_section": "다음 섹션",
+        "cta_next_class": "다음 수업",
+        "cta_check_first": "먼저 점검",
+        "cta_section_quiz_short": "섹션 퀴즈",
+        "cta_continue": "계속 학습",
+        "toc_quiz_tpl": "섹션 퀴즈 ({n}문항)",
+    },
+    "en": {
+        "menu_title": "Toggle TOC",
+        "home": "Home",
+        "slide_label": "Slide",
+        "slide_unit": " slides",
+        "min_unit": " min",
+        "prev": "Prev",
+        "play": "Play",
+        "pause": "Pause",
+        "next": "Next",
+        "transcript_h2": "Transcript",
+        "end_title": "You finished the class!",
+        "end_sub": "Move on to the next step, or review what you just learned.",
+        "resume_prefix": "Previous position",
+        "resume_yes": "Resume",
+        "resume_no": "Start over",
+        "quiz_cta_footer": "Take section quiz",
+        "back_to_toc": "Back to TOC",
+        "cta_this_section": "This section",
+        "cta_final_quiz": "Take the final quiz",
+        "cta_done": "Done",
+        "cta_course_toc": "Back to course TOC",
+        "cta_check_section": "Review this section",
+        "cta_section_quiz": "Take section quiz",
+        "cta_next_section": "Next section",
+        "cta_next_class": "Next class",
+        "cta_check_first": "Check first",
+        "cta_section_quiz_short": "Section quiz",
+        "cta_continue": "Continue",
+        "toc_quiz_tpl": "Section quiz ({n} items)",
+    },
+}
+
+
+def _tx(lang: str) -> dict:
+    return _PLAYER_STRINGS.get(lang, _PLAYER_STRINGS["ko"])
+
+
 def parse_transcript_by_slide(text: str) -> dict:
     """Return {slide_no: [line, ...]} with [pause:N] stripped."""
     out = {}
@@ -54,7 +127,7 @@ def mp3_duration(path: Path) -> float:
 
 
 PLAYER_TMPL = """<!DOCTYPE html>
-<html lang="ko">
+<html lang="{lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -134,16 +207,16 @@ PLAYER_TMPL = """<!DOCTYPE html>
 </head>
 <body>
 <header>
-  <button class="menu-toggle" id="menu-toggle" title="목차 열기/닫기">☰</button>
-  <a href="{back_href}">← 홈</a>
+  <button class="menu-toggle" id="menu-toggle" title="{tx_menu_title}">☰</button>
+  <a href="{back_href}">← {tx_home}</a>
   <h1>{title}</h1>
-  <span class="meta">LOs: {lo_ids} · {slide_count}장 · {duration_min}분</span>
+  <span class="meta">LOs: {lo_ids} · {slide_count}{tx_slide_unit} · {duration_min}{tx_min_unit}</span>
 </header>
 
 <div id="progress">
   <span class="label"><strong>Class {class_number}</strong> / {total_classes}</span>
   <div class="bar"><div class="fill" id="course-fill" style="width:{course_progress_pct}%"></div></div>
-  <span class="label">슬라이드 <strong id="slide-num">1</strong> / {slide_count}</span>
+  <span class="label">{tx_slide_label} <strong id="slide-num">1</strong> / {slide_count}</span>
   <div class="bar"><div class="fill" id="slide-fill"></div></div>
 </div>
 
@@ -153,15 +226,15 @@ PLAYER_TMPL = """<!DOCTYPE html>
   <div id="stage">
     <div id="slide-wrap"><img id="slide" alt="slide"/></div>
     <div id="controls">
-      <button id="prev">◀ 이전</button>
-      <button id="play" class="play">▶ 재생</button>
-      <button id="next">다음 ▶</button>
+      <button id="prev">◀ {tx_prev}</button>
+      <button id="play" class="play">▶ {tx_play}</button>
+      <button id="next">{tx_next} ▶</button>
       <span id="pos">1 / {slide_count}</span>
     </div>
     <audio id="audio" preload="auto"></audio>
   </div>
   <aside id="transcript">
-    <h2>발화 스크립트</h2>
+    <h2>{tx_transcript_h2}</h2>
     <div id="tx-body"></div>
   </aside>
 </main>
@@ -169,20 +242,20 @@ PLAYER_TMPL = """<!DOCTYPE html>
 <section id="thumbs"></section>
 
 <section id="end-panel">
-  <h2>🎉 수업을 완료했어요!</h2>
-  <p class="sub">다음으로 이동하거나 배운 내용을 점검해보세요.</p>
+  <h2>🎉 {tx_end_title}</h2>
+  <p class="sub">{tx_end_sub}</p>
   <div class="end-actions">{end_actions_html}</div>
 </section>
 
 <div id="resume-banner" role="dialog" aria-live="polite">
-  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
-  <button id="resume-yes" class="primary">이어 듣기</button>
-  <button id="resume-no">처음부터</button>
+  <span class="text">🎧 {tx_resume_prefix}: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">{tx_resume_yes}</button>
+  <button id="resume-no">{tx_resume_no}</button>
 </div>
 
 <footer>
-  <a href="{quiz_href}">📝 섹션 퀴즈 풀기</a>
-  <a href="{back_href}">목차로</a>
+  <a href="{quiz_href}">📝 {tx_quiz_cta_footer}</a>
+  <a href="{back_href}">{tx_back_to_toc}</a>
 </footer>
 
 <script>
@@ -300,8 +373,8 @@ btnPrev.onclick = () => loadSlide(current - 1, true);
 btnNext.onclick = () => loadSlide(current + 1, true);
 btnPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
 
-audio.addEventListener('play', () => btnPlay.textContent = '⏸ 일시정지');
-audio.addEventListener('pause', () => btnPlay.textContent = '▶ 재생');
+audio.addEventListener('play', () => btnPlay.textContent = '⏸ {tx_pause}');
+audio.addEventListener('pause', () => btnPlay.textContent = '▶ {tx_play}');
 audio.addEventListener('ended', () => {{
   if (current < SLIDES.length - 1) {{
     loadSlide(current + 1, true);
@@ -323,7 +396,7 @@ const resumeState = loadResumeState();
 loadSlide(0, false);
 if (resumeState) {{
   document.getElementById('resume-pos').textContent =
-    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+    '{tx_slide_label} ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
   const banner = document.getElementById('resume-banner');
   banner.classList.add('show');
   document.getElementById('resume-yes').onclick = () => {{
@@ -484,48 +557,56 @@ def make_end_actions_html(next_cls_title: str | None,
                           is_last_in_section: bool,
                           is_last_in_course: bool,
                           quiz_href: str,
-                          back_href: str) -> str:
+                          back_href: str,
+                          lang: str = "ko") -> str:
+    t = _tx(lang)
+    fallback_title = t["cta_continue"]
     parts = []
     if is_last_in_course:
         # Final class → quiz + back to index
         parts.append(
             f'<a class="btn-cta primary" href="{quiz_href}">'
-            f'<span><span class="label">이 섹션</span><span class="title">📝 마지막 퀴즈 풀기</span></span></a>'
+            f'<span><span class="label">{t["cta_this_section"]}</span>'
+            f'<span class="title">📝 {t["cta_final_quiz"]}</span></span></a>'
         )
         parts.append(
             f'<a class="btn-cta secondary" href="{back_href}">'
-            f'<span><span class="label">완료</span><span class="title">🎉 코스 목차로</span></span></a>'
+            f'<span><span class="label">{t["cta_done"]}</span>'
+            f'<span class="title">🎉 {t["cta_course_toc"]}</span></span></a>'
         )
     elif is_last_in_section:
-        # Section 끝 → quiz 우선, 다음 섹션 첫 class는 secondary
+        # End of section → quiz is primary, first class of next section is secondary
         parts.append(
             f'<a class="btn-cta primary" href="{quiz_href}">'
-            f'<span><span class="label">이 섹션 점검</span><span class="title">📝 섹션 퀴즈 풀기</span></span></a>'
+            f'<span><span class="label">{t["cta_check_section"]}</span>'
+            f'<span class="title">📝 {t["cta_section_quiz"]}</span></span></a>'
         )
         if next_cls_href:
             parts.append(
                 f'<a class="btn-cta secondary" href="{next_cls_href}">'
-                f'<span><span class="label">다음 섹션</span>'
-                f'<span class="title">▶ {html.escape(next_cls_title or "계속 학습")}</span></span></a>'
+                f'<span><span class="label">{t["cta_next_section"]}</span>'
+                f'<span class="title">▶ {html.escape(next_cls_title or fallback_title)}</span></span></a>'
             )
     else:
-        # 섹션 내 다음 class 존재
+        # Next class in the same section
         if next_cls_href:
             parts.append(
                 f'<a class="btn-cta primary" href="{next_cls_href}">'
-                f'<span><span class="label">다음 수업</span>'
-                f'<span class="title">▶ {html.escape(next_cls_title or "계속 학습")}</span></span></a>'
+                f'<span><span class="label">{t["cta_next_class"]}</span>'
+                f'<span class="title">▶ {html.escape(next_cls_title or fallback_title)}</span></span></a>'
             )
         parts.append(
             f'<a class="btn-cta secondary" href="{quiz_href}">'
-            f'<span><span class="label">먼저 점검</span><span class="title">📝 섹션 퀴즈</span></span></a>'
+            f'<span><span class="label">{t["cta_check_first"]}</span>'
+            f'<span class="title">📝 {t["cta_section_quiz_short"]}</span></span></a>'
         )
     return "\n    ".join(parts)
 
 
 def make_toc_html(manifest: dict, current_cls_id: str, current_sec_slug: str,
-                  current_cls_slug: str, quiz_counts: dict) -> str:
+                  current_cls_slug: str, quiz_counts: dict, lang: str = "ko") -> str:
     """Render sidebar TOC with relative hrefs from current class dir."""
+    t = _tx(lang)
     def class_href(sec_slug: str, cls_slug: str) -> str:
         if sec_slug == current_sec_slug:
             return f"../{cls_slug}/player.html"
@@ -547,9 +628,10 @@ def make_toc_html(manifest: dict, current_cls_id: str, current_sec_slug: str,
                 f'{html.escape(cls["title"])}</a></li>'
             )
         if quiz_counts.get(sec["id"]):
+            quiz_label = t["toc_quiz_tpl"].format(n=quiz_counts[sec["id"]])
             lines.append(
                 f'      <li class="quiz"><a href="{quiz_href(sec["slug"])}">'
-                f'📝 섹션 퀴즈 ({quiz_counts[sec["id"]]}문항)</a></li>'
+                f'📝 {quiz_label}</a></li>'
             )
         lines.append("    </ul>")
     return "\n".join(lines) + "\n"
@@ -562,7 +644,8 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
                        is_last_in_course: bool = False,
                        class_number: int = 1,
                        total_classes: int = 1,
-                       toc_html: str = ""):
+                       toc_html: str = "",
+                       lang: str = "ko"):
     cls_rel_dir = Path(cls["assets"]["slide_source"]).parent
     cls_dir = root / cls_rel_dir
 
@@ -590,9 +673,11 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
     lo_ids = ", ".join(cls.get("lo_ids", []))
     end_actions_html = make_end_actions_html(
         next_cls_title, next_cls_href, is_last_in_section, is_last_in_course,
-        quiz_href, back_href,
+        quiz_href, back_href, lang=lang,
     )
     course_progress_pct = round(class_number / total_classes * 100, 1)
+    t = _tx(lang)
+    tx_kwargs = {f"tx_{k}": v for k, v in t.items()}
     html_out = PLAYER_TMPL.format(
         title=html.escape(cls["title"]),
         lo_ids=html.escape(lo_ids),
@@ -606,6 +691,8 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
         total_classes=total_classes,
         course_progress_pct=course_progress_pct,
         toc_html=toc_html,
+        lang=lang,
+        **tx_kwargs,
     )
     (cls_dir / "player.html").write_text(html_out, encoding="utf-8")
     return {"slides": len(slides), "duration_min": duration_min, "lo_ids": lo_ids,
@@ -711,6 +798,9 @@ def main():
     args = ap.parse_args()
     root = args.course_root
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+    lang = (manifest.get("course", {}) or {}).get("language", "ko")
+    if lang not in _PLAYER_STRINGS:
+        lang = "ko"
 
     per_class_info = []
     quiz_counts = {}
@@ -761,6 +851,7 @@ def main():
             current_sec_slug=entry["sec"]["slug"],
             current_cls_slug=entry["cls"]["slug"],
             quiz_counts=quiz_counts,
+            lang=lang,
         )
         info = build_class_player(
             entry["cls"], root,
@@ -773,6 +864,7 @@ def main():
             class_number=idx,
             total_classes=total_classes,
             toc_html=toc_html,
+            lang=lang,
         )
         per_class_info.append(info)
 

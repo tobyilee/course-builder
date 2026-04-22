@@ -29,8 +29,15 @@ else:
 - `audience = "intermediate developers"`
 - `depth = "standard"` (intro | standard | deep)
 - `target_duration_min = 120`
-- `language = "ko"`
+- `language = "ko"` (ko | en)
 - `tone = "friendly"` (formal | friendly | socratic)
+
+### 0-2a. 언어 판별 (language resolution)
+1. 사용자가 명시: "영어로", "in English", "English course", "영문으로" → `language = "en"`.
+2. 사용자가 "한국어로", "한글로", "국문으로" → `language = "ko"`.
+3. 명시 없음 → `"ko"` 기본. **사용자 발화 언어만으로 자동 추론하지 않는다**(영어로 질문했다고 영어 강의라고 가정 금지).
+
+`language`는 Course Spec `01_architect_course_spec.json`에 저장되어 하류 에이전트 전체가 참조한다. 한 번 확정 후 재실행 전까지 변경 금지 — 중간에 바꾸면 artifact 불일치 발생.
 
 ### 0-3. HITL 플래그
 사용자가 "자동으로 끝까지"라고 하면 `hitl=false`, "중간에 확인하고 싶어"라면 `hitl=true`. 기본값은 `hitl=true`.

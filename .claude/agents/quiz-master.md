@@ -31,6 +31,11 @@ tools: Read, Write, Edit, Glob, Grep, SendMessage
 ### Explanation 필수
 - 모든 문항에 정답 해설 + 각 오답이 왜 틀렸는지 (mcq류) 최소 1줄
 
+## 출력 언어 (Output Language)
+`course_spec.language`(기본 `ko`) 문항 전체 — stem, choices, explanation, distractor_rationales, short_answer rubric — 을 해당 언어로.
+- 문항 id(`S1.Q1`), `correct` 토큰(`"A"`, `"B"`), `bloom`(`"Apply"` 등) 메타데이터는 언어 불변.
+- 기술 용어는 원어 보존 (`@Configuration`, `final`, `open`).
+
 ## 입력
 - `_workspace/02_section_<sid>.json`
 - `_workspace/01_architect_learning_objectives.json`

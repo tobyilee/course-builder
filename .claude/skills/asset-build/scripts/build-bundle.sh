@@ -79,6 +79,8 @@ log "Marp HTML: $OK_HTML/$((OK_HTML+FAIL_HTML)) · PNG: $OK_PNG/$((OK_PNG+FAIL_P
 
 # ── Step 3: TTS synthesis ──────────────────────────────────────────────
 TTS_WRAP="$ROOT_DIR/.claude/skills/tts-synthesis/scripts/run.sh"
+# Read language from Course Spec for language-aware TTS defaults
+COURSE_LANG=$(jq -r '.language // "ko"' "$WORKSPACE/01_architect_course_spec.json" 2>/dev/null || echo "ko")
 if [ -n "${OPENAI_API_KEY:-}" ] && [ "${SKIP_TTS:-0}" != "1" ] && [ -x "$TTS_WRAP" ]; then
   OK_TTS=0; SKIP_TTS_CNT=0; FAIL_TTS=0
   while IFS= read -r -d '' t; do
@@ -106,9 +108,9 @@ if [ -n "${OPENAI_API_KEY:-}" ] && [ "${SKIP_TTS:-0}" != "1" ] && [ -x "$TTS_WRA
       fi
     done
     rm -rf "$audio_dir"; mkdir -p "$audio_dir"
-    log "TTS: $cls_slug${beats_arg:+ (affect)}"
+    log "TTS: $cls_slug [$COURSE_LANG]${beats_arg:+ (affect)}"
     # shellcheck disable=SC2086
-    if bash "$TTS_WRAP" "$t" "$audio_dir" $beats_arg >>"$LOG" 2>&1; then
+    if bash "$TTS_WRAP" "$t" "$audio_dir" --language "$COURSE_LANG" $beats_arg >>"$LOG" 2>&1; then
       OK_TTS=$((OK_TTS+1))
     else
       FAIL_TTS=$((FAIL_TTS+1))

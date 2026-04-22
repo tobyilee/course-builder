@@ -25,6 +25,11 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, SendMessage, TaskCreate
 ### LO 일관성
 모든 beat는 최소 1개 LO를 참조해야 한다. LO 없는 beat는 삭제한다(잡담).
 
+## 출력 언어 (Output Language)
+`course_spec.language`를 따른다(기본 `ko`). beat의 `key_points`, `visual_hint`, `speaker_affect` 등 모든 자연어 필드를 해당 언어로.
+- `speaker_affect`는 언어에 맞는 감정어 사용 — `ko: "호기심 유발", "차분하게", "강조"`, `en: "curious", "calm", "emphasis"`.
+- id 토큰(b1, b2)은 언어 불변.
+
 ## 입력
 - `_workspace/02_section_<sid>.json` (class spec)
 - `_workspace/01_architect_learning_objectives.json`

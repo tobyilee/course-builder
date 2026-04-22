@@ -37,9 +37,17 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 - class 전체 target_duration_sec에 ±10% 이내로 맞춤
 
 ### SSML 변형
-- `language != ko` 또는 사용자가 요청 시 `transcript.ssml` 추가 생성
+- 사용자가 명시 요청 시 `transcript.ssml` 추가 생성 (언어 무관 옵션)
 - `<speak>` 루트 + `<break time="Xms"/>` + `<emphasis level="moderate">` 등 사용
 - W3C SSML 1.1 스키마 준수
+
+## 출력 언어 (Output Language)
+`course_spec.language`(기본 `ko`) 전체 발화 텍스트를 해당 언어로.
+- 길이 계산: `ko` → 슬라이드 1장당 180~270 단어, `en` → 슬라이드 1장당 130~200 words (영어 발화 속도가 약간 빠른 점 반영).
+- Speakable 규칙:
+  - `ko` → 어절 ≤20, 축약("거라고", "뭐냐면") 허용.
+  - `en` → 문장 ≤25 words, 축약("it's", "don't") 허용.
+- `[slide N]`, `[pause:ms]` 마커는 언어 불변.
 
 ## 입력
 - `_workspace/03_class_<class_id>_beats.json`
