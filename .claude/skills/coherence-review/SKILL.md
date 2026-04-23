@@ -117,12 +117,14 @@ else:
 ```
 
 ### Verdict 동기화 (필수)
-| JSON `overall` | MD `## VERDICT:` |
-|---|---|
-| `"pass"` | `PASS` |
-| `"revise"` | `REVISE` |
+JSON `.overall` 과 MD `## VERDICT:` 헤더는 **같은 verdict 를 가리켜야** 하며, 매칭은 **case-insensitive**:
 
-쓰기 전 마지막 체크: `jq -r '.overall' report.json` 의 대문자 버전 == `grep -m1 '^## VERDICT:' report.md` 의 verdict 토큰.
+| JSON `overall` | MD 헤더 (권장)       | MD 헤더 (허용)       |
+|----------------|----------------------|----------------------|
+| `"pass"`       | `## VERDICT: PASS`   | `## VERDICT: pass`   |
+| `"revise"`     | `## VERDICT: REVISE` | `## VERDICT: revise` |
+
+쓰기 전 마지막 체크: `jq -r '.overall' report.json` == `grep -m1 '^## VERDICT:' report.md` 의 verdict 토큰을 **소문자로 정규화** 후 비교. `build-bundle.sh` gate 도 동일 방식으로 비교 (lowercase normalize 후 일치 검사 → WARN on mismatch).
 
 ### Revise 루프 종료 처리
 최종 PASS가 확정되면 **JSON/MD 모두 overwrite**. 이전 라운드 MD가 "REVISE" 상태로 남아있으면 build는 pass하지만 사람이 읽는 리포트는 거짓을 말함. 이전 라운드를 보존하려면 `99_coherence_report.round_<N>.{json,md}` 로 분리해 저장.

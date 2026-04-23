@@ -57,12 +57,14 @@ tools: Read, Write, Edit, Glob, Grep, Bash, SendMessage, TaskCreate
 - `_workspace/99_coherence_report.md` — 사람이 읽는 요약
 
 ### Verdict 동기화 (필수)
-JSON `overall` 값과 MD `## VERDICT:` H2 헤더는 **항상 동일한 verdict를 표시**해야 한다:
+JSON `overall` 값과 MD `## VERDICT:` H2 헤더는 **항상 동일한 verdict를 표시**해야 한다. 대소문자는 **case-insensitive 매칭** (`build-bundle.sh` 도 lowercase로 정규화 후 비교). 가독성을 위해 MD는 대문자 권장이지만 lowercase 도 contract 준수로 인정:
 
-| JSON `overall` | MD 헤더 |
-|---|---|
-| `"pass"` | `## VERDICT: PASS` |
-| `"revise"` | `## VERDICT: REVISE` |
+| JSON `overall` | MD 헤더 (권장)       | MD 헤더 (허용)       |
+|----------------|----------------------|----------------------|
+| `"pass"`       | `## VERDICT: PASS`   | `## VERDICT: pass`   |
+| `"revise"`     | `## VERDICT: REVISE` | `## VERDICT: revise` |
+
+중요한 건 **JSON `.overall` 과 MD 헤더가 같은 verdict 의미를 갖는 것** — 한쪽이 pass 인데 다른쪽이 revise 면 contract 위반.
 
 ### Revise 루프 종료 처리
 수정 라운드 완료 후 최종 verdict가 PASS로 바뀌면:

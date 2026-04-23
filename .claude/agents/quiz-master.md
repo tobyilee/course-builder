@@ -76,6 +76,8 @@ tools: Read, Write, Edit, Glob, Grep, SendMessage
 2. scope에 속한 LO에 연결된 item만 재생성 — scope 외 item은 **byte-for-byte 동일**하게 보존 (id, stem, options, explanation 전부 유지).
 3. 새 문항이 필요하면 기존 최대 id + 1 (예: Q7까지 있으면 Q8부터). 삭제된 id는 재사용 금지.
 4. Bloom 분포가 ±1 이내로 유지되도록 — 예를 들어 Apply 1개가 빠졌는데 새 문항이 Evaluate면 warning.
+5. **도구 선택 규정**: scope 외 item 이 하나라도 보존되어야 할 때 **`Edit` 도구를 사용**해 해당 item의 JSON object를 그대로 남기고, 바꿀 item 만 `old_string`/`new_string`으로 치환한다. **전체 파일을 `Write` 로 재직렬화하는 것은 금지** — 포매터 drift가 preserved item의 byte-identity를 깨뜨린다. 모든 item이 scope에 속하는 경우(예: `S1.quiz` 단일 섹션)는 `Write` 허용되나, 기존 id 순서와 최외곽 구조는 유지할 것.
+6. **Diff-before-claim 규정**: 완료 보고 시 각 item의 disposition을 "reused as-is / reworked (id preserved) / newly added / removed" 로 분류하되, **실제 input vs output 을 field-level 로 diff한 결과**를 근거로 작성한다. "stem/choices/correct 변경 없음" 같은 주장은 실제 JSON diff로 뒷받침되어야 하며 기억에 의존하지 말 것. 예: `S1.Q5: stem CHANGED, choices CHANGED, correct unchanged, explanation reworded`.
 
 ## 사용 스킬
 `quiz-generation` — Bloom별 문항 템플릿, distractor 작성법, rubric 패턴.
