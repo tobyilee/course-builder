@@ -150,6 +150,28 @@ def parse_transcript_by_slide(text: str) -> dict:
     return out
 
 
+def char_proportional_line_times(lines: list[str], total_sec: float) -> list[dict]:
+    """Approximate per-line start/end by weighting lines by character count.
+
+    MVP for live-subtitle highlight: no whisper-align, no word-level timing —
+    just splits the slide's MP3 duration proportionally to line length. Accuracy
+    degrades on lines with skewed speaking density, but works well enough for a
+    'which sentence am I on?' affordance.
+    """
+    if not lines or total_sec <= 0:
+        return []
+    weights = [max(len(ln), 1) for ln in lines]
+    total_w = sum(weights)
+    cursor = 0.0
+    out = []
+    for w in weights:
+        frac = w / total_w
+        dur = total_sec * frac
+        out.append({"start": round(cursor, 3), "end": round(cursor + dur, 3)})
+        cursor += dur
+    return out
+
+
 def mp3_duration(path: Path) -> float:
     if not path.exists():
         return 0.0
@@ -214,7 +236,8 @@ PLAYER_TMPL = """<!DOCTYPE html>
   audio{{width:100%}}
   aside#transcript{{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}}
   aside#transcript h2{{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}}
-  #tx-body p{{margin:0 0 8px 0}}
+  #tx-body p{{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}}
+  #tx-body p.active{{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}}
   #thumbs{{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}}
   .thumb{{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}}
   .thumb.current{{border-color:#2d6cdf}}
@@ -335,9 +358,15 @@ function loadSlide(i, autoplay, resumeTime) {{
   btnNext.disabled = current === SLIDES.length - 1;
 
   txBody.innerHTML = '';
-  s.transcript.forEach(line => {{
+  const times = s.transcriptTimes || [];
+  s.transcript.forEach((line, idx) => {{
     const p = document.createElement('p');
     p.textContent = line;
+    const t = times[idx];
+    if (t && typeof t.start === 'number' && typeof t.end === 'number') {{
+      p.dataset.start = t.start;
+      p.dataset.end = t.end;
+    }}
     txBody.appendChild(p);
   }});
 
@@ -385,9 +414,29 @@ function fmtTime(t) {{
   return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
 }}
 
+let lastActiveLine = null;
 audio.addEventListener('timeupdate', () => {{
   const now = Date.now();
   if (now - lastSaveTs > 3000) {{ saveState(); lastSaveTs = now; }}
+  // Highlight the transcript line whose [start, end) range contains currentTime.
+  // Line timings come from char-proportional splitting of the slide's MP3 duration.
+  const t = audio.currentTime;
+  const lines = txBody.children;
+  let newActive = null;
+  for (let i = 0; i < lines.length; i++) {{
+    const el = lines[i];
+    const s = parseFloat(el.dataset.start);
+    const e = parseFloat(el.dataset.end);
+    if (!isNaN(s) && !isNaN(e) && t >= s && t < e) {{ newActive = el; break; }}
+  }}
+  if (newActive !== lastActiveLine) {{
+    if (lastActiveLine) lastActiveLine.classList.remove('active');
+    if (newActive) {{
+      newActive.classList.add('active');
+      newActive.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+    }}
+    lastActiveLine = newActive;
+  }}
 }});
 
 // Playback speed — single cycle button, global across classes
@@ -733,11 +782,16 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
         n = i + 1
         mp3_file = cls_dir / "audio" / f"slide_{n:02d}.mp3"
         mp3_rel = f"audio/slide_{n:02d}.mp3" if mp3_file.exists() else ""
-        total_dur += mp3_duration(mp3_file)
+        slide_dur = mp3_duration(mp3_file)
+        total_dur += slide_dur
+        lines = slide_by.get(n, [])
         slides.append({
             "png": f"slides_png/{png.name}",
             "mp3": mp3_rel,
-            "transcript": slide_by.get(n, []),
+            "transcript": lines,
+            # Parallel array: lines[k] spans transcriptTimes[k].start..end (seconds)
+            # Absent (or empty) when audio is missing — JS then skips highlight.
+            "transcriptTimes": char_proportional_line_times(lines, slide_dur),
         })
 
     duration_min = round(total_dur / 60.0, 1)
