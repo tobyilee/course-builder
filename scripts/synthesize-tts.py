@@ -104,18 +104,65 @@ def affect_to_instruction(affect: str, base: str, language: str = "ko") -> str:
     return base + suffix + " ".join(hits)
 
 
-def build_slide_to_affect(beats_path: Path, slide_count: int) -> dict:
-    """Map slide_no (1-indexed) to affect string by stretching beats over slides.
+BEAT_COMMENT_RE = re.compile(r'<!--\s*beat:\s*(\w+)\s*-->')
 
-    Convention: slide 1 = title (no beat, neutral). slides 2..slide_count map
-    proportionally to beats[0..N-1]. If slides > beats+1, beats stretch (one
-    beat covers multiple slides); if slides < beats+1, trailing beats collapse.
+
+def _parse_beat_ids_from_slides(slide_source_path: Path) -> list:
+    """Extract per-slide beat id from Marp source by splitting on `^---$`.
+
+    Returns a list where index 0 = slide 1, index 1 = slide 2, etc. Values are
+    beat id strings (e.g. "b1") or "" when the comment is absent.
+
+    The first two `---` segments in a Marp file are the frontmatter
+    delimiters (empty-before + frontmatter-body); slide content starts from
+    segment index 2.
+    """
+    try:
+        text = slide_source_path.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    segments = re.split(r'^---\s*$', text, flags=re.MULTILINE)
+    slide_bodies = segments[2:] if len(segments) >= 3 else []
+    beat_ids = []
+    for body in slide_bodies:
+        m = BEAT_COMMENT_RE.search(body)
+        beat_ids.append(m.group(1) if m else "")
+    return beat_ids
+
+
+def build_slide_to_affect(
+    beats_path: Path,
+    slide_count: int,
+    slide_source_path: Path | None = None,
+) -> dict:
+    """Map slide_no (1-indexed) to affect string.
+
+    When `slide_source_path` is given and contains `<!-- beat: bN -->` comments
+    per slide, the mapping is derived directly from those ids (100% accurate).
+    Otherwise, fall back to the proportional-stretch heuristic:
+      slide 1 = title (no beat, neutral); slides 2..slide_count map
+      proportionally to beats[0..N-1].
     """
     data = json.loads(beats_path.read_text(encoding="utf-8"))
     beats = data.get("beats", [])
     if not beats:
         return {}
+    beat_by_id = {b.get("id"): b for b in beats if b.get("id")}
 
+    # Preferred path: direct beat_id from Marp comments
+    if slide_source_path and slide_source_path.exists():
+        beat_ids = _parse_beat_ids_from_slides(slide_source_path)
+        if beat_ids and any(bid for bid in beat_ids):
+            mapping = {}
+            for i, bid in enumerate(beat_ids[:slide_count], start=1):
+                if bid and bid in beat_by_id:
+                    mapping[i] = beat_by_id[bid].get("speaker_affect", "")
+                else:
+                    mapping[i] = ""  # untagged slide → neutral
+            print(f"  [beat_id] direct mapping: {sum(1 for v in mapping.values() if v)}/{slide_count} slides tagged")
+            return mapping
+
+    # Fallback: proportional stretch (~80% accurate)
     mapping = {1: ""}  # title slide uses base instructions
     content_slides = max(slide_count - 1, 1)
     for i in range(content_slides):
@@ -272,6 +319,9 @@ def main():
                     help="openai only: 0.25–4.0, default 1.3 (30%% faster than natural)")
     ap.add_argument("--beats", type=Path, default=None,
                     help="optional beats.json — enables per-slide speaker_affect overlay")
+    ap.add_argument("--slide-source", type=Path, default=None,
+                    help="optional slide.source.md — enables exact slide↔beat mapping "
+                         "via `<!-- beat: bN -->` comments (fallback: proportional heuristic)")
     args = ap.parse_args()
 
     if args.voice is None:
@@ -298,8 +348,11 @@ def main():
     # Build slide → affect map if beats file provided
     slide_affect = {}
     if args.beats and args.beats.exists():
-        slide_affect = build_slide_to_affect(args.beats, len(slides))
-        print(f"Affect overlay: ON ({len(slide_affect)} slides mapped from {args.beats.name})")
+        slide_affect = build_slide_to_affect(
+            args.beats, len(slides), slide_source_path=args.slide_source
+        )
+        src_tag = f" + slide-source {args.slide_source.name}" if args.slide_source and args.slide_source.exists() else ""
+        print(f"Affect overlay: ON ({len(slide_affect)} slides mapped from {args.beats.name}{src_tag})")
     elif args.beats:
         print(f"⚠ --beats {args.beats} not found, using base instructions only")
 

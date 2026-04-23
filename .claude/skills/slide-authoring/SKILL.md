@@ -85,6 +85,23 @@ flowchart LR
   ## 이 슬라이드의 제목
   ```
 
+## Beat 태깅 (TTS affect 정확도용)
+각 슬라이드에 **어떤 beat에서 유도됐는지** 표기하면 `synthesize-tts.py` 가 per-slide `speaker_affect` 오버레이를 정확히 매핑한다 (없으면 proportional-stretch 휴리스틱으로 fallback).
+
+```markdown
+---
+
+<!-- beat: b2 -->
+<!-- _footer: "LO-1.1" -->
+
+## 슬라이드 제목
+```
+
+- `<!-- beat: bN -->` 는 plain HTML comment — Marp directive 아니라 render 영향 없음
+- 값은 `_workspace/03_class_<id>_beats.json` 의 beat `id` (예: `b1`, `b2`) 그대로
+- 한 beat이 여러 슬라이드를 커버하면 동일 id 반복 태깅
+- 주석 생략 시 해당 슬라이드는 neutral affect 처리
+
 ## 파일 구조
 
 ```

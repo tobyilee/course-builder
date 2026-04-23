@@ -115,10 +115,16 @@ if [ -n "${OPENAI_API_KEY:-}" ] && [ "${SKIP_TTS:-0}" != "1" ] && [ -x "$TTS_WRA
         fi
       fi
     done
+    # Pass slide.source.md for exact slide↔beat mapping when available
+    slide_src="$cls_dir/slide.source.md"
+    slide_src_arg=""
+    if [ -f "$slide_src" ] && [ -n "$beats_arg" ]; then
+      slide_src_arg="--slide-source $slide_src"
+    fi
     rm -rf "$audio_dir"; mkdir -p "$audio_dir"
-    log "TTS: $cls_slug [$COURSE_LANG]${beats_arg:+ (affect)}"
+    log "TTS: $cls_slug [$COURSE_LANG]${beats_arg:+ (affect)}${slide_src_arg:+ +slide-src}"
     # shellcheck disable=SC2086
-    if bash "$TTS_WRAP" "$t" "$audio_dir" --language "$COURSE_LANG" $beats_arg >>"$LOG" 2>&1; then
+    if bash "$TTS_WRAP" "$t" "$audio_dir" --language "$COURSE_LANG" $beats_arg $slide_src_arg >>"$LOG" 2>&1; then
       OK_TTS=$((OK_TTS+1))
     else
       FAIL_TTS=$((FAIL_TTS+1))
