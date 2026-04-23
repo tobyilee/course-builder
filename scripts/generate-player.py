@@ -31,6 +31,7 @@ _PLAYER_STRINGS = {
         "slide_label": "슬라이드",
         "slide_unit": "장",
         "min_unit": "분",
+        "speed_title": "재생 속도",
         "prev": "이전",
         "play": "재생",
         "pause": "일시정지",
@@ -80,6 +81,7 @@ _PLAYER_STRINGS = {
         "slide_label": "Slide",
         "slide_unit": " slides",
         "min_unit": " min",
+        "speed_title": "Playback speed",
         "prev": "Prev",
         "play": "Play",
         "pause": "Pause",
@@ -207,6 +209,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
   button:disabled{{opacity:.4;cursor:not-allowed}}
   button.play{{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}}
   button.play:hover{{background:#3578e5}}
+  button.speed{{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}}
   #pos{{color:#8b95a7;font-size:13px;margin-left:auto}}
   audio{{width:100%}}
   aside#transcript{{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}}
@@ -265,6 +268,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
       <button id="prev">◀ {tx_prev}</button>
       <button id="play" class="play">▶ {tx_play}</button>
       <button id="next">{tx_next} ▶</button>
+      <button id="speed" class="speed" title="{tx_speed_title}">1×</button>
       <span id="pos">1 / {slide_count}</span>
     </div>
     <audio id="audio" preload="auto"></audio>
@@ -385,6 +389,36 @@ audio.addEventListener('timeupdate', () => {{
   const now = Date.now();
   if (now - lastSaveTs > 3000) {{ saveState(); lastSaveTs = now; }}
 }});
+
+// Playback speed — single cycle button, global across classes
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const SPEED_KEY = 'course-builder:playback-speed';
+const btnSpeed = document.getElementById('speed');
+
+function loadSpeed() {{
+  try {{
+    const v = parseFloat(localStorage.getItem(SPEED_KEY));
+    if (SPEEDS.includes(v)) return v;
+  }} catch(e) {{}}
+  return 1;
+}}
+function applySpeed(v) {{
+  audio.playbackRate = v;
+  if ('preservesPitch' in audio) audio.preservesPitch = true;
+  // Display: 1× (no decimal) / 1.25× / 1.5× etc.
+  btnSpeed.textContent = (Number.isInteger(v) ? v : v.toString()) + '×';
+  btnSpeed.classList.toggle('speed-fast', v > 1);
+  btnSpeed.classList.toggle('speed-slow', v < 1);
+}}
+let currentSpeed = loadSpeed();
+applySpeed(currentSpeed);
+btnSpeed.onclick = () => {{
+  const idx = SPEEDS.indexOf(currentSpeed);
+  currentSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+  applySpeed(currentSpeed);
+  try {{ localStorage.setItem(SPEED_KEY, String(currentSpeed)); }} catch(e) {{}}
+}};
+audio.addEventListener('loadedmetadata', () => {{ audio.playbackRate = currentSpeed; }});
 
 const endPanel = document.getElementById('end-panel');
 const slideFill = document.getElementById('slide-fill');
