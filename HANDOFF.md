@@ -3,7 +3,7 @@
 **Last updated:** 2026-04-23 (sessions `1b0b191c`, `12150c38`)
 **Author:** Claude Opus 4.7 (1M context) w/ toby
 
-> **2026-04-23 update (session `12150c38`):** P1 완료 — 구 키 `sk-proj-NC2aMj...` revoke 후 재발급, `.env`의 `- ` 페이스트 artifact 수정, `source .env` 파싱 + OpenAI `models.list` live 호출로 검증. 새 키는 의도적으로 transcript 기록(Read 경유); 로컬 jsonl만 영향, 원격 노출 없음.
+> **2026-04-23 update (session `12150c38`):** P1 키 로테이션 + P2 localStorage resume + P3 레포 정비 + 언어 지원 (ko/en) 전체 + Player UI i18n + playback-speed button 전부 완료. 영어 Git-rebase 강의 end-to-end smoke test 통과. **Public repo 현재 HEAD: `2494607`** (5 commits ahead of session 1's last commit `6f8869b`).
 
 Pick up from here in a fresh session. This file is the **single source of truth for in-flight context**. `README.md` describes what the project is; this file describes **what's left to do and why**.
 
@@ -123,24 +123,26 @@ These will be **automatically loaded** in future Claude sessions launched from t
 
 ### Priority 2 (if continuing Phase 7 evolution)
 
+- [x] **localStorage resume** — DONE session 2 (commit `196eba9`). Per-class state (page pathname as key), 30d expiry, 3s throttle.
+- [x] **Multilingual** (ko/en) — DONE session 2 (commits `50f43c6`, `06bfca9`, `2494607`). Full pipeline: agents, TTS engine, player chrome, quiz.html, index.html landing. End-to-end smoke test passed on a Git-rebase 10min English course.
+- [x] **Playback-speed button** — DONE session 2 (commit `2494607`). Cycle button 0.75× → 2×, localStorage-persisted, preservesPitch.
 - [ ] **slide-author emits `beat_id` in Marp frontmatter** — current beat↔slide mapping uses a proportional stretch heuristic (~80% accurate). Direct `beat_id` would give 100% affect-injection accuracy. Touch: `.claude/agents/slide-author.md`, `.claude/skills/slide-authoring/SKILL.md`, `scripts/synthesize-tts.py:build_slide_to_affect`.
-- [ ] **Subtitle sync** — during audio playback, highlight the currently-spoken line in the transcript panel. Requires TTS synthesis to emit timing per chunk (e.g., use edge-tts `--write-subtitles` or OpenAI's timestamp extension). Touch: `scripts/synthesize-tts.py` to emit timing JSON, `scripts/generate-player.py` to bind to `audio.ontimeupdate`.
-- [ ] **localStorage resume** — remember last-played `{class_id, slide_idx, audio.currentTime}`. On player load, prompt "이어 듣기?". Touch: player JS in `generate-player.py`.
+- [ ] **Subtitle sync** — during audio playback, highlight the currently-spoken line in the transcript panel. Requires TTS synthesis to emit timing per chunk (e.g., use edge-tts `--write-subtitles` or OpenAI's timestamp extension). Touch: `scripts/synthesize-tts.py` to emit timing JSON, `scripts/generate-player.py` to bind to `audio.ontimeupdate`. **Deferred by user in session 2** (option A+B+C analyzed; cost vs accuracy trade-off favors "do later when Whisper align comes").
 - [ ] **Duration feedback loop** — `script-writer` agent reads previous run's `manifest.stats.actual_audio_duration_sec` vs `target_duration_min * 60` and auto-calibrates next run's script length. Touch: `.claude/agents/script-writer.md`, `.claude/skills/script-writing/SKILL.md`.
+- [ ] **🐛 Coherence-reviewer JSON emission bug** — agent file promises both `99_coherence_report.json` and `.md`, but in practice it only writes the MD. `build-bundle.sh` requires the JSON gate. Session 2 used a manually authored JSON as a workaround. Fix: update `.claude/agents/coherence-reviewer.md` (and possibly `coherence-review/SKILL.md`) to enforce dual output, OR change the build script to parse the MD `VERDICT:` line.
 
 ### Priority 3 (polish)
 
-- [ ] **`.env.example`** — placeholder template, committed, so others can clone and configure
-- [ ] **LICENSE** — README says MIT but no LICENSE file in repo. Add one.
+- [x] **`.env.example`** — DONE session 2 (commit `bfe1e6e`).
+- [x] **LICENSE** — DONE session 2 (commit `bfe1e6e`).
+- [x] **Screenshot for README** — DONE session 2 (commit `bfe1e6e`). Dark-theme Chrome headless.
 - [ ] **CI recipe** — GitHub Action runs orchestrator on canary topic; fails if coherence doesn't pass. Useful for contributor PRs.
-- [ ] **Screenshot for README** — use Playwright or `puppeteer-screenshot-cli` to capture `player.html` in dark theme, add to README banner section.
 
 ### Priority 4 (larger scope)
 
 - [ ] **Longer course scale test** — 60min, 4-5 sections. Surfaces unseen issues (section-level dependency graph, cross-section LO drift, larger Bloom spread).
 - [ ] **Partial re-run testing** — "Change S1.C2 tone to formal, leave rest" — exercise the stability of LO ids and cache-hit paths. Document the command flow.
-- [ ] **Non-code domain** — try a marketing/leadership topic to verify the hardness works without code-heavy content (tests whether slide-author still produces meaningful visuals without code blocks).
-- [ ] **Multilingual** — run same topic in English, verify tone/voice/Bloom all adapt.
+- [ ] **Non-code domain** — try a marketing/leadership topic to verify the harness works without code-heavy content (tests whether slide-author still produces meaningful visuals without code blocks).
 
 ### Priority 5 (vision)
 
@@ -159,13 +161,56 @@ These will be **automatically loaded** in future Claude sessions launched from t
 | Generated artifacts (`course/`) not committed | Derivable from source + build; keeps repo lean | `.gitignore` design |
 | Player renders PNG + per-slide MP3 rather than full.mp3 streaming | Simpler JS, trivial slide↔audio sync, no timeline math | Initial player design |
 | 9 agents stays as-is; no new agents for TTS or Player | Scripts are fine; adding agents adds bureaucracy | Phase 7 restraint |
+| localStorage key scheme: resume state per page, speed preference global | Resume is page-local state; speed is learner preference that should persist across classes | Session 2 commits `196eba9`, `2494607` |
+| `language = "ko"` default, never auto-infer from user's speaking language | Users often speak Korean but request English content (and vice versa). Explicit-only policy avoids wrong defaults | CLAUDE.md + orchestrator SKILL.md §0-2a (session 2) |
+| OpenAI `nova` kept for both ko and en (multilingual); edge-tts voice branches by language | `nova` produces natural English and Korean; simpler than per-language voice selection for the default engine | `synthesize-tts.py` session 2 |
+| id/slug tokens (LO-1.1, S1.C1, 01-intro) are language-invariant | Language change must not cascade into path/link breakage | All 7 agent directives (session 2) |
+| Player UI i18n scope escalated from "minimal" to "full" in a single session | User chose B (minimal) first for content pipeline, then pulled trigger on A (full) after seeing a half-Korean English course | Sessions 2 flow |
 
 ## 8. Known ugly corners
 
-- `scripts/generate-player.py` is ~720 lines, heavy string formatting. Refactor candidate: split into template files + a small orchestrator. Low priority.
+- `scripts/generate-player.py` grew from ~720 to ~860 lines in session 2 (i18n + resume + speed). Still heavy string formatting. Refactor candidate: split into template files + a small orchestrator. Low priority.
 - `scripts/synthesize-tts.py` line 153 `from openai import OpenAI` is lazy-imported; Pyright warns it can't resolve. Real import works; warning is noise.
 - `_workspace/99_coherence_report.md` isn't hand-tuned for readability; it's a machine-friendly dump. If you want a nicer report surface, that's a standalone polish.
 - `synth-manifest.py` writes `meta/audience.md` only if missing — never updates on re-run. If audience changes in spec, old meta/ lingers. Minor.
+- **Coherence JSON/MD mismatch**: reviewer emits only `.md`, build gate needs `.json`. See Priority 2 follow-up. Workaround: manually write JSON with `overall: "pass"` when issues are resolved.
+- `generate-player.py:678` Pyright warning about unused `current_cls_slug` parameter in `make_toc_html` — pre-existing, leave as-is (dead param kept for signature stability).
+
+## Appendix A: Session 2 commit log (2026-04-23)
+
+Five commits added on top of `6f8869b` (session 1 close):
+
+```
+2494607  Add playback-speed cycle button to player
+06bfca9  Extend player i18n to quiz.html and course landing
+50f43c6  Add language=en support across the course-generation pipeline
+196eba9  Add localStorage resume ("이어 듣기") banner to player
+bfe1e6e  Add LICENSE, .env.example, player screenshots, and rotation follow-up
+```
+
+Per-commit shape:
+- `bfe1e6e` (7 files): LICENSE (MIT, Toby Lee 2026), `.env.example`, three Chrome-headless screenshots, README Demo embed, HANDOFF P1 marked done.
+- `196eba9` (1 file): `scripts/generate-player.py` +76 lines — resume banner HTML/CSS/JS, `location.pathname` storage key, 30d expiry, 3s timeupdate throttle, `loadedmetadata` seek.
+- `50f43c6` (13 files): 7 agents, CLAUDE.md, orchestrator SKILL.md, `build-bundle.sh`, `synthesize-tts.py`, `generate-player.py`, + en-UI screenshot. **Sole commit for language feature pipeline**.
+- `06bfca9` (4 files): `generate-player.py` QUIZ_TMPL + `build_index` i18n, `.gitignore` broadened to `course_prev*/`, en-course final landing + quiz screenshots.
+- `2494607` (3 files): `generate-player.py` speed button (34 lines), two speed-state screenshots.
+
+## Appendix B: English smoke-test artifact
+
+Topic: "Git rebase basics — interactive rebase, squash, fixup, and when to prefer rebase over merge"
+Audience: intermediate Git users. Duration: 10 min. Language: en. Tone: friendly.
+
+Generated (lives in gitignored `course/`):
+- 1 section, 2 classes (`01-rebase-foundations-and-interactive-cleanup`, `02-when-to-rebase-safety-and-rebase-vs-merge`)
+- 4 LOs covering Understand / Apply / Analyze / Evaluate
+- 12 Marp slides (6 per class), rendered HTML + PNG
+- 2 notes (620 + 712 English words)
+- 2 transcripts (770 + 841 words, 282 + 298 sec estimated)
+- 7-item section quiz (Bloom: Understand 2, Apply 1, Analyze 2, Evaluate 2)
+- 1 round of coherence revision (C2 note `[S1.C3]` phantom ref fixed via note-writer)
+- S1.C1 audio synthesized via OpenAI `gpt-4o-mini-tts` / nova; C2 audio skipped (TTS killed by user; cost ~6 min per class too slow)
+
+Artifacts preserved in `course_prev_ko_kotlin/` (previous Korean Kotlin course).
 
 ## 9. How to resume in a fresh session
 
