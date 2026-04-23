@@ -42,6 +42,14 @@ if command -v jq >/dev/null 2>&1; then
     log "BUILD_REFUSED: coherence.overall=$OVERALL"
     exit 11
   fi
+  # Sanity check: JSON verdict must match MD header (catches reviewer dual-write bug)
+  REPORT_MD="$WORKSPACE/99_coherence_report.md"
+  if [ -f "$REPORT_MD" ]; then
+    MD_VERDICT=$(grep -m1 '^## VERDICT:' "$REPORT_MD" | awk '{print $3}' | tr '[:upper:]' '[:lower:]' || echo "")
+    if [ -n "$MD_VERDICT" ] && [ "$MD_VERDICT" != "$OVERALL" ]; then
+      log "WARN: verdict mismatch — JSON=$OVERALL, MD=$MD_VERDICT (reviewer dual-write drift; build continues)"
+    fi
+  fi
 fi
 
 # ── Tool checks ────────────────────────────────────────────────────────
