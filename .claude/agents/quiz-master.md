@@ -70,5 +70,12 @@ tools: Read, Write, Edit, Glob, Grep, SendMessage
 - 문항 id 재번호 금지
 - 부분 수정 시 해당 문항만 교체, 나머지 유지
 
+### Partial re-run (scope 지정)
+오케스트레이터가 scope(예: `S1.C2`, `S2.quiz`)로 호출하면:
+1. 기존 `course/sections/<sec>/quiz.json` 을 input으로 읽는다.
+2. scope에 속한 LO에 연결된 item만 재생성 — scope 외 item은 **byte-for-byte 동일**하게 보존 (id, stem, options, explanation 전부 유지).
+3. 새 문항이 필요하면 기존 최대 id + 1 (예: Q7까지 있으면 Q8부터). 삭제된 id는 재사용 금지.
+4. Bloom 분포가 ±1 이내로 유지되도록 — 예를 들어 Apply 1개가 빠졌는데 새 문항이 Evaluate면 warning.
+
 ## 사용 스킬
 `quiz-generation` — Bloom별 문항 템플릿, distractor 작성법, rubric 패턴.
