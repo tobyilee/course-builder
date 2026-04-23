@@ -16,12 +16,32 @@ description: Orchestrate end-to-end online course generation from a topic. Invok
 if _workspace/ 미존재:
     → 초기 실행 (Phase 1부터 진행)
 elif _workspace/ 존재 AND 사용자가 topic 등 새 파라미터 제공:
-    → 새 실행 (기존 _workspace/ → _workspace_prev/로 이동 후 Phase 1)
-elif _workspace/ 존재 AND 사용자가 부분 수정 요청:
-    → 부분 재실행 (영향받는 에이전트만 재호출, Phase 건너뜀)
+    → full re-run (기존 _workspace/ → _workspace_prev/로 이동 후 Phase 1)
+elif _workspace/ 존재 AND 사용자가 scope 지정 부분 수정:
+    → partial re-run (scope에 속한 자산만 재생성, 나머지는 보존)
 else:
     → 사용자에게 의도 확인
 ```
+
+### 0-1a. Scope 문법 (partial re-run)
+부분 재실행은 **명시적 scope**를 받는다. 사용자가 "S1.C2만", "S2 section만 다시", "C3 tone만 formal로" 라고 하면 다음 토큰으로 환원:
+
+| Scope | 의미 | 영향 |
+|---|---|---|
+| `S<n>` | 섹션 전체 | 해당 섹션의 모든 class + section quiz |
+| `S<n>.C<m>` | 단일 class | 해당 class의 slide/note/transcript(+audio) |
+| `S<n>.C<m>.tone=X` | 속성 override | tone만 교체 후 3종 자산 재생성 |
+| `S<n>.quiz` | quiz만 | 섹션 quiz.json만 교체 |
+
+여러 scope은 공백·쉼표로 연결: `--scope "S1.C2,S2.C1"`.
+
+### 0-1b. Partial re-run 원칙
+1. **LO id 보존 절대원칙** — architect가 `_workspace_prev/` 또는 `_workspace/`의 기존 `01_architect_learning_objectives.json` 을 input으로 받아 LO id/text를 **reuse**. scope에 속한 섹션의 LO만 변경, 나머지는 byte-for-byte 동일.
+2. **자산 cache-hit** — scope 밖 class의 `course/sections/.../{slide.source.md, note.md, transcript.txt, audio/}` 는 그대로 유지. build-bundle.sh는 이미 `audio/full.mp3` 존재 시 TTS skip (`FORCE_TTS=1` 로만 override).
+3. **Quiz cross-ref 안정성** — quiz-master는 `course/sections/<sec>/quiz.json` 기존 파일을 input으로 받아 scope에 속한 class의 item만 교체. 나머지 item은 **id 보존**.
+4. **Coherence regression mode** — reviewer는 scope + 그 dependency(해당 섹션 quiz, cross-ref된 note 등)만 재검증. 모든 자산 재검사 금지.
+
+부분 재실행은 `_workspace/` 를 `_workspace_prev/` 로 이동하지 **않는다**. 원본을 in-place로 부분 업데이트.
 
 ### 0-2. 입력 파라미터 수집
 필수: `topic`. 누락 시 사용자에게 질문.
