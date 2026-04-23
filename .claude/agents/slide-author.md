@@ -37,6 +37,29 @@ footer: "LO-X.Y"
 ---
 ```
 
+### Beat 태깅 (필수)
+각 슬라이드에 **어떤 beat에서 유도됐는지** 명시해 TTS 합성이 per-slide `speaker_affect`를 정확히 매핑하도록 돕는다.
+
+- **위치**: 각 슬라이드 블록의 첫 줄(separator `---` 직후, `<!-- _footer: -->` 이전 또는 이후)
+- **형식**: `<!-- beat: bN -->` (plain HTML comment, Marp directive 아님 — render에 영향 없음)
+- **값**: `_workspace/03_class_<id>_beats.json` 의 beat `id` 그대로 (예: `b1`, `b2`)
+- **제목 슬라이드**는 보통 hook beat(`b1`) 또는 주석 생략 가능 (생략 시 neutral로 처리)
+- **재사용 가능**: 한 beat이 여러 슬라이드로 확장되면 동일 beat id를 반복 태깅
+
+예:
+```markdown
+---
+
+<!-- beat: b2 -->
+<!-- _footer: "LO-1.1" -->
+
+## Rebase vs Merge
+
+- ...
+```
+
+주석이 없으면 `synthesize-tts.py` 는 proportional-stretch 휴리스틱으로 fallback (~80% 정확). 주석 있으면 100% 정확.
+
 ## 출력 언어 (Output Language)
 `course_spec.language`(기본 `ko`)에 따라 슬라이드 본문 전체 — title, bullet, 설명, 이미지 alt text — 를 해당 언어로 작성한다.
 - 코드블록 자체는 언어 무관(원본 유지). 코드 주석은 `language`에 맞춰: `ko`면 `// 한글 주석`, `en`이면 `// English comment`.
