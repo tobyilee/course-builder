@@ -125,13 +125,15 @@ def main():
                 assets["transcript_ssml"] = f"{cls_rel}/transcript.ssml"
             # Audio
             audio_dir = cls_abs / "audio"
+            cls_audio_sec: float = 0.0
             if (audio_dir / "full.mp3").exists():
                 assets["audio_full"] = f"{cls_rel}/audio/full.mp3"
                 slide_mp3s = sorted(f"{cls_rel}/audio/{p.name}"
                                     for p in audio_dir.glob("slide_*.mp3"))
                 if slide_mp3s:
                     assets["audio_slides"] = slide_mp3s
-                total_audio += mp3_duration(audio_dir / "full.mp3")
+                cls_audio_sec = mp3_duration(audio_dir / "full.mp3")
+                total_audio += cls_audio_sec
             # Slide PNGs
             png_dir = cls_abs / "slides_png"
             if png_dir.exists():
@@ -144,14 +146,19 @@ def main():
             # Remove None entries
             assets = {k: v for k, v in assets.items() if v is not None}
 
-            classes_out.append({
+            class_entry = {
                 "id": cls["id"],
                 "slug": cls["slug"],
                 "title": cls["title"],
                 "lo_ids": cls.get("lo_ids", []),
                 "duration_min": cls.get("duration_min"),
                 "assets": assets,
-            })
+            }
+            # Per-class audio duration (drives script-writer's prior-run calibration).
+            # Only record when audio actually exists — absence means "not yet synthesized".
+            if cls_audio_sec > 0:
+                class_entry["actual_audio_duration_sec"] = round(cls_audio_sec, 1)
+            classes_out.append(class_entry)
 
         sec_entry = {
             "id": sid,

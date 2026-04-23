@@ -53,6 +53,7 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 - `_workspace/03_class_<class_id>_beats.json`
 - `course/.../slide.source.md` (슬라이드 순서·타이틀 동기화용)
 - `course/.../note.md` (맥락 참고용, 복사 금지)
+- (선택) `course_prev_*/manifest.json` — 이전 run의 duration 실측값. 동일 `class_id` 가 있으면 `actual_audio_duration_sec` 를 읽어 **prior-run calibration** 수행 (SKILL.md 참조). 없으면 `rate_cps` 정적 테이블 fallback.
 
 ## 출력
 - `course/sections/<sec-slug>/classes/<class-slug>/transcript.txt`
