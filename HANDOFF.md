@@ -1,9 +1,11 @@
 # Session Handoff — AI Course Builder
 
-**Last updated:** 2026-04-23 (sessions `1b0b191c`, `12150c38`)
+**Last updated:** 2026-04-23 (sessions `1b0b191c`, `12150c38`, `0e57f7c6`)
 **Author:** Claude Opus 4.7 (1M context) w/ toby
 
-> **2026-04-23 update (session `12150c38`):** P1 키 로테이션 + P2 localStorage resume + P3 레포 정비 + 언어 지원 (ko/en) 전체 + Player UI i18n + playback-speed button 전부 완료. 영어 Git-rebase 강의 end-to-end smoke test 통과. **Public repo 현재 HEAD: `2494607`** (5 commits ahead of session 1's last commit `6f8869b`).
+> **2026-04-23 update (session `0e57f7c6`):** P2 pipeline-precision items + (a big chunk of) P4 partial re-run all landed. Five atomic commits on top of `da5b9de` (on feature branch `session-3-pipeline-precision`): T1 coherence verdict sync · T2 slide `<!-- beat: bN -->` direct mapping · T3 per-class duration feedback loop · T4 char-proportional line-level transcript highlight · T6 partial re-run scope grammar + LO/quiz id preservation. **T5 (CI canary workflow) was built and then dropped by user decision — deferred to roadmap.** T5 draft preserved in reflog as commit `bba03db` (can be cherry-picked back when ready). **Local branch HEAD: `07b90ac`** — awaiting push (branch-based PR flow; `main` rewound to `origin/main`).
+>
+> **2026-04-23 earlier (session `12150c38`):** P1 키 로테이션 + P2 localStorage resume + P3 레포 정비 + 언어 지원 (ko/en) 전체 + Player UI i18n + playback-speed button 전부 완료. 영어 Git-rebase 강의 end-to-end smoke test 통과. **Public repo HEAD through that session: `2494607`.**
 
 Pick up from here in a fresh session. This file is the **single source of truth for in-flight context**. `README.md` describes what the project is; this file describes **what's left to do and why**.
 
@@ -126,22 +128,22 @@ These will be **automatically loaded** in future Claude sessions launched from t
 - [x] **localStorage resume** — DONE session 2 (commit `196eba9`). Per-class state (page pathname as key), 30d expiry, 3s throttle.
 - [x] **Multilingual** (ko/en) — DONE session 2 (commits `50f43c6`, `06bfca9`, `2494607`). Full pipeline: agents, TTS engine, player chrome, quiz.html, index.html landing. End-to-end smoke test passed on a Git-rebase 10min English course.
 - [x] **Playback-speed button** — DONE session 2 (commit `2494607`). Cycle button 0.75× → 2×, localStorage-persisted, preservesPitch.
-- [ ] **slide-author emits `beat_id` in Marp frontmatter** — current beat↔slide mapping uses a proportional stretch heuristic (~80% accurate). Direct `beat_id` would give 100% affect-injection accuracy. Touch: `.claude/agents/slide-author.md`, `.claude/skills/slide-authoring/SKILL.md`, `scripts/synthesize-tts.py:build_slide_to_affect`.
-- [ ] **Subtitle sync** — during audio playback, highlight the currently-spoken line in the transcript panel. Requires TTS synthesis to emit timing per chunk (e.g., use edge-tts `--write-subtitles` or OpenAI's timestamp extension). Touch: `scripts/synthesize-tts.py` to emit timing JSON, `scripts/generate-player.py` to bind to `audio.ontimeupdate`. **Deferred by user in session 2** (option A+B+C analyzed; cost vs accuracy trade-off favors "do later when Whisper align comes").
-- [ ] **Duration feedback loop** — `script-writer` agent reads previous run's `manifest.stats.actual_audio_duration_sec` vs `target_duration_min * 60` and auto-calibrates next run's script length. Touch: `.claude/agents/script-writer.md`, `.claude/skills/script-writing/SKILL.md`.
-- [ ] **🐛 Coherence-reviewer JSON emission bug** — agent file promises both `99_coherence_report.json` and `.md`, but in practice it only writes the MD. `build-bundle.sh` requires the JSON gate. Session 2 used a manually authored JSON as a workaround. Fix: update `.claude/agents/coherence-reviewer.md` (and possibly `coherence-review/SKILL.md`) to enforce dual output, OR change the build script to parse the MD `VERDICT:` line.
+- [x] **slide-author emits `beat_id` in Marp frontmatter** — DONE session 3 (commit `629a4f3`, T2). Per-slide `<!-- beat: bN -->` HTML comment; `synthesize-tts.py` parses via `_parse_beat_ids_from_slides` and falls back to proportional heuristic when absent. 100% affect-injection accuracy on new decks; existing decks unchanged.
+- [~] **Subtitle sync** — session 3 shipped char-proportional **line-level** MVP (commit `eccab20`, T4). `generate-player.py` embeds per-line `{start,end}` derived from slide MP3 duration split by character-weight; timeupdate listener toggles `.active` + scrollIntoView. Word-accurate timing via Whisper-align **still deferred** — SKILL.md reserves a `audio/slide_NN.timing.json` sidecar format for that future upgrade.
+- [x] **Duration feedback loop** — DONE session 3 (commit `c9831df`, T3). `synth-manifest.py` now records per-class `actual_audio_duration_sec`; `script-writer` reads previous run's `course_prev_*/manifest.json`; `script-writing/SKILL.md` has the calibration formula (clamped to `[0.7, 1.4]`).
+- [x] **🐛 Coherence-reviewer JSON emission** — DONE session 3 (commit `3087860`, T1). Root cause was actually **JSON↔MD verdict divergence** (JSON=pass, MD=REVISE left behind after revise loop), not missing JSON. Fix: reviewer agent + SKILL now require atomic dual-write and same-verdict emit; `build-bundle.sh` logs WARN on mismatch. Existing divergent `_workspace/99_coherence_report.md` left as-is on purpose (proves T1's WARN fires).
 
 ### Priority 3 (polish)
 
 - [x] **`.env.example`** — DONE session 2 (commit `bfe1e6e`).
 - [x] **LICENSE** — DONE session 2 (commit `bfe1e6e`).
 - [x] **Screenshot for README** — DONE session 2 (commit `bfe1e6e`). Dark-theme Chrome headless.
-- [ ] **CI recipe** — GitHub Action runs orchestrator on canary topic; fails if coherence doesn't pass. Useful for contributor PRs.
+- [ ] **CI recipe** — GitHub Action that runs the non-generative asset pipeline (marp + ffmpeg + coherence gate + manifest + player) against a pre-built canary fixture with `SKIP_TTS=1`. Does NOT need Anthropic API key — Claude agents are not invoked in CI. **Draft built in session 3 then deferred** (user chose to defer; `gh` OAuth token also lacked `workflow` scope to push). Draft preserved: reflog commit **`bba03db`** contains `.github/workflows/build-canary.yml` + `.github/fixtures/canary/` (108 KB source-only fixture) + `.gitignore` anchoring fix + README badge. Resurrect with `git cherry-pick bba03db` when ready; ensure `gh auth refresh -s workflow` first.
 
 ### Priority 4 (larger scope)
 
 - [ ] **Longer course scale test** — 60min, 4-5 sections. Surfaces unseen issues (section-level dependency graph, cross-section LO drift, larger Bloom spread).
-- [ ] **Partial re-run testing** — "Change S1.C2 tone to formal, leave rest" — exercise the stability of LO ids and cache-hit paths. Document the command flow.
+- [~] **Partial re-run testing** — session 3 shipped the **contract** (commit `07b90ac`, T6): scope grammar (`S1` / `S1.C2` / `S1.C2.tone=formal` / `S1.quiz`), LO id byte-preservation rule in `curriculum-architect`, quiz id preservation + Bloom ±1 rule in `quiz-master`, regression mode in `coherence-reviewer`, orchestrator dispatch in `course-builder/SKILL.md`. **Not yet end-to-end exercised** on a real course — first partial-run test will likely surface edge cases in the architect's "read prev LO registry" path. Attack with the existing Git-rebase fixture.
 - [ ] **Non-code domain** — try a marketing/leadership topic to verify the harness works without code-heavy content (tests whether slide-author still produces meaningful visuals without code blocks).
 
 ### Priority 5 (vision)
@@ -173,8 +175,35 @@ These will be **automatically loaded** in future Claude sessions launched from t
 - `scripts/synthesize-tts.py` line 153 `from openai import OpenAI` is lazy-imported; Pyright warns it can't resolve. Real import works; warning is noise.
 - `_workspace/99_coherence_report.md` isn't hand-tuned for readability; it's a machine-friendly dump. If you want a nicer report surface, that's a standalone polish.
 - `synth-manifest.py` writes `meta/audience.md` only if missing — never updates on re-run. If audience changes in spec, old meta/ lingers. Minor.
-- **Coherence JSON/MD mismatch**: reviewer emits only `.md`, build gate needs `.json`. See Priority 2 follow-up. Workaround: manually write JSON with `overall: "pass"` when issues are resolved.
+- **Coherence JSON/MD mismatch** — session 3 (T1) locked down the atomic dual-write + verdict-sync contract on the reviewer side and added a non-fatal WARN on the build gate. Existing divergent `_workspace/99_coherence_report.md` left as-is on purpose (proves T1's WARN fires). Next revise-loop run should overwrite both files with matching verdicts.
 - `generate-player.py:678` Pyright warning about unused `current_cls_slug` parameter in `make_toc_html` — pre-existing, leave as-is (dead param kept for signature stability).
+
+## Appendix A': Session 3 commit log (2026-04-23, session `0e57f7c6`)
+
+Five atomic commits on feature branch `session-3-pipeline-precision` (forked from `da5b9de`):
+
+```
+07b90ac  T6: Partial re-run mode — scope syntax + LO/quiz id preservation
+eccab20  T4: Char-proportional line-level transcript highlight in player
+c9831df  T3: Per-class actual_audio_duration_sec + prior-run calibration
+629a4f3  T2: Direct slide↔beat mapping via <!-- beat: bN --> Marp comment
+3087860  T1: Atomic dual-write + verdict sync for coherence reports
+```
+
+Per-commit shape:
+- `3087860` (3 files): reviewer agent + coherence-review SKILL enforce atomic JSON/MD emit; `build-bundle.sh` logs WARN on verdict mismatch. **Design reversal vs prior HANDOFF:** the documented "JSON not written" bug was actually a post-revise MD-overwrite miss — JSON was fine, MD was stale.
+- `629a4f3` (4 files): `synthesize-tts.py` gains `--slide-source` + `_parse_beat_ids_from_slides`; slide-author agent/skill prescribe `<!-- beat: bN -->`; build-bundle forwards the slide source. Backward compatible — existing decks use proportional fallback.
+- `c9831df` (3 files): `synth-manifest.py` writes per-class `actual_audio_duration_sec`; script-writer SKILL adds prior-run calibration with `[0.7, 1.4]` clamp.
+- `eccab20` (1 file): `generate-player.py` — `char_proportional_line_times()` helper, `transcriptTimes` parallel array, CSS `.active`, extended timeupdate listener with scrollIntoView.
+- `07b90ac` (4 files): course-builder SKILL scope grammar + invariants; curriculum-architect split re-run guidance; quiz-master partial-run preservation; coherence-reviewer regression mode.
+
+**T5 (CI canary) dropped mid-session.** Preserved in reflog as `bba03db`. Contents: `.github/workflows/build-canary.yml` + 108 KB `.github/fixtures/canary/` + `.gitignore` anchoring + README badge. See Priority 3 note for resurrection recipe.
+
+Staging note: two files (`build-bundle.sh`, `coherence-reviewer.md`) straddled T1/T2 and T1/T6 respectively, so `git add -p` with piped answers split hunks per commit. Staged diff verified before each commit.
+
+**Branch status:** `session-3-pipeline-precision` local-only (not yet pushed). `main` was rewound to `origin/main` after the branch was created. Push + PR is the next step.
+
+---
 
 ## Appendix A: Session 2 commit log (2026-04-23)
 
