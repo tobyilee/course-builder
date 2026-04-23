@@ -77,7 +77,9 @@ else:
 
 ## 리포트 포맷
 
-### `_workspace/99_coherence_report.json`
+**원칙: atomic dual-write.** JSON과 MD를 동일 라운드의 동일 verdict로 한 번에 기록. 중간 저장 후 한 쪽만 overwrite하면 machine gate(JSON)와 사람이 보는 리포트(MD)가 엇갈림 — 실제로 과거 run에서 JSON=pass / MD=REVISE 상태로 빌드가 "성공"한 사례 있음.
+
+### `_workspace/99_coherence_report.json` (machine contract)
 ```json
 {
   "overall": "revise" | "pass",
@@ -102,8 +104,28 @@ else:
 }
 ```
 
-### `_workspace/99_coherence_report.md`
-사람이 읽는 요약, top-5 이슈를 글로.
+### `_workspace/99_coherence_report.md` (human summary)
+사람이 읽는 요약, top-5 이슈를 글로. **필수 구조**:
+```markdown
+# Coherence Review — <scope>
+
+**Scope:** ...
+**Language spec:** ...
+**Reviewer run:** <date>
+
+## VERDICT: PASS   ← 또는 REVISE (반드시 두 번째 H2)
+```
+
+### Verdict 동기화 (필수)
+| JSON `overall` | MD `## VERDICT:` |
+|---|---|
+| `"pass"` | `PASS` |
+| `"revise"` | `REVISE` |
+
+쓰기 전 마지막 체크: `jq -r '.overall' report.json` 의 대문자 버전 == `grep -m1 '^## VERDICT:' report.md` 의 verdict 토큰.
+
+### Revise 루프 종료 처리
+최종 PASS가 확정되면 **JSON/MD 모두 overwrite**. 이전 라운드 MD가 "REVISE" 상태로 남아있으면 build는 pass하지만 사람이 읽는 리포트는 거짓을 말함. 이전 라운드를 보존하려면 `99_coherence_report.round_<N>.{json,md}` 로 분리해 저장.
 
 ## 수정 라우팅 (SendMessage)
 
@@ -138,5 +160,7 @@ REVISE <artifact_id> <issue_type> | detail: ... | fix_hint: ...
 - [ ] tone 일관성 (sampling 기반)
 - [ ] quiz 사실성 (slide/note와 대조)
 - [ ] speakability grep 규칙 통과
-- [ ] 리포트 json + md 동시 출력
+- [ ] 리포트 json + md **atomic dual-write** (동일 소스 데이터, 동일 verdict)
+- [ ] **Verdict sync 검증**: JSON `overall` ↔ MD `## VERDICT:` 일치
 - [ ] revise 시 수정 라우팅 메시지 발송
+- [ ] revise 루프 종료 시 두 파일 모두 최종 verdict로 overwrite (이전 REVISE 잔재 제거)

@@ -50,8 +50,25 @@ tools: Read, Write, Edit, Glob, Grep, Bash, SendMessage, TaskCreate
 - `_workspace/` 하위 모든 spec
 
 ## 출력
-- `_workspace/99_coherence_report.json`
-- `_workspace/99_coherence_report.md` (사람이 읽는 요약)
+
+**원칙: atomic dual-write.** 매 검사 라운드마다 JSON과 MD를 **동일 소스 데이터에서 한 번에 생성**한다. 중간 저장 후 한 쪽만 overwrite하지 말 것.
+
+- `_workspace/99_coherence_report.json` — machine contract (build gate가 이 파일 `.overall`만 읽음)
+- `_workspace/99_coherence_report.md` — 사람이 읽는 요약
+
+### Verdict 동기화 (필수)
+JSON `overall` 값과 MD `## VERDICT:` H2 헤더는 **항상 동일한 verdict를 표시**해야 한다:
+
+| JSON `overall` | MD 헤더 |
+|---|---|
+| `"pass"` | `## VERDICT: PASS` |
+| `"revise"` | `## VERDICT: REVISE` |
+
+### Revise 루프 종료 처리
+수정 라운드 완료 후 최종 verdict가 PASS로 바뀌면:
+1. **반드시** 두 파일 모두 최종 verdict로 overwrite. 이전 라운드의 REVISE MD가 남아있으면 gate는 pass하지만 사람이 읽는 리포트는 거짓을 말함.
+2. 이전 라운드를 보존하고 싶으면 `99_coherence_report.round_<N>.{json,md}` 로 분리해 저장.
+3. JSON 안 `prior_revisions[]` 에 해결된 이슈 기록 + MD 본문에도 동일 섹션 추가.
 
 ```json
 {
@@ -64,6 +81,20 @@ tools: Read, Write, Edit, Glob, Grep, Bash, SendMessage, TaskCreate
   ],
   "classes":[...]
 }
+```
+
+### MD 포맷 계약
+MD 파일은 다음 구조를 따른다 (machine parse는 안 하지만 사람이 믿을 수 있게):
+```markdown
+# Coherence Review — <scope>
+
+**Scope:** ...
+**Language spec:** ...
+**Reviewer run:** <date>
+
+## VERDICT: PASS   ← 또는 REVISE (반드시 두 번째 H2)
+
+<summary body>
 ```
 
 ## 팀 통신 프로토콜
