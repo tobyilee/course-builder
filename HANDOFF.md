@@ -143,7 +143,7 @@ These will be **automatically loaded** in future Claude sessions launched from t
 ### Priority 4 (larger scope)
 
 - [ ] **Longer course scale test** — 60min, 4-5 sections. Surfaces unseen issues (section-level dependency graph, cross-section LO drift, larger Bloom spread).
-- [~] **Partial re-run testing** — session 3 shipped the **contract** (commit `07b90ac`, T6): scope grammar (`S1` / `S1.C2` / `S1.C2.tone=formal` / `S1.quiz`), LO id byte-preservation rule in `curriculum-architect`, quiz id preservation + Bloom ±1 rule in `quiz-master`, regression mode in `coherence-reviewer`, orchestrator dispatch in `course-builder/SKILL.md`. **Not yet end-to-end exercised** on a real course — first partial-run test will likely surface edge cases in the architect's "read prev LO registry" path. Attack with the existing Git-rebase fixture.
+- [~] **Partial re-run testing** — session 3 shipped the **contract** (commit `07b90ac`, T6); session 4 **end-to-end exercised** it on the Git-rebase fixture (see Appendix A''). Two scopes ran green: `S1.quiz` (quiz-master polish pass, 7/7 item ids preserved, Bloom delta=0) and `S1` with LO addition (architect appended LO-1.5, lines 1-24 of LOs file **byte-identical** via Edit-not-Write). **3 real edge cases surfaced + 1 methodological win** — all landed as contract patches. Still untested: multi-section partial re-run, `S1.C2.tone=formal` (blocked by per-class-tone storage gap), revise-loop in regression mode.
 - [ ] **Non-code domain** — try a marketing/leadership topic to verify the harness works without code-heavy content (tests whether slide-author still produces meaningful visuals without code blocks).
 
 ### Priority 5 (vision)
@@ -312,6 +312,42 @@ TTS defaults: OpenAI gpt-4o-mini-tts / nova / speed 1.3 / pause scaled by speed 
 
 ### project_course_builder_harness.md
 Harness location, trigger rules, 9 agents + 10 skills, 3 scripts, Phase 7 candidate list. Points back to CLAUDE.md for authoritative trigger keywords.
+
+---
+
+## Appendix A'': Session 4 — T6 partial re-run exercised end-to-end (2026-04-23)
+
+Session `5359fb36`. User chose Option B ("exercise T6 partial re-run on the Git-rebase fixture to flush out architect 'read prev LO registry' edge cases"). No commits — the fixture is gitignored and was reverted to baseline after tests. Baseline snapshot kept at `/tmp/course-builder-t6-baseline-20260423-145807/` with a 17-file SHA256 manifest at `HASHES.txt`.
+
+### Tests run
+
+| # | Scope | Agents invoked | Verdict | Invariants held? |
+|---|---|---|---|---|
+| A | `S1.quiz` | quiz-master → coherence-reviewer (regression mode) | PASS | 11/11 byte-identical files; 7/7 quiz item ids preserved; Bloom delta=0; LO coverage 100%; JSON↔MD verdict parity OK; `scope: ["S1.quiz"]` + `mode: "regression"` emitted; C1/C2 marked `assumed_pass_out_of_scope` |
+| B | `S1` (add LO-1.5) | curriculum-architect | PASS | LOs file lines 1-24 **byte-identical** (Edit-based, not Write); LO-1.5 cleanly appended at `max+1`; course_spec.json untouched; 3/3 beats files untouched; 6/6 slide/note/transcript files untouched; revision log written with full provenance |
+
+After both tests the fixture was reverted to baseline; `shasum -c HASHES.txt` reported 17/17 OK. Evidence files `_workspace/01_architect_revision.md` and `_workspace/partial_rerun_notes.md` were left in place as a forensic trail (gitignored; no repo impact).
+
+### Edge cases surfaced
+
+**EC-1 (not a contract bug, my test-prompt error).** My initial Test B brief told the architect to "append LO-1.5 to Section S1's `lo_ids` list" — but no such field exists in the course-spec schema; the schema uses reverse-mapping (`LO.section_id`) only, which is clean and consistent. The architect correctly pushed back rather than inventing a field. **No contract change needed.** Lesson: T6-mode prompts must be grounded in the actual schema, not an assumed schema.
+
+**EC-2 (real). Partial re-run does not auto-adjust `duration_min`.** Adding LO-1.5 to S1 left `total_duration_min: 10` unchanged despite now having 5 LOs (was 4). Downstream propagation would overpack classes. **Fix landed:** curriculum-architect.md partial re-run section now requires the architect to explicitly flag LO-count-vs-duration pressure in the revision log and suggest a mechanical duration bump (or confirm the existing budget absorbs it).
+
+**EC-3 (real). MD verdict case-drift.** `coherence-reviewer.md` and `coherence-review/SKILL.md` prescribed uppercase `## VERDICT: PASS`/`REVISE`; the agent emitted lowercase `pass`. `build-bundle.sh` line 48 already normalizes to lowercase before comparing, so the WARN doesn't fire — but the docs and the impl disagreed. **Fix landed:** both contract files now declare the match as **case-insensitive** (uppercase preferred for readability) — docs and impl now agree.
+
+**EC-4 (real). Self-report inaccuracy in quiz-master.** Agent claimed "stems/choices/correct are unchanged on every item" when `Q5.stem`, `Q5.choices`, `Q6.choices` had actually been edited. The agent was asserting from memory, not from diffing its output. **Fix landed:** curriculum-architect.md and quiz-master.md partial re-run sections now require a **diff-before-claim** step — agents must list exactly which fields changed per item/LO, verified against the input file, before reporting.
+
+### What was NOT tested (deferred)
+
+- `S1.C2` pure class re-run (slide + note + transcript regen; cache-hit check for S1.C1). Invariants already demonstrated in Tests A+B, so added value is limited.
+- `S1.C2.tone=formal` — **blocked by a schema gap**: there is no per-class tone storage slot anywhere in `_workspace/` or beat files. Options: (a) add `tone_override` to class beats, (b) add `class_overrides: {cid: {tone}}` to course_spec.json, (c) treat scope as ephemeral (pass to authors directly, no persistence). Needs a design call before implementation.
+- Revise-loop in regression mode. All tests hit PASS first try. Worth seeding an intentional defect (e.g., delete a quiz item's `lo_ids` pointer) and observing the reviewer→author revise chain on a scoped run.
+- Multi-section partial re-run (out of reach on this 1-section fixture).
+
+### Methodological win (landed)
+
+The architect's choice to use **`Edit` (not `Write`)** for partial re-runs is the *only* mechanism that guarantees byte-level identity of untouched LO entries (avoids formatter drift in quote style, whitespace, Unicode form, key order). **Fix landed:** curriculum-architect.md and quiz-master.md partial re-run sections now explicitly prescribe `Edit` with a minimal `old_string` that excludes preserved entries — `Write` with re-serialized JSON is forbidden.
 
 ---
 
