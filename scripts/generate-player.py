@@ -55,6 +55,24 @@ _PLAYER_STRINGS = {
         "cta_section_quiz_short": "섹션 퀴즈",
         "cta_continue": "계속 학습",
         "toc_quiz_tpl": "섹션 퀴즈 ({n}문항)",
+        # quiz.html chrome
+        "quiz_title": "퀴즈",
+        "back_toc_short": "목차",
+        "items_unit": "문항",
+        "submit_grade": "제출하고 채점하기",
+        "score_correct": "맞혔습니다",
+        "short_answer_note_prefix": "(서술형 ",
+        "short_answer_note_mid": "문항은 rubric 자가채점",
+        "next_label": "다음",
+        "true_label": "참 (True)",
+        "false_label": "거짓 (False)",
+        "answer_placeholder": "답변을 입력하세요...",
+        "rubric_heading": "채점 기준",
+        "distractor_heading": "오답 해설",
+        "correct_label": "정답",
+        # index.html landing
+        "landing_stats_tpl": "총 {n_cls}개 class · {n_lo}개 학습 목표 · {mins:.1f}분",
+        "landing_class_stats_tpl": "{n_slides}장 · {dur:.1f}분 · LO {los}",
     },
     "en": {
         "menu_title": "Toggle TOC",
@@ -86,6 +104,24 @@ _PLAYER_STRINGS = {
         "cta_section_quiz_short": "Section quiz",
         "cta_continue": "Continue",
         "toc_quiz_tpl": "Section quiz ({n} items)",
+        # quiz.html chrome
+        "quiz_title": "Quiz",
+        "back_toc_short": "TOC",
+        "items_unit": "items",
+        "submit_grade": "Submit & grade",
+        "score_correct": "correct",
+        "short_answer_note_prefix": "(",
+        "short_answer_note_mid": " short-answer items rely on rubric self-grading",
+        "next_label": "Next",
+        "true_label": "True",
+        "false_label": "False",
+        "answer_placeholder": "Type your answer...",
+        "rubric_heading": "Rubric",
+        "distractor_heading": "Why the other choices are wrong",
+        "correct_label": "Correct answer",
+        # index.html landing
+        "landing_stats_tpl": "{n_cls} classes · {n_lo} LOs · {mins:.1f} min",
+        "landing_class_stats_tpl": "{n_slides} slides · {dur:.1f} min · LO {los}",
     },
 }
 
@@ -415,11 +451,11 @@ if (resumeState) {{
 
 
 QUIZ_TMPL = """<!DOCTYPE html>
-<html lang="ko">
+<html lang="{lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{section_title} · 퀴즈</title>
+<title>{section_title} · {tx_quiz_title}</title>
 <style>
   body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}}
   .wrap{{max-width:760px;margin:0 auto;padding:24px 20px 80px}}
@@ -446,13 +482,13 @@ QUIZ_TMPL = """<!DOCTYPE html>
 </head>
 <body>
 <div class="wrap">
-  <div class="nav"><a href="{back_href}">← 목차</a></div>
-  <h1>{section_title} · 퀴즈</h1>
-  <p class="meta">{n_items}문항 · Bloom: {bloom_summary}</p>
+  <div class="nav"><a href="{back_href}">← {tx_back_toc_short}</a></div>
+  <h1>{section_title} · {tx_quiz_title}</h1>
+  <p class="meta">{n_items} {tx_items_unit} · Bloom: {bloom_summary}</p>
   <div class="score" id="score" style="display:none"></div>
   <form id="quiz">
 {items_html}
-    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+    <button type="button" class="submit" id="submit-btn">{tx_submit_grade}</button>
   </form>
   <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
 </div>
@@ -483,15 +519,15 @@ document.getElementById('submit-btn').onclick = () => {{
   }});
   const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
   scoreEl.style.display = 'block';
-  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
-    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> {tx_score_correct}.' +
+    (gradable < ITEMS.length ? ' {tx_short_answer_note_prefix}' + (ITEMS.length - gradable) + '{tx_short_answer_note_mid})' : '');
 
   const nextStep = document.getElementById('next-step');
   let html = '';
   if (NEXT_HREF) {{
-    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ {tx_next_label}: ' + NEXT_TITLE + '</a>';
   }}
-  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">{tx_back_to_toc}</a>';
   nextStep.innerHTML = html;
   nextStep.style.display = 'block';
 
@@ -503,7 +539,8 @@ document.getElementById('submit-btn').onclick = () => {{
 """
 
 
-def render_quiz_item_html(item: dict, idx: int) -> str:
+def render_quiz_item_html(item: dict, idx: int, lang: str = "ko") -> str:
+    t = _tx(lang)
     stem = html.escape(item["stem"])
     bloom = html.escape(item.get("bloom", ""))
     itype = item["type"]
@@ -523,29 +560,29 @@ def render_quiz_item_html(item: dict, idx: int) -> str:
                 f'<span><strong>{letter}.</strong> {html.escape(str(choice))}</span></label>'
             )
     elif itype == "true_false":
-        for letter, text in [("T", "참 (True)"), ("F", "거짓 (False)")]:
+        for letter, text in [("T", t["true_label"]), ("F", t["false_label"])]:
             parts.append(
                 f'  <label class="choice"><input type="radio" name="q{idx}" value="{letter}">'
                 f'<span>{text}</span></label>'
             )
     elif itype == "short_answer":
-        parts.append('  <textarea placeholder="답변을 입력하세요..."></textarea>')
+        parts.append(f'  <textarea placeholder="{t["answer_placeholder"]}"></textarea>')
 
     exp = html.escape(item.get("explanation", ""))
     rubric = item.get("rubric", [])
     rubric_html = ""
     if rubric:
-        rubric_html = "<strong>채점 기준:</strong><ul>" + \
+        rubric_html = f"<strong>{t['rubric_heading']}:</strong><ul>" + \
             "".join(f"<li>{html.escape(r)}</li>" for r in rubric) + "</ul>"
     dr = item.get("distractor_rationales", {})
     dr_html = ""
     if dr:
-        dr_html = "<br><strong>오답 해설:</strong><ul>" + \
+        dr_html = f"<br><strong>{t['distractor_heading']}:</strong><ul>" + \
             "".join(f"<li><strong>{k}.</strong> {html.escape(v)}</li>" for k, v in dr.items()) + "</ul>"
     correct_txt = ", ".join(item.get("correct", []))
     parts.append(
         f'  <div class="explain">'
-        + (f"<strong>정답: {correct_txt}</strong><br>" if correct_txt else "")
+        + (f"<strong>{t['correct_label']}: {correct_txt}</strong><br>" if correct_txt else "")
         + f'{exp}{dr_html}{rubric_html}</div>'
     )
     parts.append('</div>')
@@ -701,23 +738,26 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
 
 def build_section_quiz(sec: dict, root: Path,
                        next_sec_first_class: dict | None = None,
-                       next_sec: dict | None = None) -> int:
+                       next_sec: dict | None = None,
+                       lang: str = "ko") -> int:
     quiz_path_rel = sec.get("quiz_path") or f"sections/{sec['slug']}/quiz.json"
     quiz_json_path = root / quiz_path_rel
     if not quiz_json_path.exists():
         return 0
     qdata = json.loads(quiz_json_path.read_text(encoding="utf-8"))
     items = qdata["items"]
-    items_html = "\n".join(render_quiz_item_html(it, i) for i, it in enumerate(items))
+    items_html = "\n".join(render_quiz_item_html(it, i, lang) for i, it in enumerate(items))
     bloom = qdata.get("bloom_distribution", {})
     bloom_summary = ", ".join(f"{k}:{v}" for k, v in bloom.items())
+    t = _tx(lang)
     # After-quiz navigation: to next section's first class player
     if next_sec and next_sec_first_class:
         next_href = f"../{next_sec['slug']}/classes/{next_sec_first_class['slug']}/player.html"
-        next_title = next_sec_first_class.get("title", "다음 수업")
+        next_title = next_sec_first_class.get("title", t["cta_next_class"])
     else:
         next_href = None
         next_title = None
+    tx_kwargs = {f"tx_{k}": v for k, v in t.items()}
     out = QUIZ_TMPL.format(
         section_title=html.escape(sec["title"]),
         n_items=len(items),
@@ -728,6 +768,8 @@ def build_section_quiz(sec: dict, root: Path,
         next_href_json=json.dumps(next_href),
         next_title_json=json.dumps(next_title, ensure_ascii=False),
         back_href_json=json.dumps("../../index.html"),
+        lang=lang,
+        **tx_kwargs,
     )
     (quiz_json_path.parent / "quiz.html").write_text(out, encoding="utf-8")
     return len(items)
@@ -758,34 +800,42 @@ def audience_to_str(aud) -> str:
     return str(aud)
 
 
-def build_index(manifest: dict, per_class_info: list, quiz_counts: dict, root: Path):
+def build_index(manifest: dict, per_class_info: list, quiz_counts: dict, root: Path,
+                lang: str = "ko"):
     topic = manifest["course"]["topic"]
     audience = audience_to_str(manifest["course"].get("audience", ""))
+    t = _tx(lang)
+    stats_txt = t["landing_stats_tpl"].format(
+        n_cls=manifest["stats"]["classes"],
+        n_lo=manifest["stats"]["lo_count"],
+        mins=manifest["stats"].get("actual_audio_duration_sec", 0) / 60.0,
+    )
     lines = [
-        '<!DOCTYPE html><html lang="ko"><head>',
+        f'<!DOCTYPE html><html lang="{lang}"><head>',
         '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
         f'<title>{html.escape(topic)}</title>',
         f'<style>{INDEX_STYLE}</style>',
         '</head><body>',
         f'<h1>{html.escape(topic)}</h1>',
         f'<p class="meta">{html.escape(audience)} · '
-        f'{manifest["course"]["language"]} · '
-        f'총 {manifest["stats"]["classes"]}개 class · '
-        f'{manifest["stats"]["lo_count"]}개 학습 목표 · '
-        f'{manifest["stats"].get("actual_audio_duration_sec", 0)/60:.1f}분</p>',
+        f'{manifest["course"]["language"]} · {html.escape(stats_txt)}</p>',
     ]
     for sec in manifest["sections"]:
         lines.append(f'<h2>{html.escape(sec["title"])}</h2><ul>')
         for cls in sec["classes"]:
             info = next(pc for pc in per_class_info if pc["rel"] == str(Path(cls["assets"]["slide_source"]).parent))
+            class_stats = t["landing_class_stats_tpl"].format(
+                n_slides=info["slides"], dur=info["duration_min"], los=info["lo_ids"],
+            )
             lines.append(
                 f'<li><a href="{info["rel"]}/player.html">🎬 {html.escape(cls["title"])}</a>'
-                f'<span class="los">{info["slides"]}장 · {info["duration_min"]}분 · LO {html.escape(info["lo_ids"])}</span></li>'
+                f'<span class="los">{html.escape(class_stats)}</span></li>'
             )
         if sec["id"] in quiz_counts:
+            quiz_label = t["toc_quiz_tpl"].format(n=quiz_counts[sec["id"]])
             lines.append(
                 f'<li><a href="sections/{sec["slug"]}/quiz.html" class="quiz-link">'
-                f'📝 섹션 퀴즈 ({quiz_counts[sec["id"]]}문항)</a></li>'
+                f'📝 {html.escape(quiz_label)}</a></li>'
             )
         lines.append('</ul>')
     lines.append('</body></html>')
@@ -873,9 +923,9 @@ def main():
     for i, sec in enumerate(sections):
         next_sec = sections[i + 1] if i + 1 < len(sections) else None
         next_first = next_sec["classes"][0] if (next_sec and next_sec.get("classes")) else None
-        build_section_quiz(sec, root, next_sec_first_class=next_first, next_sec=next_sec)
+        build_section_quiz(sec, root, next_sec_first_class=next_first, next_sec=next_sec, lang=lang)
 
-    build_index(manifest, per_class_info, quiz_counts, root)
+    build_index(manifest, per_class_info, quiz_counts, root, lang=lang)
     print(f"✓ Generated index.html + {len(per_class_info)} player.html + {len(quiz_counts)} quiz.html")
 
 

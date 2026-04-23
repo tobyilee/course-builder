@@ -1,9 +1,9 @@
 .env
 .env.local
 _workspace/
-_workspace_prev/
+_workspace_prev*/
 course/
-course_prev/
+course_prev*/
 .omc/
 scripts/__pycache__/
 *.pyc
