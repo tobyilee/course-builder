@@ -8,3 +8,4 @@ course_prev*/
 scripts/__pycache__/
 *.pyc
 .DS_Store
+.claude/reports/handoff/
