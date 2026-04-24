@@ -243,11 +243,11 @@ PLAYER_TMPL = """<!DOCTYPE html>
   .thumb.current{{border-color:#2d6cdf}}
   .thumb img{{width:100%;height:100%;object-fit:cover}}
   .thumb span{{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}}
-  #end-panel{{margin:24px auto;max-width:900px;padding:28px 24px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:14px;text-align:center;display:none}}
+  #end-panel{{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}}
   #end-panel.active{{display:block;animation:slideIn .4s ease-out}}
   @keyframes slideIn{{from{{opacity:0;transform:translateY(10px)}}to{{opacity:1;transform:translateY(0)}}}}
-  #end-panel h2{{margin:0 0 6px 0;font-size:22px;color:#fff}}
-  #end-panel .sub{{color:#8fb3e8;margin-bottom:20px;font-size:14px}}
+  #end-panel h2{{margin:0 0 4px 0;font-size:18px;color:#fff}}
+  #end-panel .sub{{color:#8fb3e8;margin-bottom:12px;font-size:13px}}
   .end-actions{{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}}
   .btn-cta{{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}}
   .btn-cta.primary{{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}}
@@ -295,6 +295,11 @@ PLAYER_TMPL = """<!DOCTYPE html>
       <span id="pos">1 / {slide_count}</span>
     </div>
     <audio id="audio" preload="auto"></audio>
+    <section id="end-panel">
+      <h2>🎉 {tx_end_title}</h2>
+      <p class="sub">{tx_end_sub}</p>
+      <div class="end-actions">{end_actions_html}</div>
+    </section>
   </div>
   <aside id="transcript">
     <h2>{tx_transcript_h2}</h2>
@@ -303,12 +308,6 @@ PLAYER_TMPL = """<!DOCTYPE html>
 </main>
 
 <section id="thumbs"></section>
-
-<section id="end-panel">
-  <h2>🎉 {tx_end_title}</h2>
-  <p class="sub">{tx_end_sub}</p>
-  <div class="end-actions">{end_actions_html}</div>
-</section>
 
 <div id="resume-banner" role="dialog" aria-live="polite">
   <span class="text">🎧 {tx_resume_prefix}: <strong id="resume-pos">—</strong></span>
