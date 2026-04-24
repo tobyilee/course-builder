@@ -81,7 +81,11 @@ flowchart LR
   - `![alt text w:600](url)` — alt + dimension (dimension 은 **항상 마지막**, space-separated)
   - **금지**: `![w:600 alt:"..."](url)` — `alt:` prefix 는 Marp가 인식 못해 통째로 plain text 로 렌더됨 (과거 실전 사고)
   - **금지**: `![width:600px ...](url)` — `width:` 가 아니라 `w:`, 단위는 생략
-- Data URL (`data:image/svg+xml;utf8,<svg>...</svg>`) 사용 시 SVG 내부에 **unescaped `)` 포함 금지** — Markdown 링크 파서가 URL 을 거기서 끊음. 필요하면 `%29` 로 encode 하거나 PNG 파일로 변환.
+- **`data:` URI 사용 금지** — Marp 는 보안 정책상 `data:image/...` URL 을 모든 형식(`utf8,`·`base64,`)에서 통째로 거부한다 (verified with marp-cli v4.3.1: `![x](data:image/svg+xml;base64,...)` → `<img>` 태그 생성 안 됨, 원본 markdown 이 `<p>` 로 래핑되어 슬라이드에 raw text 노출). 인라인 다이어그램이 필요하면 SVG/PNG 를 `slides_png/diag-NN.svg` 같은 **실제 파일로 저장**하고 상대경로로 참조할 것:
+  ```markdown
+  ![다이어그램 설명 w:720](slides_png/diag-01.svg)
+  ```
+  Marp 는 `--allow-local-files` 플래그(build-bundle.sh 에 이미 포함)로 로컬 파일 SVG 를 PNG 렌더 시 인라인화한다.
 
 ## LO footer 표시
 - 기본은 프론트매터 `footer`
