@@ -22,6 +22,31 @@ transcript는 **귀로 듣는 콘텐츠**다. note를 그대로 낭독하면 부
 ...
 ```
 
+### Line layout (subtitle-sync 필수)
+**한 슬라이드의 내레이션을 절대 한 줄에 몰아넣지 말 것.** `generate-player.py`의 `parse_transcript_by_slide`는 newline으로 분할해 각 줄을 자막 추적 단위로 사용하고, `char_proportional_line_times`가 각 줄의 글자 수 비율로 슬라이드 MP3 duration을 쪼개 `{start,end}`를 부여한다. 한 줄짜리 슬라이드는 자막 한 덩어리 + 하이라이트 불가.
+
+규칙:
+- **발화 단위 한 개 = 한 줄.** 문장 또는 `[pause:…]` 사이의 한 호흡 단위.
+- `[pause:NNN]` 마커는 **자기만의 줄**에 둔다 (인라인 금지). 플레이어가 pause 줄은 strip → 빈 줄로 필터링.
+- `[slide N]` 역시 자기만의 줄.
+- 빈 줄은 슬라이드 사이 구분용으로만 허용.
+
+❌ 금지 (한 줄에 몰아쓰기 — 추적 불가):
+```
+[slide 1]
+첫 문장. [pause:400] 두 번째 문장. [pause:600] 세 번째 문장.
+```
+
+✅ 올바름 (줄 단위 분할 — 추적 가능):
+```
+[slide 1]
+첫 문장.
+[pause:400]
+두 번째 문장.
+[pause:600]
+세 번째 문장.
+```
+
 ## 규칙
 
 ### 문장 길이
@@ -169,6 +194,8 @@ class-planner의 `speaker_affect` 필드를 문체·속도에 반영:
 - [ ] 모든 문장 ≤25 단어 (한국어 ≤20 어절)
 - [ ] raw code/긴 숫자/URL 없음
 - [ ] `[slide N]` cue 수 == slide.source.md 슬라이드 수
+- [ ] **각 슬라이드 내레이션이 여러 줄로 분할됨 (한 줄에 몰아쓰기 금지) — subtitle-sync 추적 가능성**
+- [ ] `[pause:NNN]` 마커는 각자 자기 줄에 단독 (인라인 금지)
 - [ ] 추정 duration이 beats 총합 ±10% 이내
 - [ ] tone 파라미터 일관 유지
 - [ ] SSML 생성 시 xsd 검증 통과

@@ -10,3 +10,5 @@
 
 **작업 디렉토리:** `course/` (산출물), `_workspace/` (중간 산출물, 재실행 시 `_workspace_prev/`로 이동).
 
+**transcript.txt 형식:** 슬라이드 내레이션을 **문장 단위로 한 줄씩** 분리해 쓰고, `[pause:NNN]`/`[slide N]` 마커는 **각자 단독 줄**에 둔다. 한 슬라이드 텍스트를 한 줄에 몰아쓰면 `generate-player.py`가 자막 추적을 못 해 한 덩어리로 렌더된다. 규칙은 `.claude/skills/script-writing/SKILL.md`의 "Line layout" 참조.
+

@@ -306,7 +306,7 @@ For each class, three artifacts are produced with tight coupling:
 
 - **`slide-author`** → `slide.source.md` (Marp Markdown, 4-7 slides, ≤80 words each)
 - **`note-writer`** → `note.md` (400-900 words, 5-part structure, cross-references to slides)
-- **`script-writer`** → `transcript.txt` (speakable, `[slide N]` cues, `[pause:ms]` markers, raw code literals forbidden — "const x = 1" becomes "상수 x에 1을 할당합니다")
+- **`script-writer`** → `transcript.txt` (speakable, `[slide N]` cues, `[pause:ms]` markers on their own lines, **one sentence per line** — required by the player's char-proportional subtitle-sync, since a whole-slide single-line transcript renders as one un-highlightable blob. Raw code literals forbidden — "const x = 1" becomes "상수 x에 1을 할당합니다")
 
 The script-writer depends on the slide-author's output (needs slide numbers for cues), so the two content-side writers run in parallel and the script writer follows.
 
