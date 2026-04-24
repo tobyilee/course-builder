@@ -75,7 +75,13 @@ flowchart LR
 ## Overflow 방지
 - 텍스트 총량 ≤80 단어/슬라이드 (ko 기준 160자)
 - 코드 ≤15줄, 초과 시 분할 + `(이어서)` 서브타이틀
-- 이미지 `alt` 필수, `width` 조절: `![width:600px alt-text](url)`
+- 이미지 문법 **정확히 준수**할 것 — Marp 는 alt + dimension 을 space-separated로만 인식한다:
+  - `![alt text](url)` — alt 만
+  - `![w:600](url)` — dimension 만 (w:NUMBER, h:NUMBER — px 단위 없이 숫자만)
+  - `![alt text w:600](url)` — alt + dimension (dimension 은 **항상 마지막**, space-separated)
+  - **금지**: `![w:600 alt:"..."](url)` — `alt:` prefix 는 Marp가 인식 못해 통째로 plain text 로 렌더됨 (과거 실전 사고)
+  - **금지**: `![width:600px ...](url)` — `width:` 가 아니라 `w:`, 단위는 생략
+- Data URL (`data:image/svg+xml;utf8,<svg>...</svg>`) 사용 시 SVG 내부에 **unescaped `)` 포함 금지** — Markdown 링크 파서가 URL 을 거기서 끊음. 필요하면 `%29` 로 encode 하거나 PNG 파일로 변환.
 
 ## LO footer 표시
 - 기본은 프론트매터 `footer`
