@@ -9,3 +9,5 @@ scripts/__pycache__/
 *.pyc
 .DS_Store
 .claude/reports/handoff/
+.wrangler/
+.deploy-stash-bundle.zip
