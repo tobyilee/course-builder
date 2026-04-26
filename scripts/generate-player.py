@@ -654,8 +654,14 @@ def render_quiz_item_html(item: dict, idx: int, lang: str = "ko") -> str:
     rubric = item.get("rubric", [])
     rubric_html = ""
     if rubric:
-        rubric_html = f"<strong>{t['rubric_heading']}:</strong><ul>" + \
-            "".join(f"<li>{html.escape(r)}</li>" for r in rubric) + "</ul>"
+        if isinstance(rubric, dict):
+            rubric_items = "".join(
+                f"<li><strong>{html.escape(str(k))}</strong>: {html.escape(str(v))}</li>"
+                for k, v in rubric.items()
+            )
+        else:
+            rubric_items = "".join(f"<li>{html.escape(str(r))}</li>" for r in rubric)
+        rubric_html = f"<strong>{t['rubric_heading']}:</strong><ul>" + rubric_items + "</ul>"
     dr = item.get("distractor_rationales", {})
     dr_html = ""
     if dr:
