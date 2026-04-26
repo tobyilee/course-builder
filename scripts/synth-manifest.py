@@ -53,6 +53,8 @@ def main():
 
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
     los = json.loads(los_path.read_text(encoding="utf-8"))
+    if isinstance(los, dict):
+        los = los.get("learning_objectives", los.get("los", []))
 
     # Write meta/
     meta_dir = root / "meta"
