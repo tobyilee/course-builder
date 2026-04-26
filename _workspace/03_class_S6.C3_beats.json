@@ -1,0 +1,101 @@
+{
+  "class_id": "S6.C3",
+  "title": "context를 쓸 때와 쓰지 말 때 — props·composition과 비교",
+  "lo_ids": ["LO-S6.4"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 60,
+      "key_points": [
+        "context를 한 번 배우면 모든 prop을 context로 옮기고 싶어진다",
+        "그 결과 — 어디서 값이 오는지 추적 불가능한 코드, 'Provider 지옥' Provider 10겹 중첩",
+        "context는 강력한 도구지만 첫 도구가 되어선 안 된다",
+        "오늘은 '꺼내기 전 검토할 두 대안'을 배운다"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "visual_hint": "Provider가 10겹 중첩된 코드 스크린샷 (안티패턴), 약간 과장된 빨간 경고 톤",
+      "speaker_affect": "호기심 유발, 약간의 경계 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "대안 1 — 명시적 props 전달: 데이터 흐름이 코드에 그대로 보여 리팩터링·디버깅에 유리",
+        "대안 2 — children/JSX composition: 중간 컴포넌트를 건너뛰어 prop이 흐를 거리 자체를 단축",
+        "composition 예시: <Layout posts={posts}/>를 <Layout><Posts posts={posts}/></Layout>로 바꾸면 Layout이 posts를 알 필요 없음",
+        "두 대안을 적용했는데도 여전히 멀다면 그때 context 후보",
+        "결정 트리거 — 'props로 흐를 거리를 짧게 만들었는데도 멀다' = context"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "visual_hint": "결정 트리 — 첫 분기 '1~2 레벨인가?' → props, '중간 컴포넌트 제거 가능?' → composition, '둘 다 안 되면' → context",
+      "speaker_affect": "차분하게, 단계마다 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 210,
+      "key_points": [
+        "BEFORE — Layout이 posts/user/theme을 받아서 Sidebar/Content/Header에 분배 (drilling)",
+        "AFTER composition — Layout이 children만 받고, App에서 직접 <Layout><Sidebar user={user}/><Content posts={posts}/></Layout>",
+        "Layout은 이제 posts/user/theme를 모름 — 진짜 레이아웃에만 집중",
+        "context 없이도 drilling 해소 — 중간 컴포넌트가 사라진 게 아니라 '데이터를 모르는 상태'가 됨",
+        "이 예제는 Layout 같은 'shell' 컴포넌트에 특히 잘 맞음"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "examples": [
+        {
+          "lang": "js",
+          "snippet": "// BEFORE — drilling\nfunction Layout({ posts, user, theme }) {\n  return (\n    <div className={theme}>\n      <Header user={user} />\n      <Sidebar user={user} />\n      <Content posts={posts} />\n    </div>\n  );\n}\n\n// AFTER — composition\nfunction Layout({ children, theme }) {\n  return <div className={theme}>{children}</div>;\n}\n\n// App.js\n<Layout theme={theme}>\n  <Header user={user} />\n  <Sidebar user={user} />\n  <Content posts={posts} />\n</Layout>",
+          "why": "context로 가기 전에 composition으로 drilling을 해소할 수 있는 가장 흔한 패턴. Layout이 자기와 무관한 데이터를 더 이상 안다닐 수 있음을 직관적으로 보여줌."
+        }
+      ],
+      "visual_hint": "BEFORE/AFTER 코드 좌우 비교, Layout의 props 변화(3개→1개)에 빨간 X / 초록 O 강조",
+      "speaker_affect": "흥분 섞인 설명, AFTER에서 만족스러운 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "context 정당한 사례 — Theming(다크모드/색상 스킴): 앱 전반 분산 컴포넌트가 동일 값을 읽음",
+        "Authentication — 현재 로그인 사용자: Header/Sidebar/Page/Modal 어디서든 접근",
+        "Routing — 현재 경로/파라미터: 라우터 라이브러리가 내부적으로 context 사용",
+        "글로벌 설정/feature flag — 앱 전반 옵션",
+        "공통 특성 — '많은 분산 컴포넌트' + '깊이 무관' + '값이 자주 바뀌지 않음'"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "visual_hint": "정당한 사례 4개를 아이콘 카드로 (theme 팔레트, auth 자물쇠, routing 화살표, settings 톱니)",
+      "speaker_affect": "명료하게, 사례마다 명확히 구분"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "케이스 A — Form이 자식 Input에 disabled를 1단계만 내려보냄. context? props?",
+        "케이스 B — 다크모드 토글이 Header/Sidebar/Card/Footer 색을 바꿈. context? props?",
+        "케이스 C — Page가 PostList에 posts를 내려보내는데 PostList는 Layout으로만 감싸여 있다. context? composition? props?",
+        "각 케이스에 결정 트리거('drilling 거리를 단축할 수 있는가')를 적용해 보기"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "visual_hint": "3개 케이스 카드, 각 카드 아래 'props / composition / context' 라디오 박스",
+      "speaker_affect": "질문하는 톤, 침묵 허용"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "검토 순서 — 먼저 props, 다음 composition, 그래도 멀면 context",
+        "정당한 사례 — theming/auth/routing/글로벌 설정처럼 분산된 다수 컴포넌트가 공유하는 값",
+        "다음 section 예고 — context와 reducer를 결합해 dispatch까지 트리에 꽂는 패턴"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "visual_hint": "3단계 결정 사다리 (props → composition → context) 한 장 요약",
+      "speaker_affect": "힘 실린 확신"
+    }
+  ]
+}

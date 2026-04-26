@@ -1,0 +1,192 @@
+{
+  "section_id": "S1",
+  "items": [
+    {
+      "id": "Q-S1-1",
+      "type": "mcq_single",
+      "stem": "선언형 UI 사고법에서 '코드를 한 줄도 짜기 전에' 가장 먼저 해야 하는 작업은 무엇인가?",
+      "choices": [
+        "useState로 필요한 변수들을 모두 선언한다",
+        "컴포넌트가 보여줄 수 있는 모든 visual state를 펼쳐 그린다",
+        "handleSubmit 같은 이벤트 핸들러의 시그니처를 결정한다",
+        "JSX 마크업의 최상위 구조부터 작성한다"
+      ],
+      "correct": ["B"],
+      "explanation": "선언형 5단계의 ①단계는 '상태 열거' — 디자이너 모드로 모든 visual state(empty/typing/submitting/success/error 등)를 먼저 펼쳐 그리는 것이다. 이 산출물이 이후의 트리거 식별, useState 모델링, 핸들러 연결 모두의 재료가 된다.",
+      "distractor_rationales": {
+        "A": "흔한 오해 — useState는 ③단계이며, 그 전에 어떤 상태가 존재하는지부터 그려야 한다.",
+        "C": "핸들러 연결은 마지막 ⑤단계이며, 트리거 표가 먼저 있어야 의미가 있다.",
+        "D": "JSX 구조는 visual state가 정해진 뒤에 따라온다."
+      },
+      "lo_ids": ["LO-S1.1"],
+      "bloom": "Remember",
+      "difficulty": 2
+    },
+    {
+      "id": "Q-S1-2",
+      "type": "mcq_single",
+      "stem": "도시 퀴즈 폼의 'submitting → success' 전이를 일으키는 트리거의 종류와 핸들러 위치로 가장 적절한 것은?",
+      "choices": [
+        "human 트리거 — Submit 버튼의 onClick 안에서 setStatus('success')",
+        "human 트리거 — textarea의 onChange 안에서 setStatus('success')",
+        "computer 트리거 — submitForm await 성공 후 then 분기에서 setStatus('success')",
+        "computer 트리거 — useEffect cleanup 함수 안에서 setStatus('success')"
+      ],
+      "correct": ["C"],
+      "explanation": "네트워크 응답은 시스템이 일으키는 computer 트리거이고, 비동기 작업의 결과는 await 성공(또는 .then) 분기에서 setState로 반영한다. handleSubmit 안의 try 블록에서 setStatus('success')를 호출하는 것이 표준 패턴이다.",
+      "distractor_rationales": {
+        "A": "Submit 클릭은 typing→submitting 전이를 일으키는 human 트리거다. 성공 여부는 클릭 시점에는 알 수 없다.",
+        "B": "onChange는 empty↔typing 전이용 human 트리거다.",
+        "D": "useEffect cleanup은 언마운트/의존성 변경 시 실행되는 정리 코드 — 비동기 성공 처리와 무관하다."
+      },
+      "lo_ids": ["LO-S1.1", "LO-S1.3"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "Q-S1-3",
+      "type": "mcq_single",
+      "stem": "도시 퀴즈 폼을 다음과 같이 7개 boolean으로 모델링했다. 비핵심 state 제거 3대 질문 중 isTyping/isSubmitting/isSuccess 세 변수를 status enum으로 합치는 근거가 되는 질문은?\n\nconst [isEmpty, ...] = useState(true);\nconst [isTyping, ...] = useState(false);\nconst [isSubmitting, ...] = useState(false);\nconst [isSuccess, ...] = useState(false);\nconst [isError, ...] = useState(false);",
+      "choices": [
+        "① 모순(paradox)을 만드는가? — 항상 정확히 하나만 true여야 하는 상호배타 관계다",
+        "② 다른 변수에서 같은 정보를 얻을 수 있는가? — 중복 정보다",
+        "③ 다른 변수의 역(逆)인가? — 역수 관계다",
+        "④ 사용자가 직접 바꾸는 입력값인가? — human 트리거 변수다"
+      ],
+      "correct": ["A"],
+      "explanation": "isTyping=true이면서 isSuccess=true가 동시에 가능한 모델은 UI상 존재할 수 없는 paradox 상태를 만든다. 상호배타 boolean들은 status enum으로 합쳐 '존재 불가능한 상태'를 타입 차원에서 차단한다.",
+      "distractor_rationales": {
+        "B": "질문 ②는 isEmpty(=answer.length===0)처럼 다른 state에서 매 렌더 계산되는 중복값을 제거하는 근거다.",
+        "C": "질문 ③은 isError(=error!==null)처럼 다른 변수의 역수로 표현되는 변수를 제거하는 근거다.",
+        "D": "이런 질문은 3대 질문에 존재하지 않는다 — 입력값 여부는 state/파생값 분류 기준이지 enum 합치기 근거가 아니다."
+      },
+      "lo_ids": ["LO-S1.2"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "Q-S1-4",
+      "type": "mcq_multi",
+      "stem": "도시 퀴즈 폼의 7개 boolean을 status enum 기반 3개 변수(answer, error, status)로 리팩터링했다. 다음 중 '진짜 state로 남겨야 하는 변수'를 모두 고르시오. (정답 3개)",
+      "choices": [
+        "answer — 사용자가 textarea에 입력하는 문자열",
+        "error — submitForm이 throw한 에러 객체(또는 null)",
+        "status — 'typing'|'submitting'|'success' 중 현재 상태",
+        "isEmpty — 입력이 비어있는지 여부",
+        "isError — 에러 표시 여부"
+      ],
+      "correct": ["A", "B", "C"],
+      "explanation": "answer/error/status는 사용자나 시간이 바꾸는 진짜 입력값이다. 반면 isEmpty는 answer.length===0으로, isError는 error!==null로 매 렌더 계산할 수 있는 파생값이므로 useState에 두면 동기화 책임만 늘어난다.",
+      "distractor_rationales": {
+        "D": "isEmpty는 answer로부터 매 렌더 계산되는 파생값 — state로 두면 setAnswer와 setIsEmpty를 매번 같이 호출해야 하고 한 번이라도 빠지면 어긋난다.",
+        "E": "isError는 error의 역수 관계 — error!==null로 식 한 줄로 끝나므로 별도 state가 불필요하다."
+      },
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "Q-S1-5",
+      "type": "true_false",
+      "stem": "다음 코드는 '파생값(computed at render)' 규칙을 올바르게 따른 예다.\n\n<button disabled={answer.length === 0 || status === 'submitting'}>Submit</button>",
+      "choices": ["참(True)", "거짓(False)"],
+      "correct": ["A"],
+      "explanation": "버튼의 disabled 여부는 answer와 status로부터 매 렌더 계산되는 파생값이다. 별도 isDisabled state를 두지 않고 식으로 직접 계산한 것은 비핵심 state 제거 규칙(질문 ②: 다른 변수에서 얻을 수 있나?)을 정확히 따른 모범 사례다.",
+      "distractor_rationales": {
+        "B": "거짓이 아니다 — 별도 isButtonDisabled를 useState로 두면 answer/status가 바뀔 때마다 손으로 동기화해야 하므로 오히려 안티패턴이다."
+      },
+      "lo_ids": ["LO-S1.4"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "Q-S1-6",
+      "type": "mcq_single",
+      "stem": "도시 퀴즈 폼의 handleSubmit에서 submitForm 호출이 실패한 경우의 catch 분기 코드로 가장 올바른 것은? (status enum: 'typing'|'submitting'|'success', error: Error|null)",
+      "choices": [
+        "catch (err) { setStatus('error'); setError(err); }",
+        "catch (err) { setStatus('typing'); setError(err); }",
+        "catch (err) { setIsError(true); setIsSubmitting(false); }",
+        "catch (err) { setStatus('typing'); setError(err); setIsError(true); }"
+      ],
+      "correct": ["B"],
+      "explanation": "리팩터링된 모델에서 status는 'typing'|'submitting'|'success' 셋뿐이다. 에러 분기는 별도 'error' status가 아니라 'status==typing + error!==null' 조합으로 표현한다 — 이것이 비핵심 state 제거의 결과다.",
+      "distractor_rationales": {
+        "A": "흔한 오해 — status enum에 'error'를 추가하면 error 변수와 정보가 중복되어 다시 paradox가 생긴다(status='error'인데 error===null인 경우 등).",
+        "C": "isError, isSubmitting은 리팩터링으로 이미 제거된 변수다 — 옛 모델로 회귀한 코드.",
+        "D": "setIsError까지 호출하는 순간 파생값을 state로 다시 들이는 안티패턴이 부활한다."
+      },
+      "lo_ids": ["LO-S1.3", "LO-S1.2"],
+      "bloom": "Apply",
+      "difficulty": 4
+    },
+    {
+      "id": "Q-S1-7",
+      "type": "mcq_multi",
+      "stem": "다음 6개 boolean state를 status enum + 보조 변수로 줄이려 한다. 어느 변수를 '제거 가능한 파생값/역수'로 분류해야 하는가? (정답 2개)\n\nisLoggedIn, isLoading, isLoadingProfile, hasProfileError, profileLoaded, isLoggedOut",
+      "choices": [
+        "isLoggedOut — isLoggedIn의 정확한 역(逆)이다",
+        "profileLoaded — status==='ready'와 같은 정보(또는 profile!==null)로 얻을 수 있다",
+        "isLoading — status='loading'을 나타내는 핵심 상태 표지다",
+        "hasProfileError — 다른 변수로부터 항상 도출 가능한 정보다",
+        "isLoggedIn — 사용자의 본질 입력값이므로 보존해야 한다"
+      ],
+      "correct": ["A", "B"],
+      "explanation": "isLoggedOut은 isLoggedIn의 역수이므로 질문 ③에 해당해 제거된다. profileLoaded는 status나 profile 변수로부터 매 렌더 계산되는 중복 정보(질문 ②)다. 정답 모델 예시: status: 'logged-out'|'loading'|'ready'|'error', profile: User|null.",
+      "distractor_rationales": {
+        "C": "isLoading은 상호배타 status들 중 하나로 status enum에 흡수되어야 하는 핵심 표지 — 단순 '제거 가능한 파생값'은 아니다.",
+        "D": "hasProfileError는 status='error'로 흡수되거나 별도 error 변수로 보존되는 정보 — 이 보기처럼 단순히 'derived'라고만 분류하긴 모호하다.",
+        "E": "isLoggedIn 자체는 status로 흡수되거나 보존되는 핵심 정보이지 '제거 가능한 파생값'이 아니다."
+      },
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "bloom": "Analyze",
+      "difficulty": 4
+    },
+    {
+      "id": "Q-S1-8",
+      "type": "short_answer",
+      "stem": "파일 업로드 버튼을 선언형 5단계 프로세스로 처음부터 설계하시오. 다음을 모두 포함할 것:\n(1) visual state 4개 이상 열거\n(2) 각 전이의 트리거(human/computer) 표\n(3) 최종 useState 변수 (3대 질문 적용 후)\n(4) 핸들러 1개의 의사코드 (setState 호출 위치 포함)",
+      "choices": [],
+      "correct": ["see_rubric"],
+      "explanation": "5단계 사고법(상태 열거 → 트리거 식별 → useState 모델링 → 비핵심 제거 → 핸들러 연결)을 처음부터 끝까지 적용해 새 컴포넌트를 설계할 수 있는지 평가한다.",
+      "distractor_rationales": {},
+      "rubric": {
+        "visual_states_4plus": "idle/selecting/uploading/success/error 등 4개 이상이며, 'empty/disabled' 같은 평범한 상태를 빠뜨리지 않았는가? (2점)",
+        "trigger_table": "각 전이 옆에 human(파일 선택, 버튼 클릭)/computer(업로드 진행, 응답) 라벨이 정확한가? (2점)",
+        "minimal_state": "boolean 나열이 아니라 status enum + 본질 입력값(file, error 등) 형태로 압축되었는가? 3대 질문(모순/중복/역수) 적용 흔적이 보이는가? (3점)",
+        "handler_mapping": "handleUpload 같은 핸들러에서 setStatus('uploading') → await → setStatus('success'|'idle' + setError) 흐름이 트리거 표와 1:1 대응하는가? (3점)"
+      },
+      "lo_ids": ["LO-S1.3", "LO-S1.1", "LO-S1.2"],
+      "bloom": "Create",
+      "difficulty": 5
+    },
+    {
+      "id": "Q-S1-9",
+      "type": "mcq_single",
+      "stem": "동료가 작성한 다음 코드 리뷰를 맡았다. 선언형 사고법 관점에서 가장 큰 결함은?\n\nconst [text, setText] = useState('');\nconst [isEmpty, setIsEmpty] = useState(true);\nconst [isSubmitting, setIsSubmitting] = useState(false);\nconst [isError, setIsError] = useState(false);\nconst [error, setError] = useState(null);\n\nfunction handleChange(e) {\n  setText(e.target.value);\n  setIsEmpty(e.target.value.length === 0);\n}",
+      "choices": [
+        "handleChange가 너무 짧아 입력 검증 로직이 누락되었다",
+        "isEmpty와 isError가 각각 text와 error의 파생값인데 useState로 저장되어 동기화 버그가 발생할 수 있다",
+        "useState 호출 순서가 알파벳 순이 아니어서 가독성이 떨어진다",
+        "setText 대신 setState 객체 형태로 한 번에 갱신해야 한다"
+      ],
+      "correct": ["B"],
+      "explanation": "isEmpty는 text.length===0의 파생값(질문 ②), isError는 error!==null의 역수(질문 ③)다. 둘 다 useState로 두면 setText와 setIsEmpty를 매번 같이 호출해야 하고 한 번이라도 누락되면 두 값이 어긋난다. 핵심 진단은 '파생값을 state로 저장하지 마라'.",
+      "distractor_rationales": {
+        "A": "검증 로직 부재는 부차적 문제다 — 구조적 결함이 아니다.",
+        "C": "useState 선언 순서는 가독성 취향일 뿐 선언형 사고법의 결함이 아니다.",
+        "D": "React의 useState는 의도적으로 변수별로 분리하는 것이 권장 패턴 — 한 번에 갱신해야 한다는 규칙은 없다."
+      },
+      "lo_ids": ["LO-S1.4", "LO-S1.2"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    }
+  ],
+  "bloom_distribution": {
+    "Remember": 1,
+    "Understand": 1,
+    "Apply": 3,
+    "Analyze": 3,
+    "Create": 1
+  }
+}

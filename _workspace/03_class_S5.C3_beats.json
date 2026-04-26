@@ -1,0 +1,119 @@
+{
+  "class_id": "S5.C3",
+  "title": "Action 컨벤션과 Reducer 순수성 — 결함 진단",
+  "lo_ids": ["LO-S5.3"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "마이그레이션은 끝났는데 한 달 뒤 팀원이 reducer를 보고 'action.type이 왜 이래' 한다",
+        "프라하 Tasks 앱에 동료가 'taskAdd' / 'UPDATE_TASK' / 'remove' 식 제각각 어휘를 추가",
+        "reducer 안에서 fetch를 호출하고 tasks.push(...)로 mutate한 코드도 발견",
+        "오늘은 '좋은 reducer'를 가르는 두 축 — action 컨벤션과 순수성 — 으로 결함을 진단한다"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "visual_hint": "엉망인 reducer 코드 스크린샷 + 빨간 진단 표시 4개. '진단 모드' 배지",
+      "speaker_affect": "약간 긴장감, 호기심 유발"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "축 1 — action.type은 '발생한 사건'을 묘사하는 동사 과거형: 'added', 'changed', 'deleted'",
+        "'set_tasks', 'update_state' 같은 명령형/구현 누설 이름은 피한다 — reducer가 뭘 하는지가 아니라 사용자가 뭘 했는가",
+        "팀 내 일관성: snake_case 또는 camelCase 한 가지 — 섞지 않는다",
+        "type 외 추가 데이터는 평탄하게 (id, text, task) — payload 래퍼는 선호도 차이",
+        "이 어휘가 곧 '앱의 인터랙션 사전'이 된다 — reducer만 봐도 사용자가 뭘 할 수 있는지 보임"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "examples": [
+        "// 좋음\ndispatch({ type: 'added', id: 3, text: 'Visit Charles Bridge' });\n// 나쁨\ndispatch({ type: 'SET_TASKS', payload: newTasks });"
+      ],
+      "visual_hint": "좋은 어휘 vs 나쁜 어휘 2열 표 — added/changed/deleted vs SET_TASKS/UPDATE/handle_x",
+      "speaker_affect": "또박또박 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "축 2 — '한 사용자 상호작용 = 한 action' 원칙",
+        "안티패턴: 폼 리셋을 필드별 dispatch로 흩뿌리기 — set_field × 5번",
+        "더 나은 형태: 단일 'reset_form' action 하나",
+        "이유 1: 디버그 로그가 의미 단위로 보임 ('reset_form' 한 줄 vs set_field 5줄)",
+        "이유 2: reducer가 한 번만 돌아 중간 상태가 React에 노출되지 않음 (배치 효과)"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "examples": [
+        "// 안티패턴\ndispatch({ type: 'set_field', field: 'name', value: '' });\ndispatch({ type: 'set_field', field: 'email', value: '' });\n// 권장\ndispatch({ type: 'reset_form' });"
+      ],
+      "visual_hint": "타임라인 비교 — 5개 dispatch가 일렬로 vs 1개 dispatch. 디버그 로그 출력 미리보기",
+      "speaker_affect": "강조, 안티패턴은 살짝 단호하게"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "Reducer 순수성 3대 규칙",
+        "(1) 같은 입력 → 같은 출력: Math.random(), Date.now() 같은 비결정 호출 금지",
+        "(2) 부수효과 금지: fetch, setTimeout, console에 외부 시스템 영향 호출 금지 — 핸들러나 useEffect로",
+        "(3) Mutation 금지: state.push, state.x = ... 절대 금지, 항상 새 배열/객체 반환",
+        "이유: React가 같은 state로 reducer를 두 번 호출해도 결과가 같아야 동시성·StrictMode가 안전"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "visual_hint": "3개 규칙 아이콘 카드 — 결정성 / 무부수효과 / 불변. 각 카드 아래 금지 예시 한 줄",
+      "speaker_affect": "또박또박 강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "결함이 박힌 reducer 진단 실습 — Tasks 앱 변형 코드",
+        "결함 1: case 'added'에서 tasks.push(newTask); return tasks; — mutation",
+        "결함 2: case 'fetched'에서 fetch('/api/tasks').then(...) 호출 — 부수효과",
+        "결함 3: case 'added'에서 id: Date.now() — 비결정",
+        "결함 4: type이 'addTask'(camelCase) — 컨벤션 불일치, 다른 case들은 'added'",
+        "각 결함을 어느 규칙 위반인지 라벨링하고 수정안 제시"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "examples": [
+        "// 결함 코드\ncase 'addTask':\n  tasks.push({ id: Date.now(), text: action.text });\n  fetch('/api/log', { method: 'POST' });\n  return tasks;\n// 수정안\ncase 'added':\n  return [...tasks, { id: action.id, text: action.text, done: false }];\n// id는 핸들러에서 nextId++로 만들어 dispatch에 전달, 로그는 useEffect로"
+      ],
+      "visual_hint": "결함 코드 + 4개 빨간 마커. 우측에 '어느 규칙 위반인가' 매칭 카드. 아래 수정안 코드",
+      "speaker_affect": "진단하듯 차분하게, 수정안은 확신 있게"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "잠시 멈추고 자문: 내 reducer는 어느 한 줄이라도 외부 변수를 읽는가?",
+        "현재 시각, 랜덤 ID, localStorage — 이 셋이 reducer 안에 있다면 옮겨야 한다",
+        "옮길 곳: 핸들러 (dispatch 직전에 계산해 action에 실어 보낸다)",
+        "action.type 목록을 늘어놓고 동사 과거형 일관성 점검 — 하나라도 명사형이면 후보 교체"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "visual_hint": "셀프 체크리스트 4문항. '예/아니오' 토글",
+      "speaker_affect": "친근하게 권유"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "Action: 동사 과거형, 한 상호작용 = 한 action, 일관된 케이싱",
+        "Reducer 순수성: 결정적 / 무부수효과 / 불변 — 셋 다 지켜야 진짜 reducer",
+        "다음 시간엔 useState와 useReducer 트레이드오프 + Immer 단축 표기를 본다"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "visual_hint": "2축 요약 카드 + 다음 예고",
+      "speaker_affect": "정리, 차분하게"
+    }
+  ]
+}

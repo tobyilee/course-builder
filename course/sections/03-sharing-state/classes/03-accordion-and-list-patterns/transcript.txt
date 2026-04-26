@@ -1,0 +1,163 @@
+[slide 1]
+안녕하세요. 섹션 3의 마지막 클래스, 케이스 스터디 3종을 시작합니다.
+[pause:500]
+오늘 다룰 패턴은 Almaty Accordion, Synced Inputs, Filterable List 이렇게 세 가지예요.
+[pause:400]
+11분 동안 지금까지 배운 절차와 원칙이 실제 코드에서 어떻게 모양 잡히는지 손에 익혀봅시다.
+
+[slide 2]
+오늘 적용할 표준 패턴 3개부터 살펴볼게요.
+[pause:500]
+지금까지 우리는 두 가지를 배웠죠.
+[pause:300]
+C1에서 lifting state up의 3단계 절차, C2에서 Single Source of Truth 원칙.
+[pause:600]
+오늘은 그 두 가지를 실전 패턴 세 개에 적용해 봅니다.
+[pause:500]
+이 세 패턴은 면접에서도, 실무에서도 반복적으로 등장하는 표준 템플릿이에요.
+[pause:600]
+공통 모양도 미리 한 줄로 말해 두면, 부모가 state를 보유하고 자식들에게 값과 핸들러를 props로 전달한다는 거예요.
+[pause:600]
+오늘 끝나면 lifting state up이 코드에서 어떤 모양으로 나타나는지가 손에 익을 겁니다.
+
+[slide 3]
+첫 번째 케이스는 우리의 단골, Almaty Accordion입니다.
+[pause:500]
+요구사항을 다시 짚으면, 한 번에 하나의 패널만 열려야 해요.
+[pause:600]
+Before 상태에서는 각 Panel이 isActive를 useState로 갖고 있었기 때문에 두 패널이 동시에 열릴 수 있었죠.
+[pause:300]
+이게 우리가 S3.C1에서 반복적으로 봤던 그 통증의 정체였습니다.
+[pause:600]
+After 상태에서는 부모 Accordion이 useState 0으로 activeIndex를 단 하나만 보유합니다.
+[pause:400]
+즉 트리 전체에서 활성 패널을 표현하는 변수가 정확히 하나뿐이에요.
+[pause:500]
+각 Panel에는 isActive에 activeIndex가 0과 같은지, 1과 같은지를 비교한 결과를 props로 내려보냅니다.
+[pause:500]
+그리고 onShow 핸들러로 setActiveIndex를 0이나 1로 호출하는 화살표 함수를 넘깁니다.
+[pause:400]
+Panel 입장에서는 자기가 몇 번 인덱스인지조차 모르고, 그저 부모가 알려준 isActive대로 그릴 뿐이에요.
+[pause:600]
+여기서 핵심 인사이트가 나옵니다.
+[pause:400]
+한 번에 하나라는 제약은 결국 state 변수를 하나만 갖는다는 모양으로 표현된다는 거예요.
+[pause:400]
+하나의 변수는 하나의 값만 가질 수 있으니까, 두 패널이 동시에 활성이 되는 모순이 원천적으로 표현 불가능해집니다.
+[pause:400]
+이게 모순과 redundant를 자연스럽게 회피하는 가장 우아한 방법이에요.
+
+[slide 4]
+두 번째 케이스는 Synced Inputs입니다.
+[pause:500]
+두 개의 Input이 항상 같은 값을 표시해야 하는 시나리오예요.
+[pause:400]
+사용자가 어느 쪽에 입력해도 다른 쪽이 즉시 같은 글자를 따라가야 합니다.
+[pause:600]
+부모에 text 하나만 useState로 두고 빈 문자열로 시작합니다.
+[pause:400]
+그리고 두 Input 모두 value에 text를, onChange에는 setText를 호출하는 핸들러를 동일하게 props로 받습니다.
+[pause:400]
+두 Input이 받는 props는 완전히 같아요.
+[pause:300]
+즉 둘은 같은 source of truth를 두 위치에서 보여주는 창문일 뿐입니다.
+[pause:600]
+이 패턴은 SST의 가장 단순하고 시각적인 사례예요.
+[pause:400]
+같은 값을 두 번 저장하지 마라, 한 곳에만 두고 두 곳에서 보게 하라는 원칙이 그대로 코드가 됩니다.
+[pause:600]
+만약 각 Input이 자기 state를 갖고 있다면 어떻게 될까요?
+[pause:400]
+첫 번째 입력에서 한쪽만 바뀌고 다른 쪽은 그대로라서 동기화가 즉시 깨집니다.
+[pause:400]
+설령 양쪽 onChange에서 서로의 setState를 호출해서 억지로 맞추려고 해도, 무한 루프나 미묘한 race condition이 생기기 쉬워요.
+[pause:400]
+이건 S2에서 봤던 duplication 안티패턴이 그대로 회수되는 장면이에요.
+
+[slide 5]
+세 번째 케이스는 Filterable List입니다.
+[pause:500]
+SearchBar 입력에 따라 List가 필터링되는 흔한 패턴이죠.
+[pause:400]
+검색창에 'plov'를 치면 plov가 들어간 음식만 리스트에 남는, 그런 친숙한 동작이에요.
+[pause:600]
+공통 부모인 FilterableList가 query state를 보유합니다.
+[pause:400]
+SearchBar는 query에 쓰고, List는 결과를 읽어야 하니까 두 자식 모두 query에 접근해야 하거든요.
+[pause:400]
+결정 알고리즘을 그대로 따른 결과예요.
+[pause:600]
+그리고 여기서 굉장히 중요한 한 가지.
+[pause:300]
+results는 state가 아닙니다.
+[pause:400]
+query로부터 derive 하는 값이에요.
+[pause:300]
+부모에서 const results는 filterItems(foods, query)로 매번 계산하면 됩니다.
+[pause:400]
+results를 별도 state로 두면 query와 어긋나는 redundant 문제가 다시 생기겠죠.
+[pause:600]
+List에는 results를 items props로 내려주고, SearchBar에는 query와 onChange 핸들러를 내려줍니다.
+[pause:400]
+SearchBar는 controlled input이고, List는 부모가 계산해 준 결과만 보여주는 순수 표시 컴포넌트가 돼요.
+[pause:600]
+여기서 이중 lifting의 의미가 보여요.
+[pause:400]
+state를 lift 했더니, 거기서 derive 되는 값도 자연스럽게 부모에서 계산되는 모양이 잡히는 거죠.
+[pause:400]
+state 하나를 옮기는 결정이, 컴포넌트들의 역할까지 깔끔하게 정리해 줍니다.
+
+[slide 6]
+세 패턴의 공통 모양을 한 번에 회수해 봅시다.
+[pause:500]
+Accordion은 부모 state로 activeIndex를 두고 자식 props로 isActive와 onShow를 전달합니다.
+[pause:500]
+Synced Inputs는 부모 state로 text를 두고 자식 props로 value와 onChange를 전달합니다.
+[pause:500]
+Filterable List는 부모 state로 query를 두고 자식 props로 query와 onChange, 그리고 derived items를 전달합니다.
+[pause:600]
+패턴은 다 달라 보이지만 모양은 똑같아요.
+[pause:400]
+부모 state 한 개와 자식들에게 값과 핸들러 쌍 props.
+[pause:500]
+이 모양을 머릿속에 새겨 두면, 새로운 컴포넌트를 설계할 때도 같은 틀로 빠르게 시작할 수 있습니다.
+
+[slide 7]
+이제 직접 응용해 봅시다.
+[pause:500]
+미니 시나리오는 탭 UI 3개를 만드는 거예요.
+[pause:400]
+한 번에 하나만 활성이어야 합니다.
+[pause:300]
+Accordion과 같은 패턴인지 따져봅시다.
+[pause:600]
+자문자답 체크리스트를 같이 가볼게요.
+[pause:400]
+첫째, state 모양은 어떻게 잡을까요?
+[pause:300]
+activeTab을 'home', 'about', 'contact' 중 하나의 문자열 리터럴 유니온으로 두면 깔끔하죠.
+[pause:600]
+둘째, 부모 Tabs는 무엇을 props로 내려보낼까요?
+[pause:300]
+각 Tab에 isActive와 onSelect, 두 가지를 전달하면 됩니다.
+[pause:600]
+셋째, 두 개가 동시에 활성이 되는 버그는 왜 원천적으로 불가능한가요?
+[pause:400]
+state 변수가 단 하나뿐이기 때문에 그런 모순 자체를 표현할 수가 없는 거예요.
+
+[slide 8]
+섹션 3 마무리 한 장으로 정리합니다.
+[pause:500]
+Accordion은 단일 activeIndex로 한 번에 하나를 강제합니다.
+[pause:400]
+Synced Inputs는 단일 text state로 동기화를 보장합니다.
+[pause:400]
+Filterable List는 단일 query에 derived results를 더한 모양이에요.
+[pause:600]
+세 패턴 모두 공통 모양은 같습니다.
+[pause:300]
+부모 state 1개에서 자식들에게 값과 핸들러 쌍 props.
+[pause:600]
+다음 섹션 S4에서는 state가 의도치 않게 리셋되거나 보존되는 문제, 즉 트리 위치와 key prop의 관계를 다룹니다.
+[pause:400]
+오늘도 수고하셨어요.

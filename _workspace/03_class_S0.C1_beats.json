@@ -1,0 +1,104 @@
+{
+  "class_id": "S0.C1",
+  "title": "왜 state 설계가 따로 필요한가 — 4가지 통증 진단",
+  "lo_ids": ["LO-S0.1", "LO-S0.3"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 60,
+      "key_points": [
+        "useState는 손에 익었는데 앱이 커지면 왜 state가 자꾸 꼬일까?",
+        "어제 잘 돌던 화면이 오늘 prop 하나 추가하니 동기화가 깨진 경험을 떠올려보자",
+        "이 강의는 'useState 사용법'이 아니라 'state 설계'를 다룬다는 점을 못 박기",
+        "오늘 수업의 약속: 4가지 통증의 정체를 진단하고, 강의 전체의 출발점을 한 문장으로 잡는다"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "왼쪽: 잘 동작하는 작은 컴포넌트. 오른쪽: 화살표·중복 박스가 얽힌 큰 화면 — 대조 다이어그램",
+      "speaker_affect": "호기심 유발, 공감"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "통증 #1 — 중복(redundancy): 같은 정보를 여러 state에 복제해 놓으면 한쪽만 갱신되며 모순 발생",
+        "통증 #2 — 동기화 버그: props에서 받은 값을 useState 초기값으로 mirror 했더니 prop이 바뀌어도 화면이 안 따라옴",
+        "각 통증은 '내가 잘못 코딩한 것'이 아니라 'state 구조 결정이 잘못된 것'임을 강조",
+        "두 통증 모두 결국 '한 진실을 두 곳에 두면서 생긴 문제' — 단일 출처(single source of truth) 부재"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "두 박스 다이어그램 — 같은 데이터가 두 state에 복제된 모습, 한쪽만 빨갛게 갱신되는 애니메이션 힌트",
+      "speaker_affect": "차분하게 진단하듯"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "통증 #3 — prop drilling: 깊은 트리에 데이터를 넘기느라 중간 컴포넌트가 자기와 무관한 prop을 그저 전달만 함",
+        "통증 #4 — 의도치 않은 리셋: 조건부 렌더나 컴포넌트 타입 교체로 화면은 같은데 input 값이 갑자기 사라지는 현상",
+        "두 통증의 공통점: React가 state를 어디에 묶어두는지(트리 위치)를 모르면 추적이 불가능",
+        "이 4가지 통증은 우연이 아니라 '구조 미설계'에서 반복적으로 재생산된다는 점이 핵심"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "왼쪽: 트리 그림에 prop이 5단계 통과하는 화살표. 오른쪽: 동일 위치 input이 리셋되는 before/after",
+      "speaker_affect": "차분하게, 마지막 문장은 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 180,
+      "key_points": [
+        "구체 예: 폼 컴포넌트에 isLoading, isError, isSuccess, isEmpty 4개 boolean을 두면 (true,true,…) 같은 모순 상태가 만들어짐",
+        "이게 통증 #1(중복)과 통증 #2(동기화)가 한 컴포넌트에서 동시에 터지는 전형적 사례",
+        "명령형 코드라면 'DOM을 직접 보이고 숨기는' 식으로 또 다른 임시 변수가 늘어남",
+        "선언형 사고로 바꾸면 status: 'idle' | 'loading' | 'success' | 'error' 한 줄로 정리 가능 — 다음 챕터의 예고편"
+      ],
+      "lo_ids": ["LO-S0.1", "LO-S0.3"],
+      "visual_hint": "코드 스니펫 두 개 비교 — 왼쪽 4 boolean, 오른쪽 status enum. 잘못된 조합에 빨간 X 표시",
+      "speaker_affect": "예시는 친근하게, '이거 본 적 있죠?' 톤"
+    },
+    {
+      "id": "b5",
+      "type": "teach",
+      "duration_sec": 105,
+      "key_points": [
+        "강의 전체의 출발선을 한 문장으로: '상태 → UI 자동 반영' (선언형 UI)",
+        "명령형은 '이벤트가 일어나면 DOM을 어떻게 바꿔라' — 단계를 코드가 직접 지시",
+        "선언형은 '지금 상태가 X이면 UI는 Y이다' — 상태만 정확히 정의하면 React가 알아서 그려줌",
+        "이 명제 하나가 앞으로 7개 챕터(state 구조·lifting·key·reducer·context)를 관통하는 척도가 된다"
+      ],
+      "lo_ids": ["LO-S0.3"],
+      "visual_hint": "한 문장 큰 글씨: '상태 → UI 자동 반영'. 아래 명령형/선언형 2단 비교 표",
+      "speaker_affect": "강조, 또박또박"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 45,
+      "key_points": [
+        "자문자답: 최근 내 프로젝트에서 isLoading + data 같은 boolean·값 조합으로 모순 상태가 가능한 곳이 있었는가?",
+        "있다면 그 통증은 4가지 중 어느 것에 가까운가? (중복 / 동기화 / drilling / 리셋)",
+        "정답을 맞추는 게 아니라 '내 코드 한 군데를 떠올리는 것'이 목표 — 다음 class에서 챕터와 매핑할 것이다"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "체크리스트 형태 4개 통증 박스 — 학습자가 머릿속으로 체크",
+      "speaker_affect": "친근하게 권유"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "오늘 못 박은 3가지 — ① state 통증은 4가지 패턴(중복/동기화/drilling/리셋)으로 반복된다",
+        "② 통증의 뿌리는 '잘못된 코드'가 아니라 'state 구조 결정 부재'다",
+        "③ 강의 전체의 척도는 한 문장: '상태 → UI 자동 반영'(선언형 UI)"
+      ],
+      "lo_ids": ["LO-S0.1", "LO-S0.3"],
+      "visual_hint": "3개 핵심 카드 한 화면에 정렬 — 다음 class(코스 맵) 예고 화살표",
+      "speaker_affect": "정리, 마무리 톤"
+    }
+  ]
+}

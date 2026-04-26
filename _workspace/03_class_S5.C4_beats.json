@@ -1,0 +1,99 @@
+{
+  "class_id": "S5.C4",
+  "title": "useState vs useReducer 트레이드오프와 Immer 옵션",
+  "lo_ids": ["LO-S5.4", "LO-S5.5"],
+  "target_duration_sec": 480,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 30,
+      "key_points": [
+        "Reducer를 배웠다고 모든 useState를 갈아엎어야 하나? 아니다",
+        "프라하 Tasks 앱처럼 핸들러 4개 이상이면 이득이지만, 토글 하나 뿐인 컴포넌트는 useState로 충분",
+        "오늘은 언제 갈아탈지 판단 기준을 세우고, mutation 스타일을 가능케 하는 Immer 옵션을 본다"
+      ],
+      "lo_ids": ["LO-S5.4", "LO-S5.5"],
+      "visual_hint": "저울 일러스트 — 한쪽 useState, 다른 쪽 useReducer. 가운데 4축 라벨",
+      "speaker_affect": "친근하게, 균형감"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "비교 4축 — 코드량 / 가독성 / 디버깅 / 테스트",
+        "코드량: useState 적음, useReducer는 reducer 함수 + action 객체 보일러플레이트",
+        "가독성: 단순 갱신은 useState가 직관적, 복잡한 다중 핸들러는 useReducer가 정리됨",
+        "디버깅: useReducer는 reducer 한 곳에 console.log를 넣으면 모든 state 전이 관찰 — useState는 setter 호출 추적이 어렵다",
+        "테스트: reducer는 순수 함수라 컴포넌트 마운트 없이 단위 테스트, useState 로직은 컴포넌트 통째로 렌더 필요"
+      ],
+      "lo_ids": ["LO-S5.4"],
+      "visual_hint": "4행 비교표 — 코드량/가독성/디버깅/테스트, useState vs useReducer 컬럼. 우세 칸 하이라이트",
+      "speaker_affect": "또박또박, 균형 있게"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "갈아타기 결정 기준 — '여러 핸들러가 같은 state를 다양하게 갱신하는가'",
+        "yes면 useReducer, no면 useState — 단순 토글/카운터/입력 한 칸은 굳이 reducer로 가지 않는다",
+        "한 컴포넌트 안에서 혼용도 정상 — Tasks는 useReducer, isOpen 토글은 useState",
+        "리팩터링 타이밍: setState가 3개 이상이고 핸들러 사이에 갱신 로직 중복이 보이면 신호"
+      ],
+      "lo_ids": ["LO-S5.4"],
+      "examples": [
+        "function TaskApp() {\n  const [tasks, dispatch] = useReducer(tasksReducer, initialTasks);\n  const [isPanelOpen, setIsPanelOpen] = useState(false);\n  // ...\n}"
+      ],
+      "visual_hint": "결정 플로우차트 — '핸들러 3개+? 갱신 로직 복잡?' yes/no 분기",
+      "speaker_affect": "확신 있게"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "Immer 소개 — useImmerReducer로 mutation 스타일 작성을 가능케",
+        "내부 원리: draft를 Proxy로 감싸 변경을 기록 후 immutable 복사본을 만들어 반환",
+        "프라카 Tasks reducer를 Immer로 다시 작성 — return 없이 draft.push, draft[i] = ...",
+        "장점: 깊게 중첩된 객체 갱신이 짧아짐, 배열 spread 연쇄가 사라짐",
+        "단점: 추가 의존성, 디버깅 시 Proxy 한 겹 더, 팀이 'mutation 같지만 사실은 아님'을 이해해야 함",
+        "일반 reducer와 의미상 동등 — 변환 가능한 짝꿍이라는 점이 중요"
+      ],
+      "lo_ids": ["LO-S5.5"],
+      "examples": [
+        "// 일반 reducer\ncase 'changed':\n  return tasks.map(t => t.id === action.task.id ? action.task : t);\n// Immer\ncase 'changed': {\n  const i = draft.findIndex(t => t.id === action.task.id);\n  draft[i] = action.task;\n  break;\n}"
+      ],
+      "visual_hint": "동일 case 'changed' 두 버전 나란히 — map vs draft 인덱스 할당. 'semantically equivalent' 라벨",
+      "speaker_affect": "흥미롭게, 트레이드오프는 균형"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 70,
+      "key_points": [
+        "잠시 멈추고 자문: 내 프로젝트의 어느 컴포넌트가 reducer로 갈 후보인가?",
+        "기준 점검 — setState 3개 이상, 핸들러 간 갱신 로직 중복, 디버깅 어려움 호소",
+        "후보를 골랐다면 Immer를 쓸지 일반 reducer를 쓸지도 함께 결정",
+        "단순 배열/객체면 일반 reducer로 충분, 깊은 중첩이면 Immer가 코드량 절약"
+      ],
+      "lo_ids": ["LO-S5.4", "LO-S5.5"],
+      "visual_hint": "후보 컴포넌트 체크리스트 + Immer 결정 분기",
+      "speaker_affect": "친근하게 권유"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "4축(코드량/가독성/디버깅/테스트)으로 비교, 핸들러 다·갱신 복잡할 때 useReducer",
+        "한 컴포넌트 안 혼용 OK, 단순 state는 useState 유지",
+        "Immer는 mutation 스타일 단축 표기, 일반 reducer와 의미 동등 — 다음 섹션은 Context로 reducer를 트리에 뿌리는 패턴"
+      ],
+      "lo_ids": ["LO-S5.4", "LO-S5.5"],
+      "visual_hint": "Section 5 종합 카드 — 4 클래스 핵심 + S6 Context 다리",
+      "speaker_affect": "정리, 마무리감"
+    }
+  ]
+}

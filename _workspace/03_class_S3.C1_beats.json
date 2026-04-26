@@ -1,0 +1,113 @@
+{
+  "class_id": "S3.C1",
+  "title": "Lifting State Up — 형제 컴포넌트를 협조시키는 3단계",
+  "lo_ids": ["LO-S3.1"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "두 형제 컴포넌트가 각자 useState를 갖고 있을 때 생기는 통증 — 한 쪽을 클릭해도 다른 쪽이 반응하지 않는다",
+        "예: Accordion의 두 Panel이 각자 isActive를 갖고 있어 둘 다 동시에 열려버리는 상황",
+        "'형제는 직접 대화할 수 없다'는 React의 단방향 데이터 흐름 제약을 환기",
+        "오늘의 약속 — 3단계 절차만 따르면 형제 협조 문제가 기계적으로 풀린다"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "examples": ["두 Panel이 각자 isActive를 보유 → 동시에 열림"],
+      "visual_hint": "왼쪽: 각자 state를 가진 두 Panel이 동시에 열려있는 잘못된 상태 / 오른쪽: 부모로 끌어올린 단일 activeIndex로 한 번에 하나만 열린 상태 — 대조 다이어그램",
+      "speaker_affect": "호기심 유발, 공감"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "Lifting state up = 자식이 갖던 state를 공통 부모로 옮긴다",
+        "데이터는 props로 '아래로', 이벤트는 핸들러로 '위로' — 양방향 흐름 모양",
+        "공통 부모 = 두 형제를 모두 렌더하는 '가장 가까운' 컴포넌트",
+        "이 절차는 형제 협조가 필요한 모든 상황에 동일하게 적용되는 표준 레시피"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "트리 다이어그램 — Accordion(부모) 노드에서 두 Panel로 props 화살표(아래) + 두 Panel에서 부모로 onShow 화살표(위)",
+      "speaker_affect": "차분하게, 설명적"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "Step 1 — 자식에서 state 제거: Panel 내부의 useState(isActive) 삭제",
+        "Step 2 — 부모에서 하드코딩 props로 자식들 전달: <Panel isActive={true} /> 같은 임시값으로 렌더 확인",
+        "Step 3 — 부모에 state 추가 + 핸들러를 props로 내려보냄: useState(activeIndex)와 onShow 핸들러를 자식에 주입",
+        "각 단계가 '독립적으로 컴파일/렌더 가능한 체크포인트'라는 점이 핵심 — 한 번에 한 단계씩만 바꾼다"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "3단계 진행을 코드 변형 3컷으로 — 각 단계마다 변경된 줄을 하이라이트",
+      "speaker_affect": "단계별, 안정적"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "Almaty Accordion 코드를 3단계 절차로 직접 변형",
+        "Before: 각 Panel이 const [isActive, setIsActive] = useState(false)를 보유",
+        "Step 1 후: Panel은 이제 isActive props만 받는다 — 내부 state 제거",
+        "Step 2 후: <Panel title='About' isActive={true} /> + <Panel title='Etymology' isActive={false} /> 하드코딩으로 렌더 확인",
+        "Step 3 후: Accordion이 useState(0)으로 activeIndex 보유, isActive={activeIndex === 0}, onShow={() => setActiveIndex(0)} 전달"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "examples": [
+        "function Panel({ title, children, isActive, onShow }) — 자식 시그니처",
+        "function Accordion() { const [activeIndex, setActiveIndex] = useState(0); ... } — 부모 변형"
+      ],
+      "visual_hint": "코드 비교 — 좌측: Before(자식이 state 보유), 우측: After(부모가 activeIndex 보유). 변경된 라인 하이라이트",
+      "speaker_affect": "꼼꼼하게, 설명적"
+    },
+    {
+      "id": "b5",
+      "type": "teach",
+      "duration_sec": 100,
+      "key_points": [
+        "왜 이 순서인가 — Step 1·2를 분리하면 '값이 위에서 내려와도 자식이 잘 그려지는가'를 먼저 검증",
+        "흔한 실수 1: Step 1을 건너뛰고 부모에 state만 추가 — 자식의 옛 state가 부모 값을 무시함",
+        "흔한 실수 2: 핸들러를 자식에서 정의하고 부모에 통보 안 함 — 데이터가 위로 못 올라감",
+        "핸들러 이름 컨벤션 — onShow, onChange처럼 '이벤트가 발생했음을 부모에 알림'을 표현"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "흔한 실수 2개를 X 표시와 함께 코드 스니펫으로",
+      "speaker_affect": "주의 환기, 친근하게"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "미니 시나리오 — 두 개의 Toggle 버튼이 각자 on/off state를 가짐. 라디오 버튼처럼 '동시에 하나만 on' 만들고 싶다면?",
+        "자문자답 1: 어떤 컴포넌트가 공통 부모인가?",
+        "자문자답 2: 부모에 둘 state 이름과 타입은? (예: activeId: 'a' | 'b' | null)",
+        "자문자답 3: 자식에 내려보낼 props 2개는? (isOn, onTurnOn)",
+        "자문자답 4: 자식에서 useState를 지웠는가?"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "체크리스트 4개 — 학습자가 머릿속으로 답해보는 빈칸",
+      "speaker_affect": "격려하는, 친근하게"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 45,
+      "key_points": [
+        "Lifting state up = 자식 state 제거 → 부모에서 하드코딩 → 부모에 state 추가의 3단계",
+        "데이터는 props로 아래로, 이벤트는 핸들러로 위로",
+        "각 단계마다 렌더가 깨지지 않는 체크포인트로 작업하라",
+        "다음 class에서는 '그래서 state를 어디에 둘지' 결정하는 사고법을 배운다"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "3단계 + 양방향 화살표 한 장 요약 카드",
+      "speaker_affect": "마무리, 자신감"
+    }
+  ]
+}

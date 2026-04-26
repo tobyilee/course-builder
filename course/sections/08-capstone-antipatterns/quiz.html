@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>종합 — 안티패턴 진단과 통합 케이스 스터디 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>종합 — 안티패턴 진단과 통합 케이스 스터디 · 퀴즈</h1>
+  <p class="meta">7 문항 · Bloom: Analyze:2, Evaluate:4, Create:1</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다음 컴포넌트 코드 조각에 박혀 있는 안티패턴을 모두 고르시오. (정답 3개)
+
+```jsx
+function ProfileCard({ user, theme }) {
+  const [name, setName] = useState(user.name);          // (a)
+  const [fullName, setFullName] = useState(&#x27;&#x27;);         // (b) 항상 firstName + &#x27; &#x27; + lastName 으로 채움
+
+  function Avatar({ src }) {                            // (c)
+    return &lt;img src={src} className=&quot;avatar&quot; /&gt;;
+  }
+
+  return (
+    &lt;ThemeContext.Provider value={theme}&gt;             {/* (d) 단 한 곳에서만 쓰임 */}
+      &lt;Avatar src={user.avatar} /&gt;
+      &lt;h2&gt;{fullName}&lt;/h2&gt;
+    &lt;/ThemeContext.Provider&gt;
+  );
+}
+```</h3>
+  <label class="choice"><input type="checkbox" name="q0" value="A"><span><strong>A.</strong> (a) props(user.name)를 useState 초기값으로 mirror — S2 원칙 위반</span></label>
+  <label class="choice"><input type="checkbox" name="q0" value="B"><span><strong>B.</strong> (b) firstName/lastName으로 파생 가능한 redundant state — S2 원칙 위반</span></label>
+  <label class="choice"><input type="checkbox" name="q0" value="C"><span><strong>C.</strong> (c) 컴포넌트 정의를 다른 컴포넌트 안에 중첩 — 매 렌더마다 state 리셋, S4 원칙 위반</span></label>
+  <label class="choice"><input type="checkbox" name="q0" value="D"><span><strong>D.</strong> (d) ThemeContext.Provider를 사용한 것 자체 — context는 어떤 경우에도 안티패턴</span></label>
+  <label class="choice"><input type="checkbox" name="q0" value="E"><span><strong>E.</strong> useState 훅을 두 번 호출한 것 — 한 컴포넌트에 useState는 1회만 허용</span></label>
+  <div class="explain"><strong>정답: A, B, C</strong><br>(a) props mirroring은 부모가 prop을 갱신해도 자식 state가 동기화되지 않는 고전 버그(S2.4). (b) fullName은 두 prop으로 매 렌더 계산 가능하므로 state가 아닌 파생값이어야 한다(S2.1). (c) 함수 컴포넌트 안에 컴포넌트를 정의하면 매 렌더마다 새 함수 reference가 생겨 React가 다른 타입으로 보고 자식 state를 리셋한다(S4.4).<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> theming은 S6에서 context의 정당한 사용 사례로 명시됐다. 이 코드의 진짜 문제는 &#x27;context를 썼다&#x27;가 아니라 다른 세 가지다. (단 한 곳에서만 쓰인다는 점은 prop drilling이 아닐 수 있어 별도 논의 대상이지만, 5대 안티패턴 매핑상 (a)(b)(c)가 명백한 1순위다.)</li><li><strong>E.</strong> useState는 한 컴포넌트에서 여러 번 호출 가능하다. 흔한 입문자 오개념이지만 React 규칙에 어긋나지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>코드 리뷰에서 다음 패턴을 발견했다. 가장 적절한 진단과 처방 매핑은?
+
+```jsx
+function Counter({ initialCount }) {
+  const [count, setCount] = useState(initialCount);
+  // 부모가 initialCount를 바꿔도 count는 안 바뀐다는 버그 리포트가 들어옴
+}
+```</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> 안티패턴: redundant state — 처방: count를 props에서 직접 사용 (S2 원칙)</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> 안티패턴: props mirroring — 처방: prop 이름을 initialCount로 유지하고 &#x27;리셋이 의도된 동작&#x27;임을 명시하거나, 부모에서 key를 바꿔 강제 리셋 (S2.4 + S4.3)</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> 안티패턴: 컴포넌트 중첩 정의 — 처방: Counter를 부모 밖으로 추출 (S4 원칙)</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> 안티패턴: context 남용 — 처방: CounterContext를 제거하고 props로 내려보냄 (S6 원칙)</span></label>
+  <div class="explain"><strong>정답: B</strong><br>이 코드는 prop을 useState 초기값으로 한 번만 복사한 뒤 동기화하지 않는 전형적인 mirroring 안티패턴이다(S2.4). 해법은 두 가지: (1) &#x27;initial&#x27; 접두사로 의도를 드러내고 리셋이 필요할 때 부모에서 key prop을 바꿔 컴포넌트를 의도적으로 리셋(S4.3), (2) state를 들고 있을 필요가 없다면 props를 직접 쓴다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> redundant state는 &#x27;다른 state/props로 계산 가능한 값을 별도 state로 둘 때&#x27;다. 이 코드는 count가 별도 사용자 입력으로 바뀌므로 redundant가 아니다. &#x27;props에서 직접 사용&#x27;은 부분적으로 맞지만 안티패턴 명칭이 틀렸다.</li><li><strong>C.</strong> 코드에 중첩 정의가 없다.</li><li><strong>D.</strong> context는 등장하지도 않는다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>mini Kanban 앱 설계 첫 단계에서 카드 데이터 구조를 정한다. 컬럼 3개, 컬럼당 카드 수십 개가 들어가고, 카드를 다른 컬럼으로 이동·삭제하는 연산이 잦다. 어떤 state shape이 가장 적절한가?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> columns: [{ id, title, cards: [{ id, text }, ...] }, ...] — 트리 구조 그대로 보관</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> cardsById: { [id]: { id, text, columnId } }, columnOrder: [colId, ...], columnsById: { [id]: { id, title, cardIds: [...] } } — 정규화된 평탄 구조</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> cards: [{ id, text }, ...] 하나의 배열만 두고, 컬럼은 텍스트 prefix로 구분</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> 각 컬럼 컴포넌트가 자기 카드 배열을 useState로 따로 보관</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S2.5의 정규화 원칙: 깊게 중첩된 트리는 업데이트가 어렵고 중복(같은 카드를 두 컬럼에서 참조하는 등) 시 동기화 버그를 유발한다. id-맵 + childIds 패턴이 이동·삭제·재정렬 연산을 단순화한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 트리 그대로 보관하면 카드를 한 컬럼에서 빼서 다른 컬럼에 넣을 때 중첩 업데이트(spread 중첩)가 필요하고 불변성 유지가 까다롭다(S2.5 위반).</li><li><strong>C.</strong> 텍스트 prefix는 데이터를 문자열에 인코딩하는 안티패턴 — 파싱 비용·오타 버그·타입 안전성 모두 손실.</li><li><strong>D.</strong> 각 컬럼이 따로 들고 있으면 카드 이동 시 두 컴포넌트가 동기화되어야 하므로 single source of truth(S3.3)에 위배된다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>mini Kanban에서 state shape을 정한 뒤, &#x27;state를 어디에 둘 것인가&#x27;를 결정해야 한다. 현재 트리는 App &gt; Board &gt; Column &gt; Card 구조이고, 카드는 컬럼 사이를 이동한다. single source of truth 관점에서 가장 적절한 결정은?</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> 각 Column이 자기 카드를 useState로 들고, 이동 시 부모를 통해 이벤트 버스로 통신</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> Card 컴포넌트가 자기 columnId를 useState로 들고, 드래그 시 스스로 갱신</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> Board가 cardsById와 columnsById를 들고, Column·Card에는 read-only props와 dispatch를 내려보냄 (lifting state up)</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> App 최상위에 두되, 모든 자식이 직접 import 해서 mutate</span></label>
+  <div class="explain"><strong>정답: C</strong><br>카드 이동은 두 컬럼 모두에 영향을 주므로 두 컬럼의 &#x27;가장 가까운 공통 부모&#x27;인 Board가 state를 소유해야 한다(S3.1, S3.3). lifting state up의 표준 적용.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 각 Column이 따로 들고 이벤트로 동기화하면 단일 진실 공급원이 깨지고 race condition이 발생한다(S3 위반).</li><li><strong>B.</strong> Card가 자기 columnId를 들면 Board는 카드가 어느 컬럼에 있는지 모르게 되어 일관된 렌더가 불가능하다.</li><li><strong>D.</strong> import해서 mutate는 React 데이터 흐름(단방향, 불변) 자체를 깨는 행위다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>Board가 state를 소유하기로 했더니, 카드 추가/삭제/이동/제목수정/컬럼추가까지 setState 호출이 7개로 늘어났고 핸들러가 Board 전반에 흩어졌다. 다음 중 가장 적절한 다음 단계는?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> 그대로 둔다. setState 7개는 useReducer 도입 비용보다 작다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> useReducer로 통합하고, action.type을 &#x27;card_added&#x27;, &#x27;card_moved&#x27;, &#x27;column_renamed&#x27; 등 동사 과거형으로 정리해 한 상호작용 = 한 action 원칙을 따른다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> useState를 7개 그대로 두되, 모두 하나의 큰 객체로 묶어 setBoard(prev =&gt; ({ ...prev, ... }))로 호출한다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> Redux를 즉시 도입한다 — 상태 7개는 외부 라이브러리의 임계점이다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S5.4의 트레이드오프: 상호작용이 많고 상태 전이 로직이 복잡해지면 reducer가 더 읽기 쉽고 테스트 가능하다. action.type 컨벤션(S5.3)도 함께 적용된다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 흩어진 setState는 race condition과 중복 갱신 버그를 유발하기 쉽다 — useReducer의 도입 임계점을 지났다.</li><li><strong>C.</strong> useState 한 개로 묶어도 dispatch가 없으면 핸들러는 여전히 흩어진다. 가독성 개선이 미미하다.</li><li><strong>D.</strong> Redux는 미들웨어·devtools·여러 도메인 동기화가 필요할 때(S7.4) 도입한다. 단일 도메인 reducer면 useReducer로 충분하다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>reducer 도입 후, Board → Column → Card 트리에서 Card가 dispatch를 호출하려면 Board에서 Column을 거쳐 Card까지 dispatch prop을 3단계로 내려보내야 한다. 그리고 같은 트리 깊은 곳에 있는 &#x27;CardEditor 모달&#x27;도 dispatch를 필요로 한다. 가장 적절한 처방은?</h3>
+  <label class="choice"><input type="radio" name="q5" value="A"><span><strong>A.</strong> TasksContext에 { state, dispatch } 객체를 함께 넣어 Provider로 감싸고, 자식들이 useContext로 꺼내 쓴다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="B"><span><strong>B.</strong> TasksContext(state 전용)와 TasksDispatchContext(dispatch 전용) 두 개로 분리하고, useTasks/useTasksDispatch 커스텀 훅으로 추상화한다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="C"><span><strong>C.</strong> 전역 변수로 dispatch를 export 해 Card에서 import 한다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="D"><span><strong>D.</strong> context를 쓰지 않고 prop drilling을 유지한다 — context는 무조건 나쁜 패턴이다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S7.1~S7.2의 정확한 패턴: state와 dispatch를 한 context에 묶으면 dispatch만 필요한 컴포넌트도 state 변경 시 불필요하게 재렌더된다. 두 context로 분리하면 dispatch는 안정 reference라 dispatch 전용 소비자는 재렌더되지 않는다. 커스텀 훅으로 응집해 사용처에서 깔끔하게 노출한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 한 context에 묶으면 동작은 하지만 재렌더 최적화와 관심사 분리에서 (B)에 밀린다(S7.1).</li><li><strong>C.</strong> 전역 변수 export는 React 데이터 흐름을 깨고 SSR·테스트에서 누수된다.</li><li><strong>D.</strong> context는 prop drilling을 해소하는 정당한 도구다(S6.4). &#x27;무조건 나쁘다&#x27;는 흔한 오개념.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Create</span>
+  <span class="tag">short_answer</span>
+  <h3>mini Kanban 위에 (1) 사용자 인증(현재 로그인 사용자 정보), (2) 다크/라이트 테마, (3) 카드 데이터 — 세 도메인이 추가됐다. reducer+context 패턴을 어떻게 확장할지 도메인별 결정과 근거를 3~5문장으로 서술하시오. (강의의 어떤 원칙을 적용했는지 최소 2개 이상 명시)</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain"><strong>정답: rubric</strong><br>모범 답안 골자: 도메인별로 reducer+context 쌍을 분리(TasksProvider / AuthProvider / ThemeProvider)하고 Provider를 트리 상단에 중첩 배치. Tasks는 액션이 많으므로 state/dispatch context 분리(S7.1). Auth는 로그인/로그아웃 두 액션이라 reducer는 가볍게, 또는 useState로도 충분(S5.4 트레이드오프). Theme는 값이 거의 안 바뀌고 dispatch도 단순하므로 단일 context로 충분(S6.4 — context의 정당한 사례). 도메인 경계는 &#x27;함께 갱신되는가&#x27;(S2.2)로 판단 — 카드 갱신이 인증을 건드리지 않으므로 분리.<strong>채점 기준:</strong><ul><li><strong>full_credit_3pt</strong>: 세 도메인을 별도 reducer+context로 분리하고, 각 도메인의 결정 근거를 강의 원칙(S7.1 분리/S5.4 트레이드오프/S6.4 context 적합성/S2.2 묶기 기준 중 2개 이상)으로 명시함.</li><li><strong>partial_2pt</strong>: 분리 결정은 옳지만 근거 원칙이 1개만 명시되거나 도메인 중 하나의 처방이 부정확.</li><li><strong>partial_1pt</strong>: 단일 context에 모두 묶거나, 분리는 했지만 근거가 &#x27;그냥 깔끔해서&#x27; 수준.</li><li><strong>zero</strong>: Redux 같은 외부 라이브러리만 답하거나, prop drilling 유지를 정당화함.</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S8.Q1", "type": "mcq_multi", "stem": "다음 컴포넌트 코드 조각에 박혀 있는 안티패턴을 모두 고르시오. (정답 3개)\n\n```jsx\nfunction ProfileCard({ user, theme }) {\n  const [name, setName] = useState(user.name);          // (a)\n  const [fullName, setFullName] = useState('');         // (b) 항상 firstName + ' ' + lastName 으로 채움\n\n  function Avatar({ src }) {                            // (c)\n    return <img src={src} className=\"avatar\" />;\n  }\n\n  return (\n    <ThemeContext.Provider value={theme}>             {/* (d) 단 한 곳에서만 쓰임 */}\n      <Avatar src={user.avatar} />\n      <h2>{fullName}</h2>\n    </ThemeContext.Provider>\n  );\n}\n```", "choices": ["(a) props(user.name)를 useState 초기값으로 mirror — S2 원칙 위반", "(b) firstName/lastName으로 파생 가능한 redundant state — S2 원칙 위반", "(c) 컴포넌트 정의를 다른 컴포넌트 안에 중첩 — 매 렌더마다 state 리셋, S4 원칙 위반", "(d) ThemeContext.Provider를 사용한 것 자체 — context는 어떤 경우에도 안티패턴", "useState 훅을 두 번 호출한 것 — 한 컴포넌트에 useState는 1회만 허용"], "correct": ["A", "B", "C"], "explanation": "(a) props mirroring은 부모가 prop을 갱신해도 자식 state가 동기화되지 않는 고전 버그(S2.4). (b) fullName은 두 prop으로 매 렌더 계산 가능하므로 state가 아닌 파생값이어야 한다(S2.1). (c) 함수 컴포넌트 안에 컴포넌트를 정의하면 매 렌더마다 새 함수 reference가 생겨 React가 다른 타입으로 보고 자식 state를 리셋한다(S4.4).", "distractor_rationales": {"D": "theming은 S6에서 context의 정당한 사용 사례로 명시됐다. 이 코드의 진짜 문제는 'context를 썼다'가 아니라 다른 세 가지다. (단 한 곳에서만 쓰인다는 점은 prop drilling이 아닐 수 있어 별도 논의 대상이지만, 5대 안티패턴 매핑상 (a)(b)(c)가 명백한 1순위다.)", "E": "useState는 한 컴포넌트에서 여러 번 호출 가능하다. 흔한 입문자 오개념이지만 React 규칙에 어긋나지 않는다."}, "lo_ids": ["LO-S8.1"], "bloom": "Analyze", "difficulty": 3}, {"id": "S8.Q2", "type": "mcq_single", "stem": "코드 리뷰에서 다음 패턴을 발견했다. 가장 적절한 진단과 처방 매핑은?\n\n```jsx\nfunction Counter({ initialCount }) {\n  const [count, setCount] = useState(initialCount);\n  // 부모가 initialCount를 바꿔도 count는 안 바뀐다는 버그 리포트가 들어옴\n}\n```", "choices": ["안티패턴: redundant state — 처방: count를 props에서 직접 사용 (S2 원칙)", "안티패턴: props mirroring — 처방: prop 이름을 initialCount로 유지하고 '리셋이 의도된 동작'임을 명시하거나, 부모에서 key를 바꿔 강제 리셋 (S2.4 + S4.3)", "안티패턴: 컴포넌트 중첩 정의 — 처방: Counter를 부모 밖으로 추출 (S4 원칙)", "안티패턴: context 남용 — 처방: CounterContext를 제거하고 props로 내려보냄 (S6 원칙)"], "correct": ["B"], "explanation": "이 코드는 prop을 useState 초기값으로 한 번만 복사한 뒤 동기화하지 않는 전형적인 mirroring 안티패턴이다(S2.4). 해법은 두 가지: (1) 'initial' 접두사로 의도를 드러내고 리셋이 필요할 때 부모에서 key prop을 바꿔 컴포넌트를 의도적으로 리셋(S4.3), (2) state를 들고 있을 필요가 없다면 props를 직접 쓴다.", "distractor_rationales": {"A": "redundant state는 '다른 state/props로 계산 가능한 값을 별도 state로 둘 때'다. 이 코드는 count가 별도 사용자 입력으로 바뀌므로 redundant가 아니다. 'props에서 직접 사용'은 부분적으로 맞지만 안티패턴 명칭이 틀렸다.", "C": "코드에 중첩 정의가 없다.", "D": "context는 등장하지도 않는다."}, "lo_ids": ["LO-S8.1"], "bloom": "Analyze", "difficulty": 2}, {"id": "S8.Q3", "type": "mcq_single", "stem": "mini Kanban 앱 설계 첫 단계에서 카드 데이터 구조를 정한다. 컬럼 3개, 컬럼당 카드 수십 개가 들어가고, 카드를 다른 컬럼으로 이동·삭제하는 연산이 잦다. 어떤 state shape이 가장 적절한가?", "choices": ["columns: [{ id, title, cards: [{ id, text }, ...] }, ...] — 트리 구조 그대로 보관", "cardsById: { [id]: { id, text, columnId } }, columnOrder: [colId, ...], columnsById: { [id]: { id, title, cardIds: [...] } } — 정규화된 평탄 구조", "cards: [{ id, text }, ...] 하나의 배열만 두고, 컬럼은 텍스트 prefix로 구분", "각 컬럼 컴포넌트가 자기 카드 배열을 useState로 따로 보관"], "correct": ["B"], "explanation": "S2.5의 정규화 원칙: 깊게 중첩된 트리는 업데이트가 어렵고 중복(같은 카드를 두 컬럼에서 참조하는 등) 시 동기화 버그를 유발한다. id-맵 + childIds 패턴이 이동·삭제·재정렬 연산을 단순화한다.", "distractor_rationales": {"A": "트리 그대로 보관하면 카드를 한 컬럼에서 빼서 다른 컬럼에 넣을 때 중첩 업데이트(spread 중첩)가 필요하고 불변성 유지가 까다롭다(S2.5 위반).", "C": "텍스트 prefix는 데이터를 문자열에 인코딩하는 안티패턴 — 파싱 비용·오타 버그·타입 안전성 모두 손실.", "D": "각 컬럼이 따로 들고 있으면 카드 이동 시 두 컴포넌트가 동기화되어야 하므로 single source of truth(S3.3)에 위배된다."}, "lo_ids": ["LO-S8.2"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S8.Q4", "type": "mcq_single", "stem": "mini Kanban에서 state shape을 정한 뒤, 'state를 어디에 둘 것인가'를 결정해야 한다. 현재 트리는 App > Board > Column > Card 구조이고, 카드는 컬럼 사이를 이동한다. single source of truth 관점에서 가장 적절한 결정은?", "choices": ["각 Column이 자기 카드를 useState로 들고, 이동 시 부모를 통해 이벤트 버스로 통신", "Card 컴포넌트가 자기 columnId를 useState로 들고, 드래그 시 스스로 갱신", "Board가 cardsById와 columnsById를 들고, Column·Card에는 read-only props와 dispatch를 내려보냄 (lifting state up)", "App 최상위에 두되, 모든 자식이 직접 import 해서 mutate"], "correct": ["C"], "explanation": "카드 이동은 두 컬럼 모두에 영향을 주므로 두 컬럼의 '가장 가까운 공통 부모'인 Board가 state를 소유해야 한다(S3.1, S3.3). lifting state up의 표준 적용.", "distractor_rationales": {"A": "각 Column이 따로 들고 이벤트로 동기화하면 단일 진실 공급원이 깨지고 race condition이 발생한다(S3 위반).", "B": "Card가 자기 columnId를 들면 Board는 카드가 어느 컬럼에 있는지 모르게 되어 일관된 렌더가 불가능하다.", "D": "import해서 mutate는 React 데이터 흐름(단방향, 불변) 자체를 깨는 행위다."}, "lo_ids": ["LO-S8.2"], "bloom": "Evaluate", "difficulty": 2}, {"id": "S8.Q5", "type": "mcq_single", "stem": "Board가 state를 소유하기로 했더니, 카드 추가/삭제/이동/제목수정/컬럼추가까지 setState 호출이 7개로 늘어났고 핸들러가 Board 전반에 흩어졌다. 다음 중 가장 적절한 다음 단계는?", "choices": ["그대로 둔다. setState 7개는 useReducer 도입 비용보다 작다.", "useReducer로 통합하고, action.type을 'card_added', 'card_moved', 'column_renamed' 등 동사 과거형으로 정리해 한 상호작용 = 한 action 원칙을 따른다.", "useState를 7개 그대로 두되, 모두 하나의 큰 객체로 묶어 setBoard(prev => ({ ...prev, ... }))로 호출한다.", "Redux를 즉시 도입한다 — 상태 7개는 외부 라이브러리의 임계점이다."], "correct": ["B"], "explanation": "S5.4의 트레이드오프: 상호작용이 많고 상태 전이 로직이 복잡해지면 reducer가 더 읽기 쉽고 테스트 가능하다. action.type 컨벤션(S5.3)도 함께 적용된다.", "distractor_rationales": {"A": "흩어진 setState는 race condition과 중복 갱신 버그를 유발하기 쉽다 — useReducer의 도입 임계점을 지났다.", "C": "useState 한 개로 묶어도 dispatch가 없으면 핸들러는 여전히 흩어진다. 가독성 개선이 미미하다.", "D": "Redux는 미들웨어·devtools·여러 도메인 동기화가 필요할 때(S7.4) 도입한다. 단일 도메인 reducer면 useReducer로 충분하다."}, "lo_ids": ["LO-S8.2"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S8.Q6", "type": "mcq_single", "stem": "reducer 도입 후, Board → Column → Card 트리에서 Card가 dispatch를 호출하려면 Board에서 Column을 거쳐 Card까지 dispatch prop을 3단계로 내려보내야 한다. 그리고 같은 트리 깊은 곳에 있는 'CardEditor 모달'도 dispatch를 필요로 한다. 가장 적절한 처방은?", "choices": ["TasksContext에 { state, dispatch } 객체를 함께 넣어 Provider로 감싸고, 자식들이 useContext로 꺼내 쓴다.", "TasksContext(state 전용)와 TasksDispatchContext(dispatch 전용) 두 개로 분리하고, useTasks/useTasksDispatch 커스텀 훅으로 추상화한다.", "전역 변수로 dispatch를 export 해 Card에서 import 한다.", "context를 쓰지 않고 prop drilling을 유지한다 — context는 무조건 나쁜 패턴이다."], "correct": ["B"], "explanation": "S7.1~S7.2의 정확한 패턴: state와 dispatch를 한 context에 묶으면 dispatch만 필요한 컴포넌트도 state 변경 시 불필요하게 재렌더된다. 두 context로 분리하면 dispatch는 안정 reference라 dispatch 전용 소비자는 재렌더되지 않는다. 커스텀 훅으로 응집해 사용처에서 깔끔하게 노출한다.", "distractor_rationales": {"A": "한 context에 묶으면 동작은 하지만 재렌더 최적화와 관심사 분리에서 (B)에 밀린다(S7.1).", "C": "전역 변수 export는 React 데이터 흐름을 깨고 SSR·테스트에서 누수된다.", "D": "context는 prop drilling을 해소하는 정당한 도구다(S6.4). '무조건 나쁘다'는 흔한 오개념."}, "lo_ids": ["LO-S8.2"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S8.Q7", "type": "short_answer", "stem": "mini Kanban 위에 (1) 사용자 인증(현재 로그인 사용자 정보), (2) 다크/라이트 테마, (3) 카드 데이터 — 세 도메인이 추가됐다. reducer+context 패턴을 어떻게 확장할지 도메인별 결정과 근거를 3~5문장으로 서술하시오. (강의의 어떤 원칙을 적용했는지 최소 2개 이상 명시)", "correct": ["rubric"], "explanation": "모범 답안 골자: 도메인별로 reducer+context 쌍을 분리(TasksProvider / AuthProvider / ThemeProvider)하고 Provider를 트리 상단에 중첩 배치. Tasks는 액션이 많으므로 state/dispatch context 분리(S7.1). Auth는 로그인/로그아웃 두 액션이라 reducer는 가볍게, 또는 useState로도 충분(S5.4 트레이드오프). Theme는 값이 거의 안 바뀌고 dispatch도 단순하므로 단일 context로 충분(S6.4 — context의 정당한 사례). 도메인 경계는 '함께 갱신되는가'(S2.2)로 판단 — 카드 갱신이 인증을 건드리지 않으므로 분리.", "rubric": {"full_credit_3pt": "세 도메인을 별도 reducer+context로 분리하고, 각 도메인의 결정 근거를 강의 원칙(S7.1 분리/S5.4 트레이드오프/S6.4 context 적합성/S2.2 묶기 기준 중 2개 이상)으로 명시함.", "partial_2pt": "분리 결정은 옳지만 근거 원칙이 1개만 명시되거나 도메인 중 하나의 처방이 부정확.", "partial_1pt": "단일 context에 모두 묶거나, 분리는 했지만 근거가 '그냥 깔끔해서' 수준.", "zero": "Redux 같은 외부 라이브러리만 답하거나, prop drilling 유지를 정당화함."}, "lo_ids": ["LO-S8.2", "LO-S8.1"], "bloom": "Create", "difficulty": 4}];
+const NEXT_HREF = null;
+const NEXT_TITLE = null;
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

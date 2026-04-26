@@ -1,0 +1,23 @@
+{
+  "section_id": "S0",
+  "classes": [
+    {
+      "id": "S0.C1",
+      "slug": "01-why-state-design-matters",
+      "title": "왜 state 설계가 따로 필요한가 — 4가지 통증 진단",
+      "lo_ids": ["LO-S0.1", "LO-S0.3"],
+      "duration_min": 12,
+      "depends_on": [],
+      "summary": "useState는 익숙한데 왜 앱이 커지면 state가 자꾸 꼬이는지, 그 통증의 정체를 먼저 정리한다. 중복·동기화 버그·prop drilling·의도치 않은 리셋 4가지 사례를 빠르게 훑고, 선언형 UI('상태 → UI 자동 반영')라는 강의 전체의 출발선을 한 문장으로 못 박는다."
+    },
+    {
+      "id": "S0.C2",
+      "slug": "02-course-map-and-self-diagnosis",
+      "title": "코스 맵 — 7개 챕터가 어떤 통증을 푸는가",
+      "lo_ids": ["LO-S0.1", "LO-S0.2"],
+      "duration_min": 8,
+      "depends_on": ["S0.C1"],
+      "summary": "S1~S7 7개 챕터를 한 장의 지도로 본다. 각 챕터가 앞서 본 통증 중 어느 것을 푸는지 매핑하고, 학습자가 자기 최근 프로젝트에서 겪은 state 버그 1개를 골라 '이건 어느 챕터에서 풀릴 것 같다'는 가설을 세우는 짧은 self-diagnosis로 마무리한다."
+    }
+  ]
+}

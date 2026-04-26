@@ -1,0 +1,139 @@
+{
+  "class_id": "S7.C1",
+  "title": "Reducer와 Context를 결합하기 — 두 context 분리 전략",
+  "lo_ids": ["LO-S7.1"],
+  "target_duration_sec": 900,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 60,
+      "key_points": [
+        "useReducer만 쓰면 state와 dispatch가 최상위 컴포넌트에만 있다",
+        "중간 컴포넌트들은 자기는 안 쓰는 props를 받아서 내려보내는 prop drilling 지옥에 빠진다",
+        "TaskApp → TaskList → Task → 버튼까지 dispatch가 4단계 내려가는 그림을 보여 준다",
+        "오늘 목표: state context와 dispatch context 두 개로 쪼개서 어디서나 직접 read/dispatch 하기"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "왼쪽엔 dispatch가 4단계로 내려가는 prop drilling 트리, 오른쪽엔 Provider가 감싸 모든 자식이 직접 dispatch하는 트리 — Before/After 대조 다이어그램",
+      "speaker_affect": "공감하며 호기심 유발"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "왜 두 개로 나누나? — state context 하나로 묶으면 dispatch만 쓰는 컴포넌트도 state 변경 때마다 재렌더된다",
+        "TasksContext (값) / TasksDispatchContext (함수) 분리 = 관심사 분리 + 재렌더 분리",
+        "dispatch는 reducer 등록 후 동일 참조를 유지하므로 dispatch context는 사실상 안정적이다",
+        "S5(reducer) + S6(context) 지식이 합쳐지는 지점이라는 위치를 짚어 준다"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "두 박스 다이어그램 — 왼쪽 TasksContext(value: tasks 배열), 오른쪽 TasksDispatchContext(value: dispatch 함수). 아래쪽에 '재렌더 트리거 X' 표시",
+      "speaker_affect": "차분하게 설명"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "3단계 빌드 패턴 미리보기: ① context 두 개 만들기 ② Provider 안에서 useReducer ③ 자식에서 useContext로 read/dispatch",
+        "단계마다 책임이 명확 — 각 단계가 무엇을 해결하는지 머릿속에 지도를 그려 두자",
+        "이번 클래스는 이 3단계를 Tasks 예시로 따라간다",
+        "다음 클래스(C2)에서 이걸 Provider 컴포넌트 + 커스텀 훅으로 응집시킬 예정"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "1-2-3 번호 카드형 로드맵: createContext × 2 → Provider+useReducer → useContext × 2",
+      "speaker_affect": "안내자 톤"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "Step 1: TasksContext.js에서 createContext(null) 두 개 export",
+        "초기값을 null로 두는 관습 — Provider 밖에서 쓰면 의도치 않게 동작하지 않도록",
+        "이름 컨벤션: 값 context는 도메인 그대로(TasksContext), dispatcher는 …DispatchContext",
+        "이 두 줄이 prop drilling 해소의 출발점"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "examples": [
+        "export const TasksContext = createContext(null);",
+        "export const TasksDispatchContext = createContext(null);"
+      ],
+      "visual_hint": "코드 하이라이트 슬라이드 — createContext(null) 두 줄을 1번 단계 라벨과 함께 강조",
+      "speaker_affect": "단계별 안내, 차분"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 180,
+      "key_points": [
+        "Step 2: TaskApp에서 const [tasks, dispatch] = useReducer(tasksReducer, initialTasks)",
+        "JSX 트리에서 두 Provider를 중첩 — 바깥 TasksContext value={tasks}, 안쪽 TasksDispatchContext value={dispatch}",
+        "React 19+ 단축 문법 <TasksContext value=…>를 그대로 쓴다 (.Provider 생략)",
+        "AddTask, TaskList 어떤 자식이든 props 없이 두 값에 접근 가능해진다"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "examples": [
+        "<TasksContext value={tasks}>",
+        "  <TasksDispatchContext value={dispatch}>",
+        "    <AddTask />",
+        "    <TaskList />",
+        "  </TasksDispatchContext>",
+        "</TasksContext>"
+      ],
+      "visual_hint": "JSX 트리 시각화 — 두 Provider를 동심원처럼 감싼 그림과 그 안의 자식 컴포넌트들",
+      "speaker_affect": "또렷하게, 강조"
+    },
+    {
+      "id": "b6",
+      "type": "example",
+      "duration_sec": 120,
+      "key_points": [
+        "Step 3: AddTask는 useContext(TasksDispatchContext)로 dispatch만 가져온다",
+        "TaskList는 useContext(TasksContext)로 tasks만 가져온다",
+        "필요한 것만 구독 → 재렌더 범위 최소화",
+        "props로 전달하던 onAddTask, onChangeTask, onDeleteTask 콜백이 전부 사라진다"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "examples": [
+        "// AddTask",
+        "const dispatch = useContext(TasksDispatchContext);",
+        "dispatch({ type: 'added', id: nextId++, text });",
+        "// TaskList",
+        "const tasks = useContext(TasksContext);"
+      ],
+      "visual_hint": "Before/After 코드 비교 — 왼쪽 props 4개로 받던 컴포넌트, 오른쪽 useContext 한 줄로 끝나는 동일 컴포넌트",
+      "speaker_affect": "정리하듯 또렷하게"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 60,
+      "key_points": [
+        "자문자답: dispatch context를 따로 두지 않고 { tasks, dispatch }를 한 객체로 묶어 단일 context에 넣었다면 어떤 문제가 생길까?",
+        "힌트: dispatch만 쓰는 AddTask가 tasks 변경마다 재렌더되는지 따라가 보기",
+        "추가 질문: createContext의 초기값 null은 언제 사용되는가? (Provider 밖에서 useContext 호출 시)",
+        "스스로 손으로 그림을 그려 보고 다음 클래스로 넘어가자"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "물음표 아이콘 + 두 질문 카드. 답은 노출하지 않고 학습자 사고를 유도",
+      "speaker_affect": "유도하듯, 살짝 도전적"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 45,
+      "key_points": [
+        "useReducer + Context를 결합하면 분산된 자식이 직접 read/dispatch 가능",
+        "state context와 dispatch context를 분리하는 이유: 재렌더 분리 + 관심사 분리",
+        "3단계 빌드: createContext × 2 → Provider 안에서 useReducer → useContext × 2",
+        "다음 시간: 이 wiring을 TasksProvider + 커스텀 훅으로 응집시킨다"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "3개의 핵심 요약 불릿과 다음 클래스 예고 화살표",
+      "speaker_affect": "정리하듯 따뜻하게"
+    }
+  ]
+}

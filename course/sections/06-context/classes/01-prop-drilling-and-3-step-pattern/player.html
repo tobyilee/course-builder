@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prop drilling 문제와 createContext / Provider / useContext 3단계</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.55}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  header{padding:12px 20px;border-bottom:1px solid #1f2430;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:600}
+  .meta{color:#8b95a7;font-size:13px}
+  button.menu-toggle{background:transparent;border:1px solid #2a3345;color:#e8eaed;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer}
+  button.menu-toggle:hover{background:#222a3a}
+  /* Progress bar */
+  #progress{padding:10px 20px;background:#12151c;border-bottom:1px solid #1f2430;display:flex;gap:14px;align-items:center;font-size:13px;color:#8b95a7}
+  #progress .bar{flex:1;height:4px;background:#1f2430;border-radius:2px;overflow:hidden}
+  #progress .bar .fill{height:100%;background:linear-gradient(90deg,#2d6cdf,#5ea0ff);border-radius:2px;transition:width .3s ease}
+  #progress .label{white-space:nowrap}
+  #progress strong{color:#e8eaed;font-weight:600}
+  /* Sidebar */
+  aside#toc{background:#12151c;border-right:1px solid #1f2430;padding:16px 14px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0}
+  aside#toc h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#8b95a7;margin:14px 0 6px 0;font-weight:500}
+  aside#toc h3:first-child{margin-top:0}
+  aside#toc ul{list-style:none;padding:0;margin:0 0 12px 0}
+  aside#toc li{padding:6px 8px;border-radius:6px;margin-bottom:2px;font-size:13px}
+  aside#toc a{color:#c4cad6;text-decoration:none;display:block}
+  aside#toc a:hover{color:#fff}
+  aside#toc li:hover{background:#1a1f29}
+  aside#toc li.current{background:#1a2e4a;border-left:3px solid #2d6cdf}
+  aside#toc li.current a{color:#fff;font-weight:600}
+  aside#toc li.quiz a{color:#3a8a4f}
+  main{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;padding:16px;max-width:1700px;margin:0 auto;align-items:start}
+  @media(max-width:1280px){main{grid-template-columns:1fr 320px} aside#toc{display:none} aside#toc.open{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.4);max-height:100vh}}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  #stage{background:#181c26;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  #slide-wrap{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #slide{max-width:100%;max-height:100%;display:block}
+  #controls{display:flex;gap:8px;align-items:center;padding:6px 2px}
+  button{background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}
+  button:hover{background:#2a3547}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.play{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}
+  button.play:hover{background:#3578e5}
+  button.speed{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}
+  #pos{color:#8b95a7;font-size:13px;margin-left:auto}
+  audio{width:100%}
+  aside#transcript{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}
+  aside#transcript h2{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  #tx-body p{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}
+  #tx-body p.active{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}
+  #thumbs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}
+  .thumb{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}
+  .thumb.current{border-color:#2d6cdf}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb span{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}
+  #end-panel{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}
+  #end-panel.active{display:block;animation:slideIn .4s ease-out}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #end-panel h2{margin:0 0 4px 0;font-size:18px;color:#fff}
+  #end-panel .sub{color:#8fb3e8;margin-bottom:12px;font-size:13px}
+  .end-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}
+  .btn-cta.primary{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}
+  .btn-cta.primary:hover{background:#3578e5;transform:translateY(-1px)}
+  .btn-cta.secondary{background:#222a3a;color:#e8eaed;border:1px solid #2a3345}
+  .btn-cta.secondary:hover{background:#2a3547}
+  .btn-cta .label{font-size:12px;opacity:.75;font-weight:400;display:block;margin-bottom:1px}
+  .btn-cta .title{display:block}
+  footer{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}
+  footer a{margin:0 10px}
+  /* Resume banner */
+  #resume-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}
+  #resume-banner.show{display:flex}
+  #resume-banner .text{font-size:13px;color:#c4cad6}
+  #resume-banner .text strong{color:#fff}
+  #resume-banner button{padding:6px 12px;font-size:13px;margin:0}
+  #resume-banner button.primary{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <button class="menu-toggle" id="menu-toggle" title="목차 열기/닫기">☰</button>
+  <a href="../../../index.html">← 홈</a>
+  <h1>prop drilling 문제와 createContext / Provider / useContext 3단계</h1>
+  <span class="meta">LOs: LO-S6.1, LO-S6.2 · 8장 · 9.9분</span>
+</header>
+
+<div id="progress">
+  <span class="label"><strong>Class 20</strong> / 26</span>
+  <div class="bar"><div class="fill" id="course-fill" style="width:76.9%"></div></div>
+  <span class="label">슬라이드 <strong id="slide-num">1</strong> / 8</span>
+  <div class="bar"><div class="fill" id="slide-fill"></div></div>
+</div>
+
+<main>
+  <aside id="toc">
+    <h3>오리엔테이션 — 왜 state 설계가 따로 필요한가</h3>
+    <ul>
+      <li class=""><a href="../../../00-orientation/classes/01-why-state-design-matters/player.html">왜 state 설계가 따로 필요한가 — 4가지 통증 진단</a></li>
+      <li class=""><a href="../../../00-orientation/classes/02-course-map-and-self-diagnosis/player.html">코스 맵 — 7개 챕터가 어떤 통증을 푸는가</a></li>
+      <li class="quiz"><a href="../../../00-orientation/quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+    <h3>사고방식 전환 — 선언형 UI와 visual states로 반응하기</h3>
+    <ul>
+      <li class=""><a href="../../../01-declarative-thinking/classes/01-visual-states-and-triggers/player.html">visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기</a></li>
+      <li class=""><a href="../../../01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/player.html">useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로</a></li>
+      <li class=""><a href="../../../01-declarative-thinking/classes/03-connect-handlers-end-to-end/player.html">핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기</a></li>
+      <li class="quiz"><a href="../../../01-declarative-thinking/quiz.html">📝 섹션 퀴즈 (9문항)</a></li>
+    </ul>
+    <h3>state 구조 설계 — 5가지 원칙으로 동기화 버그 차단</h3>
+    <ul>
+      <li class=""><a href="../../../02-state-structure/classes/01-five-principles-and-grouping/player.html">5원칙 한눈에 + 관련 state 묶기·모순 회피</a></li>
+      <li class=""><a href="../../../02-state-structure/classes/02-redundant-state-and-props-mirroring/player.html">redundant state 제거와 props mirroring 안티패턴</a></li>
+      <li class=""><a href="../../../02-state-structure/classes/03-store-id-not-object/player.html">duplication 회피 — 객체 대신 id를 저장하라</a></li>
+      <li class=""><a href="../../../02-state-structure/classes/04-flatten-deep-nesting/player.html">deep nesting 평탄화 — 트리 데이터를 정규화하기</a></li>
+      <li class="quiz"><a href="../../../02-state-structure/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>컴포넌트 간 state 공유 — Lifting State Up</h3>
+    <ul>
+      <li class=""><a href="../../../03-sharing-state/classes/01-lifting-state-up-3-steps/player.html">Lifting State Up — 형제 컴포넌트를 협조시키는 3단계</a></li>
+      <li class=""><a href="../../../03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/player.html">Controlled vs Uncontrolled와 Single Source of Truth</a></li>
+      <li class=""><a href="../../../03-sharing-state/classes/03-accordion-and-list-patterns/player.html">케이스 스터디 — Accordion·Synced Inputs·Filterable List</a></li>
+      <li class="quiz"><a href="../../../03-sharing-state/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>state 보존과 리셋 — 트리 위치와 key prop</h3>
+    <ul>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/01-state-tied-to-tree-position/player.html">state는 트리 위치에 묶인다 — 보존과 리셋의 기본 규칙</a></li>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/02-reset-strategies-key-prop/player.html">의도된 리셋 — 다른 위치 vs key prop 두 전략</a></li>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/player.html">함정 — JSX 위치 ≠ 트리 위치 &amp; 컴포넌트 정의 중첩 금지</a></li>
+      <li class="quiz"><a href="../../../04-preserving-resetting-state/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Reducer로 state 로직 추출하기</h3>
+    <ul>
+      <li class=""><a href="../../../05-reducer/classes/01-why-reducer-and-signature/player.html">왜 Reducer인가 — useReducer 시그니처와 도입 동기</a></li>
+      <li class=""><a href="../../../05-reducer/classes/02-three-step-migration/player.html">3단계 마이그레이션 — useState에서 useReducer로</a></li>
+      <li class=""><a href="../../../05-reducer/classes/03-action-conventions-and-purity/player.html">Action 컨벤션과 Reducer 순수성 — 결함 진단</a></li>
+      <li class=""><a href="../../../05-reducer/classes/04-tradeoffs-and-immer/player.html">useState vs useReducer 트레이드오프와 Immer 옵션</a></li>
+      <li class="quiz"><a href="../../../05-reducer/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Context로 깊이 데이터 전달하기</h3>
+    <ul>
+      <li class="current"><a href="../01-prop-drilling-and-3-step-pattern/player.html">prop drilling 문제와 createContext / Provider / useContext 3단계</a></li>
+      <li class=""><a href="../02-consume-and-provide-pattern/player.html">같은 컴포넌트가 consume + provide — 자동 level 증가 패턴</a></li>
+      <li class=""><a href="../03-context-vs-alternatives/player.html">context를 쓸 때와 쓰지 말 때 — props·composition과 비교</a></li>
+      <li class="quiz"><a href="../../quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Reducer + Context로 확장하기</h3>
+    <ul>
+      <li class=""><a href="../../../07-reducer-context/classes/01-reducer-context-combine/player.html">Reducer와 Context를 결합하기 — 두 context 분리 전략</a></li>
+      <li class=""><a href="../../../07-reducer-context/classes/02-provider-custom-hooks-scaling/player.html">TasksProvider + 커스텀 훅으로 응집하고 다중 도메인으로 확장하기</a></li>
+      <li class="quiz"><a href="../../../07-reducer-context/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>종합 — 안티패턴 진단과 통합 케이스 스터디</h3>
+    <ul>
+      <li class=""><a href="../../../08-capstone-antipatterns/classes/01-antipattern-clinic/player.html">안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기</a></li>
+      <li class=""><a href="../../../08-capstone-antipatterns/classes/02-mini-kanban-capstone/player.html">통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬</a></li>
+      <li class="quiz"><a href="../../../08-capstone-antipatterns/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+  </aside>
+  <div id="stage">
+    <div id="slide-wrap"><img id="slide" alt="slide"/></div>
+    <div id="controls">
+      <button id="prev">◀ 이전</button>
+      <button id="play" class="play">▶ 재생</button>
+      <button id="next">다음 ▶</button>
+      <button id="speed" class="speed" title="재생 속도">1×</button>
+      <span id="pos">1 / 8</span>
+    </div>
+    <audio id="audio" preload="auto"></audio>
+    <section id="end-panel">
+      <h2>🎉 수업을 완료했어요!</h2>
+      <p class="sub">다음으로 이동하거나 배운 내용을 점검해보세요.</p>
+      <div class="end-actions"><a class="btn-cta primary" href="../02-consume-and-provide-pattern/player.html"><span><span class="label">다음 수업</span><span class="title">▶ 같은 컴포넌트가 consume + provide — 자동 level 증가 패턴</span></span></a>
+    <a class="btn-cta secondary" href="../../quiz.html"><span><span class="label">먼저 점검</span><span class="title">📝 섹션 퀴즈</span></span></a></div>
+    </section>
+  </div>
+  <aside id="transcript">
+    <h2>발화 스크립트</h2>
+    <div id="tx-body"></div>
+  </aside>
+</main>
+
+<section id="thumbs"></section>
+
+<div id="resume-banner" role="dialog" aria-live="polite">
+  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">이어 듣기</button>
+  <button id="resume-no">처음부터</button>
+</div>
+
+<footer>
+  <a href="../../quiz.html">📝 섹션 퀴즈 풀기</a>
+  <a href="../../../index.html">목차로</a>
+</footer>
+
+<script>
+const SLIDES = [{"png": "slides_png/slide.001.png", "mp3": "audio/slide_01.mp3", "transcript": ["자, 이번 클래스의 주제는 prop drilling을 멈추는 3단계입니다.", "크리에이트컨텍스트, 프로바이더, 그리고 유즈컨텍스트.", "이 세 가지 도구를 묶어서, 깊은 컴포넌트 트리에 데이터를 직접 꽂는 백채널을 만들 거예요.", "대부분의 React 학습자가 useState 다음에 가장 헷갈려하는 영역이 바로 이 context입니다.", "왜 헷갈리냐면, 데이터가 props처럼 한 칸씩 흐르는 게 아니라 트리 위쪽에서 아래쪽 임의 자손으로 점프해 버리거든요.", "오늘은 이 점프가 어떻게 일어나는지, 그리고 어떤 경우에 자연스러운지를 천천히 풀어볼게요.", "대략 14분 정도 잡고 편하게 따라와 주세요."], "transcriptTimes": [{"start": 0.0, "end": 4.982}, {"start": 4.982, "end": 8.507}, {"start": 8.507, "end": 14.704}, {"start": 14.704, "end": 21.753}, {"start": 21.753, "end": 29.895}, {"start": 29.895, "end": 35.971}, {"start": 35.971, "end": 39.009}]}, {"png": "slides_png/slide.002.png", "mp3": "audio/slide_02.mp3", "transcript": ["먼저 통증부터 같이 느껴봅시다.", "앱, 페이지, 레이아웃, 사이드바, 그리고 유저뱃지.", "이렇게 다섯 단계 트리가 있다고 해볼게요.", "실제로 currentUser라는 값을 쓰는 건 가장 안쪽 유저뱃지 하나뿐입니다.", "그런데 그 사이 네 개 컴포넌트가 전부 currentUser를 props로 받아서 줄줄이 내려보내야 해요.", "페이지는 currentUser를 받아서 레이아웃에 넘기고, 레이아웃은 또 사이드바에 넘기고, 사이드바는 다시 유저뱃지에 넘기죠.", "여기서 끝이 아니에요.", "다크모드를 추가하고 싶다고 해봅시다.", "그러면 같은 네 개 컴포넌트를 또 한 번 똑같이 수정해야 합니다.", "새 props를 추가할 때마다 이 통과 작업이 반복되는 거예요.", "중간 컴포넌트들은 이 데이터를 직접 쓰지도 않아요.", "그런데도 시그니처가 점점 더러워지는 거죠.", "타입까지 정의해야 한다면 더 끔찍해집니다.", "레이아웃의 props 타입에 currentUser와 theme이 추가되는데, 정작 레이아웃은 그 값을 쓰지 않아요.", "이게 prop drilling의 비용입니다."], "transcriptTimes": [{"start": 0.0, "end": 2.147}, {"start": 2.147, "end": 5.811}, {"start": 5.811, "end": 8.716}, {"start": 8.716, "end": 14.274}, {"start": 14.274, "end": 21.727}, {"start": 21.727, "end": 30.695}, {"start": 30.695, "end": 32.211}, {"start": 32.211, "end": 34.737}, {"start": 34.737, "end": 39.285}, {"start": 39.285, "end": 43.706}, {"start": 43.706, "end": 47.243}, {"start": 47.243, "end": 50.148}, {"start": 50.148, "end": 53.053}, {"start": 53.053, "end": 61.137}, {"start": 61.137, "end": 64.169}]}, {"png": "slides_png/slide.003.png", "mp3": "audio/slide_03.mp3", "transcript": ["이런 패턴을 prop drilling이라고 부릅니다.", "정의는 간단해요.", "중간 컴포넌트가 단지 통과시키기 위해서 prop을 받는 패턴이에요.", "드릴로 구멍을 뚫듯 props가 트리를 관통한다는 비유에서 이름이 왔습니다.", "다른 예시 하나 더 들어볼게요.", "Heading 컴포넌트에 level prop을 전달한다고 해봅시다.", "페이지 안에 Section이 있고, 그 안에 또 Section, 그 안에 Heading이 있는 구조라고 해보죠.", "원래대로라면 Section을 거칠 때마다 level 숫자를 일일이 손으로 적어야 합니다.", "이건 단순 통과는 아니지만, 의미상으로는 사람이 매번 같은 정보를 반복해 적는 부담이에요.", "props는 본질적으로 위에서 아래로, 직렬로 흐릅니다.", "부모에서 자식, 자식에서 또 자식.", "한 칸씩 내려가는 구조죠.", "이건 React의 단방향 데이터 흐름이라는 핵심 모델이기도 해요.", "대부분의 경우 이게 가장 명확하고, 디버깅도 쉽습니다.", "어떤 값이 어디서 오는지 파일만 따라가면 보이거든요.", "반면 context는 전혀 다릅니다.", "프로바이더에서 임의의 자손으로 한 번에 점프합니다.", "한 번 꽂으면 그 아래 어디서든 같은 값을 읽을 수 있어요.", "중간에 있는 컴포넌트는 context의 존재조차 몰라도 돼요.", "그냥 통과만 하면 됩니다.", "저는 이걸 컴포넌트 트리에 직접 꽂는 백채널이라고 비유하곤 해요.", "공식 라우트는 props라는 큰길이고, context는 그 옆에 따로 뚫린 비밀 통로 같은 거죠.", "큰길로 멀리 가야 하는 짐일수록 비밀 통로의 가치가 커집니다."], "transcriptTimes": [{"start": 0.0, "end": 3.622}, {"start": 3.622, "end": 4.746}, {"start": 4.746, "end": 9.368}, {"start": 9.368, "end": 14.614}, {"start": 14.614, "end": 16.737}, {"start": 16.737, "end": 21.359}, {"start": 21.359, "end": 29.103}, {"start": 29.103, "end": 35.223}, {"start": 35.223, "end": 41.469}, {"start": 41.469, "end": 45.341}, {"start": 45.341, "end": 47.714}, {"start": 47.714, "end": 49.463}, {"start": 49.463, "end": 53.959}, {"start": 53.959, "end": 57.707}, {"start": 57.707, "end": 61.329}, {"start": 61.329, "end": 63.827}, {"start": 63.827, "end": 67.324}, {"start": 67.324, "end": 71.446}, {"start": 71.446, "end": 75.693}, {"start": 75.693, "end": 77.442}, {"start": 77.442, "end": 81.938}, {"start": 81.938, "end": 88.683}, {"start": 88.683, "end": 92.93}]}, {"png": "slides_png/slide.004.png", "mp3": "audio/slide_04.mp3", "transcript": ["그럼 이제 3단계 패턴을 봅시다.", "1단계, 크리에이트컨텍스트입니다.", "context 객체를 하나 만들어요.", "인자로 넘기는 값은 디폴트밸류, 즉 프로바이더가 없을 때의 폴백 값이에요.", "이 디폴트는 의외로 중요합니다.", "프로바이더가 어떤 이유로 빠지더라도 자손이 깨지지 않도록 안전망이 되거든요.", "테스트 환경에서 프로바이더 없이 컴포넌트를 단독 렌더할 때도 디폴트가 큰 도움이 됩니다.", "2단계는 프로바이더입니다.", "컴포넌트처럼 트리에 꽂아서 value 속성으로 값을 공급해요.", "React 19부터는 Context 자체를 프로바이더로 직접 쓸 수 있습니다.", "LevelContext.Provider 같은 점 표기 없이 그냥 LevelContext에 value를 꽂으면 끝이에요.", "이번 강의에서는 이 새 문법을 기준으로 설명할게요.", "이 value는 매 렌더마다 새 값으로 바꿔도 괜찮습니다.", "값이 바뀌면 그 값을 읽는 자손이 자동으로 다시 렌더돼요.", "이게 props와 다른 점인데, props는 부모가 새 값을 내려보내야 자식이 안다면, context는 프로바이더가 갱신되면 자손이 알아서 반응합니다.", "3단계는 유즈컨텍스트예요.", "자손 컴포넌트에서 호출하면, 자기를 감싼 가장 가까운 프로바이더의 값을 읽어옵니다.", "인자로는 어떤 context를 읽을지 객체 자체를 그대로 넘겨요.", "한 가지 꼭 기억할 점.", "유즈컨텍스트는 훅입니다.", "그래서 컴포넌트 최상단에서만 부를 수 있어요.", "조건문 안이나 반복문 안에서 호출하면 안 됩니다.", "이건 모든 React 훅의 공통 규칙이고, 어기면 React가 경고를 띄워줍니다.", "그리고 프로바이더가 트리 위에 하나도 없다면, 크리에이트컨텍스트의 디폴트가 그대로 반환돼요.", "에러가 나는 게 아니라, 조용히 디폴트가 채워진다는 점도 기억해 주세요."], "transcriptTimes": [{"start": 0.0, "end": 2.35}, {"start": 2.35, "end": 4.701}, {"start": 4.701, "end": 7.312}, {"start": 7.312, "end": 12.666}, {"start": 12.666, "end": 14.885}, {"start": 14.885, "end": 20.369}, {"start": 20.369, "end": 26.767}, {"start": 26.767, "end": 28.596}, {"start": 28.596, "end": 33.035}, {"start": 33.035, "end": 38.65}, {"start": 38.65, "end": 47.267}, {"start": 47.267, "end": 50.924}, {"start": 50.924, "end": 55.102}, {"start": 55.102, "end": 59.28}, {"start": 59.28, "end": 70.248}, {"start": 70.248, "end": 72.076}, {"start": 72.076, "end": 78.083}, {"start": 78.083, "end": 82.783}, {"start": 82.783, "end": 84.481}, {"start": 84.481, "end": 86.178}, {"start": 86.178, "end": 89.443}, {"start": 89.443, "end": 92.968}, {"start": 92.968, "end": 98.844}, {"start": 98.844, "end": 105.503}, {"start": 105.503, "end": 110.726}]}, {"png": "slides_png/slide.005.png", "mp3": "audio/slide_05.mp3", "transcript": ["이제 실제 예제로 가봅시다.", "react.dev 원전과 같은 Heading 예제예요.", "Heading은 children을 받아서 h1, h2, h3 같은 헤딩 태그로 렌더하는 컴포넌트입니다.", "원래는 level이라는 props를 받아서 그 숫자에 따라 태그를 바꿨어요.", "지난 섹션의 lifting state up이나 controlled 패턴이 그랬듯, props로 명시적으로 내려보내는 방식이었죠.", "이번엔 다르게 해봅시다.", "LevelContext.js라는 별도 파일을 하나 만들어요.", "이 파일은 react에서 크리에이트컨텍스트를 임포트하고, LevelContext라는 이름으로 export 합니다.", "디폴트는 1로 둡니다.", "이렇게 별도 파일로 빼는 이유는, Heading과 Section 양쪽에서 같은 객체를 참조해야 하기 때문이에요.", "Heading 컴포넌트는 children만 받아요.", "level은 props로 받지 않습니다.", "대신 컴포넌트 안에서 유즈컨텍스트를 호출해서 LevelContext의 값을 읽어와요.", "함수 첫 줄이 const level은 useContext(LevelContext) 한 줄짜리 표현으로 끝납니다.", "그 다음은 스위치문이에요.", "level이 1이면 h1, 2면 h2, 3이면 h3, 그 외에는 h4를 렌더합니다.", "JSX는 그냥 children을 그 안에 넣어주면 끝이에요.", "포인트는 여기예요.", "Heading의 시그니처에서 level prop이 완전히 사라졌다는 거.", "타입 정의도 단출해지고, 사용하는 쪽에서 매번 level을 적을 필요가 없어졌어요.", "이게 시각적으로 꽤 강력한 변화입니다.", "컴포넌트 사용자에게 보이는 API가 아주 깨끗해진 거예요."], "transcriptTimes": [{"start": 0.0, "end": 1.821}, {"start": 1.821, "end": 5.464}, {"start": 5.464, "end": 12.386}, {"start": 12.386, "end": 17.486}, {"start": 17.486, "end": 26.108}, {"start": 26.108, "end": 27.686}, {"start": 27.686, "end": 31.693}, {"start": 31.693, "end": 39.343}, {"start": 39.343, "end": 40.801}, {"start": 40.801, "end": 48.329}, {"start": 48.329, "end": 51.729}, {"start": 51.729, "end": 54.401}, {"start": 54.401, "end": 60.108}, {"start": 60.108, "end": 67.637}, {"start": 67.637, "end": 69.337}, {"start": 69.337, "end": 74.923}, {"start": 74.923, "end": 78.93}, {"start": 78.93, "end": 80.144}, {"start": 80.144, "end": 85.001}, {"start": 85.001, "end": 90.587}, {"start": 90.587, "end": 93.137}, {"start": 93.137, "end": 97.023}]}, {"png": "slides_png/slide.006.png", "mp3": "audio/slide_06.mp3", "transcript": ["그럼 그 level은 누가 공급하느냐.", "Section 컴포넌트가 합니다.", "Section은 level과 children을 받아요.", "그리고 section 태그 안에, LevelContext를 프로바이더처럼 쓰면서 value에 level을 꽂아줍니다.", "그 안에 children을 넣어주면 끝이에요.", "section 태그는 순전히 의미적 마크업이고, 실제 데이터 공급은 LevelContext가 합니다.", "HTML 시멘틱과 React 데이터 채널이 같은 위치에 공존하는 모양이죠.", "사용 쪽도 깔끔해집니다.", "Section level 1로 감싸고, 그 안에 그냥 Heading title이라고만 적어요.", "Heading에는 level prop이 보이지 않아요.", "이미 Section이 백채널로 1을 꽂아줬기 때문이죠.", "사용자가 적어야 할 곳은 Section 한 군데로 줄어든 셈입니다.", "그리고 정말 흥미로운 부분은 여기에요.", "중간에 있는 다른 컴포넌트들은 LevelContext를 임포트조차 안 해도 됩니다.", "그냥 통과만 하면 돼요.", "Page가 Section을 자식으로 가지든, Sidebar가 Section을 자식으로 가지든, 그 사이 컴포넌트는 level의 존재 자체를 모르고 살 수 있어요.", "이게 prop drilling과 가장 다른 점이에요.", "context는 통과 컴포넌트에게 아무런 부담을 주지 않습니다.", "시그니처도 깨끗하고, 의존성도 안 늘어나요."], "transcriptTimes": [{"start": 0.0, "end": 2.45}, {"start": 2.45, "end": 4.549}, {"start": 4.549, "end": 8.049}, {"start": 8.049, "end": 15.631}, {"start": 15.631, "end": 18.547}, {"start": 18.547, "end": 25.08}, {"start": 25.08, "end": 29.863}, {"start": 29.863, "end": 31.379}, {"start": 31.379, "end": 37.445}, {"start": 37.445, "end": 40.944}, {"start": 40.944, "end": 44.444}, {"start": 44.444, "end": 48.76}, {"start": 48.76, "end": 51.21}, {"start": 51.21, "end": 56.576}, {"start": 56.576, "end": 58.092}, {"start": 58.092, "end": 68.591}, {"start": 68.591, "end": 71.974}, {"start": 71.974, "end": 76.056}, {"start": 76.056, "end": 78.856}]}, {"png": "slides_png/slide.007.png", "mp3": "audio/slide_07.mp3", "transcript": ["잠깐 멈추고 같이 답해봅시다.", "첫 번째 질문.", "프로바이더 없이 유즈컨텍스트로 LevelContext를 부르면 어떤 값이 반환될까요?", "정답은 디폴트, 즉 1입니다.", "크리에이트컨텍스트에 1을 넘겼기 때문에, 프로바이더 없이도 Heading은 h1으로 렌더돼요.", "이게 디폴트의 안전망 역할입니다.", "두 번째 질문.", "LevelContext value 2로 감싼 안에서 또 LevelContext value 4로 감싸면, 가장 안쪽 Heading은 어떤 태그가 될까요?", "가장 가까운 프로바이더 규칙에 따라 안쪽 4가 이깁니다.", "그래서 h4가 돼요.", "바깥쪽 2는 안쪽 프로바이더가 그림자를 드리워서 보이지 않게 됩니다.", "이 그림자 규칙이 다음 클래스의 핵심 동력이 될 거예요.", "세 번째.", "왜 크리에이트컨텍스트의 인자가 1처럼 의미 있는 기본값이어야 할까요?", "힌트만 드리면, 다음 클래스에서 Section이 자기를 감싼 값에 1을 더해서 자식에게 줄 거예요.", "그러면 가장 위 Section은 무엇을 읽고, 무엇을 줄까요?", "이 부분은 다음 클래스에서 자연스럽게 드러날 거예요."], "transcriptTimes": [{"start": 0.0, "end": 2.084}, {"start": 2.084, "end": 3.126}, {"start": 3.126, "end": 9.247}, {"start": 9.247, "end": 11.331}, {"start": 11.331, "end": 18.104}, {"start": 18.104, "end": 20.448}, {"start": 20.448, "end": 21.49}, {"start": 21.49, "end": 32.431}, {"start": 32.431, "end": 36.468}, {"start": 36.468, "end": 37.901}, {"start": 37.901, "end": 42.85}, {"start": 42.85, "end": 46.888}, {"start": 46.888, "end": 47.539}, {"start": 47.539, "end": 52.488}, {"start": 52.488, "end": 59.652}, {"start": 59.652, "end": 64.08}, {"start": 64.08, "end": 67.857}]}, {"png": "slides_png/slide.008.png", "mp3": "audio/slide_08.mp3", "transcript": ["정리해봅시다.", "prop drilling은, 통과만 하는 props 때문에 트리가 깊어질수록 통증이 커지는 패턴이에요.", "중간 컴포넌트의 시그니처가 자기 책임과 무관한 데이터로 더러워지죠.", "해법은 3단계입니다.", "크리에이트컨텍스트로 디폴트와 함께 만들고, 프로바이더로 value를 꽂고, 유즈컨텍스트로 읽는다.", "이 흐름을 머릿속에 새겨주세요.", "그리고 가장 가까운 프로바이더가 이긴다는 그림자 규칙도 함께요.", "다음 클래스에서는 한 단계 더 나갑니다.", "같은 컴포넌트가 동시에 consume도 하고 provide도 하면 어떻게 되는지.", "그러면 level이 자동으로 증가하는 마법 같은 패턴이 나옵니다.", "거기서 만나요."], "transcriptTimes": [{"start": 0.0, "end": 0.909}, {"start": 0.909, "end": 8.306}, {"start": 8.306, "end": 13.109}, {"start": 13.109, "end": 14.536}, {"start": 14.536, "end": 21.545}, {"start": 21.545, "end": 23.751}, {"start": 23.751, "end": 28.294}, {"start": 28.294, "end": 31.149}, {"start": 31.149, "end": 36.989}, {"start": 36.989, "end": 41.662}, {"start": 41.662, "end": 42.7}]}];
+let current = 0;
+const img = document.getElementById('slide');
+const audio = document.getElementById('audio');
+const txBody = document.getElementById('tx-body');
+const pos = document.getElementById('pos');
+const thumbs = document.getElementById('thumbs');
+const btnPrev = document.getElementById('prev');
+const btnPlay = document.getElementById('play');
+const btnNext = document.getElementById('next');
+
+SLIDES.forEach((s, i) => {
+  const t = document.createElement('div');
+  t.className = 'thumb';
+  t.dataset.i = i;
+  t.innerHTML = '<img src="' + s.png + '"/><span>' + (i+1) + '</span>';
+  t.onclick = () => loadSlide(i, true);
+  thumbs.appendChild(t);
+});
+
+function loadSlide(i, autoplay, resumeTime) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, i));
+  const s = SLIDES[current];
+  img.src = s.png;
+  audio.src = s.mp3;
+  if (resumeTime && resumeTime > 1) {
+    audio.addEventListener('loadedmetadata', () => {
+      const dur = audio.duration;
+      if (isFinite(dur)) audio.currentTime = Math.min(resumeTime, Math.max(0, dur - 1));
+    }, { once: true });
+  }
+  pos.textContent = (current + 1) + ' / ' + SLIDES.length;
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === SLIDES.length - 1;
+
+  txBody.innerHTML = '';
+  const times = s.transcriptTimes || [];
+  s.transcript.forEach((line, idx) => {
+    const p = document.createElement('p');
+    p.textContent = line;
+    const t = times[idx];
+    if (t && typeof t.start === 'number' && typeof t.end === 'number') {
+      p.dataset.start = t.start;
+      p.dataset.end = t.end;
+    }
+    txBody.appendChild(p);
+  });
+
+  document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('current', idx === current));
+  const cur = document.querySelector('.thumb.current');
+  if (cur) cur.scrollIntoView({block:'nearest', inline:'center'});
+
+  maybeShowEnd();
+  saveState();
+
+  if (autoplay) audio.play().catch(() => {});
+}
+
+// localStorage resume — key = page path so each class gets its own slot
+const STORAGE_KEY = 'course-builder:' + location.pathname;
+const STATE_MAX_AGE_MS = 30 * 86400 * 1000;
+let lastSaveTs = 0;
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      slide: current,
+      time: audio.currentTime || 0,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadResumeState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > STATE_MAX_AGE_MS) return null;
+    if (typeof s.slide !== 'number' || s.slide < 0 || s.slide >= SLIDES.length) return null;
+    // Don't bother prompting if they barely started
+    if (s.slide === 0 && (s.time || 0) < 3) return null;
+    return s;
+  } catch(e) { return null; }
+}
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+function fmtTime(t) {
+  const sec = Math.max(0, Math.floor(t || 0));
+  return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}
+
+let lastActiveLine = null;
+audio.addEventListener('timeupdate', () => {
+  const now = Date.now();
+  if (now - lastSaveTs > 3000) { saveState(); lastSaveTs = now; }
+  // Highlight the transcript line whose [start, end) range contains currentTime.
+  // Line timings come from char-proportional splitting of the slide's MP3 duration.
+  const t = audio.currentTime;
+  const lines = txBody.children;
+  let newActive = null;
+  for (let i = 0; i < lines.length; i++) {
+    const el = lines[i];
+    const s = parseFloat(el.dataset.start);
+    const e = parseFloat(el.dataset.end);
+    if (!isNaN(s) && !isNaN(e) && t >= s && t < e) { newActive = el; break; }
+  }
+  if (newActive !== lastActiveLine) {
+    if (lastActiveLine) lastActiveLine.classList.remove('active');
+    if (newActive) {
+      newActive.classList.add('active');
+      newActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    lastActiveLine = newActive;
+  }
+});
+
+// Playback speed — single cycle button, global across classes
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const SPEED_KEY = 'course-builder:playback-speed';
+const btnSpeed = document.getElementById('speed');
+
+function loadSpeed() {
+  try {
+    const v = parseFloat(localStorage.getItem(SPEED_KEY));
+    if (SPEEDS.includes(v)) return v;
+  } catch(e) {}
+  return 1;
+}
+function applySpeed(v) {
+  audio.playbackRate = v;
+  if ('preservesPitch' in audio) audio.preservesPitch = true;
+  // Display: 1× (no decimal) / 1.25× / 1.5× etc.
+  btnSpeed.textContent = (Number.isInteger(v) ? v : v.toString()) + '×';
+  btnSpeed.classList.toggle('speed-fast', v > 1);
+  btnSpeed.classList.toggle('speed-slow', v < 1);
+}
+let currentSpeed = loadSpeed();
+applySpeed(currentSpeed);
+btnSpeed.onclick = () => {
+  const idx = SPEEDS.indexOf(currentSpeed);
+  currentSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+  applySpeed(currentSpeed);
+  try { localStorage.setItem(SPEED_KEY, String(currentSpeed)); } catch(e) {}
+};
+audio.addEventListener('loadedmetadata', () => { audio.playbackRate = currentSpeed; });
+
+const endPanel = document.getElementById('end-panel');
+const slideFill = document.getElementById('slide-fill');
+const slideNumEl = document.getElementById('slide-num');
+const toc = document.getElementById('toc');
+const menuToggle = document.getElementById('menu-toggle');
+menuToggle.addEventListener('click', () => toc.classList.toggle('open'));
+
+function maybeShowEnd() {
+  if (current === SLIDES.length - 1) {
+    endPanel.classList.add('active');
+  } else {
+    endPanel.classList.remove('active');
+  }
+  // Update progress bar
+  const pct = ((current + 1) / SLIDES.length) * 100;
+  slideFill.style.width = pct + '%';
+  slideNumEl.textContent = current + 1;
+}
+
+btnPrev.onclick = () => loadSlide(current - 1, true);
+btnNext.onclick = () => loadSlide(current + 1, true);
+btnPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
+
+audio.addEventListener('play', () => btnPlay.textContent = '⏸ 일시정지');
+audio.addEventListener('pause', () => btnPlay.textContent = '▶ 재생');
+audio.addEventListener('ended', () => {
+  if (current < SLIDES.length - 1) {
+    loadSlide(current + 1, true);
+  } else {
+    maybeShowEnd();
+    endPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); btnPlay.click(); }
+  else if (e.key === 'ArrowRight') btnNext.click();
+  else if (e.key === 'ArrowLeft') btnPrev.click();
+});
+
+// Initial load — show resume banner if prior state exists, otherwise start at slide 0
+const resumeState = loadResumeState();
+loadSlide(0, false);
+if (resumeState) {
+  document.getElementById('resume-pos').textContent =
+    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+  const banner = document.getElementById('resume-banner');
+  banner.classList.add('show');
+  document.getElementById('resume-yes').onclick = () => {
+    banner.classList.remove('show');
+    loadSlide(resumeState.slide, true, resumeState.time);
+  };
+  document.getElementById('resume-no').onclick = () => {
+    banner.classList.remove('show');
+    clearState();
+  };
+}
+</script>
+</body>
+</html>

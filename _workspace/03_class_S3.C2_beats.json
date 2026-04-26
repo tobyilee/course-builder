@@ -1,0 +1,112 @@
+{
+  "class_id": "S3.C2",
+  "title": "Controlled vs Uncontrolled와 Single Source of Truth",
+  "lo_ids": ["LO-S3.2", "LO-S3.3"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "같은 Panel 컴포넌트라도 '내부에 state가 있냐, 부모가 props로 통제하냐'에 따라 협조 능력이 완전히 달라진다",
+        "C1에서 lift 했더니 Panel은 더 이상 자기 상태를 갖지 않는다 — 이게 'controlled'다",
+        "그렇다면 모든 컴포넌트를 controlled로 만들어야 하나? 아니면 어떤 기준으로 결정?",
+        "오늘 — 두 스타일의 트레이드오프 + 'state를 어디에 둘지' 결정 사고법"
+      ],
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "visual_hint": "한 컴포넌트를 두 버전으로 — 왼쪽 uncontrolled(useState 박스 내부), 오른쪽 controlled(부모로부터 props 화살표)",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 100,
+      "key_points": [
+        "Uncontrolled — state가 자식 내부 useState에 있음. 부모는 영향 못 줌. 부모 설정 적게 필요해서 '드롭인' 사용 편함",
+        "Controlled — state가 부모 props에서 옴. 부모가 완전히 통제. 협조·동기화 가능하지만 부모가 모든 props 책임짐",
+        "핵심 식별 법: 같은 정보를 'props로 받는가(controlled), useState로 보유하는가(uncontrolled)'를 본다",
+        "둘은 흑백이 아니다 — 대부분 컴포넌트는 일부 props는 부모 통제, 일부는 내부 state인 '부분 controlled'"
+      ],
+      "lo_ids": ["LO-S3.2"],
+      "visual_hint": "두 코드 스니펫 나란히 — Uncontrolled Panel(내부 useState) vs Controlled Panel(props isActive/onShow)",
+      "speaker_affect": "설명적, 차분하게"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "비교 매트릭스 — 상태 위치 / 부모 영향 / 사용 편의 3축",
+        "Uncontrolled: 자식 내부 / 부모 영향 없음 / 부모 설정 적음, 협조 어려움",
+        "Controlled: 부모 props / 완전 통제 / 부모가 모든 props 제공",
+        "선택 기준 한 줄 — '다른 컴포넌트와 협조해야 하는가?' Yes → controlled로, No → uncontrolled 유지"
+      ],
+      "lo_ids": ["LO-S3.2"],
+      "visual_hint": "3열 비교 표 — 상태 위치 / 부모 영향 / 사용 편의 행, Uncontrolled / Controlled 열",
+      "speaker_affect": "정리하는, 강조"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "Single Source of Truth — 각 state는 단 하나의 컴포넌트가 소유한다",
+        "공유가 필요해지는 순간: state를 '가장 가까운 공통 부모'로 lift",
+        "원칙은 정적이지 않다 — 요구사항이 바뀌면 state는 자유롭게 위/아래로 이동",
+        "결정 알고리즘 — (1) 이 state를 누가 읽는가 나열 → (2) 그들의 가장 가까운 공통 조상을 찾음 → (3) 거기에 state 배치"
+      ],
+      "lo_ids": ["LO-S3.3"],
+      "visual_hint": "트리 다이어그램 — A·B 두 자식이 같은 state를 읽음 → 가장 가까운 공통 부모 노드에 state 배지(별표) 표시",
+      "speaker_affect": "원칙적, 안정적"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "시나리오 1 — Synced Inputs: 두 Input이 같은 값을 보여줘야 함",
+        "각 Input이 자체 useState를 가지면(uncontrolled) 동기화 불가 → 부모에 text state, 두 Input은 controlled",
+        "시나리오 2 — Filterable List: SearchBar는 query를 입력받고 List는 필터된 결과를 보여줌",
+        "query를 누가 읽나? SearchBar(쓰기)와 List(읽기) → 가장 가까운 공통 부모(예: FilterableList)에 query state 배치",
+        "results는 state가 아니라 query로부터 derive — filterItems(foods, query)"
+      ],
+      "lo_ids": ["LO-S3.3"],
+      "examples": [
+        "Synced Inputs — const [text, setText] = useState(''); 부모가 보유, Input 2개에 동일하게 props 전달",
+        "Filterable List — const [query, setQuery] = useState(''); const results = filterItems(foods, query);"
+      ],
+      "visual_hint": "두 시나리오 트리 — 각각 state 위치를 별표로 표시, props/handler 화살표",
+      "speaker_affect": "구체적, 친근하게"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 95,
+      "key_points": [
+        "미니 시나리오 — 쇼핑몰 상품 카드(ProductCard)와 장바구니 배지(CartBadge)가 같은 페이지에 있다. 카드의 '담기' 버튼이 배지 숫자를 올려야 한다",
+        "자문자답 1: 이 state(cartCount)를 누가 읽는가? — ProductCard(쓰기), CartBadge(읽기)",
+        "자문자답 2: 가장 가까운 공통 부모는 어디인가? — 두 컴포넌트를 모두 렌더하는 페이지 컴포넌트",
+        "자문자답 3: 둘 중 어느 컴포넌트가 controlled가 되는가? — 두 자식 모두 controlled (cartCount/onAdd props)",
+        "자문자답 4: 만약 ProductCard가 자체 useState로 cartCount를 갖고 있다면 어떤 버그가? — 배지와 동기화 안됨, redundant state"
+      ],
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "visual_hint": "시나리오 트리 + 4개 빈칸 체크리스트",
+      "speaker_affect": "격려하는, 사고 유도"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 45,
+      "key_points": [
+        "Controlled = 부모 props 주도, Uncontrolled = 자식 내부 state 주도",
+        "협조가 필요하면 controlled로 만들고 state는 가장 가까운 공통 부모로 lift",
+        "Single Source of Truth — 각 state는 하나의 컴포넌트만 소유, 위치는 자유롭게 조정",
+        "다음 class에서는 Accordion·Synced Inputs·Filterable List 세 패턴을 직접 구현해본다"
+      ],
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "visual_hint": "한 장 요약 — 비교 표 + 결정 알고리즘 3줄",
+      "speaker_affect": "마무리, 자신감"
+    }
+  ]
+}

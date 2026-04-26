@@ -1,0 +1,90 @@
+{
+  "class_id": "S0.C2",
+  "title": "코스 맵 — 7개 챕터가 어떤 통증을 푸는가",
+  "lo_ids": ["LO-S0.1", "LO-S0.2"],
+  "target_duration_sec": 480,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 40,
+      "key_points": [
+        "앞 class에서 본 4가지 통증을 머릿속에 두고, 이제 '어디서 어떻게 풀리는지' 한 장의 지도로 본다",
+        "오늘의 약속: 7개 챕터를 통증과 1:1로 매핑하고, 학습자가 자기 코드 한 줄을 어느 챕터에 걸어볼지 결정한다",
+        "이 지도는 강의 전체에서 '지금 어디에 있는지' 다시 펴볼 북극성 역할"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "여행 지도 메타포 — 7개 챕터가 길 위에 정거장처럼 배치된 그림",
+      "speaker_affect": "기대감, 안내자 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "S1 선언형 사고 — 통증 #1·#2 뿌리 해결: visual states 열거·트리거 식별·useState 모델링·비핵심 제거 5단계",
+        "S2 state 구조 설계 — 통증 #1(중복)·#2(동기화) 직접 차단: 5원칙(묶기/모순회피/redundant 제거/duplication 회피/평탄화)",
+        "S3 lifting state up — 통증 #3(drilling)의 1차 처방: 형제 협조가 필요할 때 공통 부모로 끌어올리기 + single source of truth",
+        "여기까지가 '구조 잡기' — state를 어디에 어떤 모양으로 둘지 결정하는 영역"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "S1·S2·S3 3개 박스를 '구조 잡기' 그룹으로 묶은 다이어그램, 왼쪽에 통증 #1·#2·#3 라벨 연결",
+      "speaker_affect": "차분하게 안내"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "S4 state 보존과 리셋 — 통증 #4(의도치 않은 리셋) 정면 해결: 트리 위치 규칙 + key prop으로 리셋 의도 표현",
+        "S5 reducer — setState가 흩어진 컴포넌트의 복잡도 통증: (state, action) => nextState 순수 함수로 통합",
+        "S6 context — 통증 #3(drilling)의 2차 처방: createContext/Provider/useContext 3단계",
+        "S7 reducer + context — 대규모 분산 상태로의 확장: state/dispatch context 분리, 커스텀 훅 응집",
+        "S4~S7는 '동작 다듬기' — 구조가 잡힌 뒤 리셋·로직·전달 방식을 정교화하는 영역"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "S4·S5·S6·S7 4개 박스를 '동작 다듬기' 그룹으로 묶기. 통증 #3·#4 라벨이 S6·S4로 연결",
+      "speaker_affect": "차분하게, 마지막에 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 70,
+      "key_points": [
+        "예시 매핑: '체크박스 7개를 boolean으로 들고 있다가 모순 상태가 만들어진' 통증 → S1·S2 챕터에서 status enum과 5원칙으로 풀린다",
+        "예시 매핑: '같은 폼인데 탭만 바꾸면 입력이 그대로 남아 있어 새 글에 옛 값이 보이는' 통증 → S4 챕터에서 key prop으로 리셋",
+        "이 두 예시처럼, 모든 통증에는 '풀리는 챕터'가 정해져 있다는 사실을 체감하기"
+      ],
+      "lo_ids": ["LO-S0.1", "LO-S0.2"],
+      "visual_hint": "통증 → 챕터 화살표 2개 — 좌측 통증 카드, 우측 챕터 카드, 화살표 굵게",
+      "speaker_affect": "친근하게, 사례 들려주듯"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 50,
+      "key_points": [
+        "자기 진단(self-diagnosis): 최근 프로젝트에서 겪은 state 버그/스멜 1개를 머릿속에 떠올리기",
+        "그 버그는 4가지 통증 중 어느 것에 가까운가? — 한 단어로 라벨링",
+        "그 통증을 풀 챕터를 코스 맵에서 찾아 '이건 S?에서 풀릴 것 같다'는 가설을 세우기",
+        "정답 검증은 강의 진행하며 자연스럽게 — 지금은 가설만 잡으면 충분"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "3단 워크시트 그림 — ①내 버그 한 줄 ②해당 통증 ③예상 챕터",
+      "speaker_affect": "친근하게 권유, 잠깐 멈춰 생각하도록 유도"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 20,
+      "key_points": [
+        "정리 — ① S1·S2·S3은 '구조 잡기', S4~S7은 '동작 다듬기' 두 묶음으로 기억",
+        "② 4가지 통증은 7개 챕터 어딘가에서 반드시 풀린다 — 우연으로 두지 않는다",
+        "③ 다음 섹션부터는 가설을 들고 입장 — 내 코드의 어느 줄이 어느 챕터에 걸리는지 추적하며 듣자"
+      ],
+      "lo_ids": ["LO-S0.1", "LO-S0.2"],
+      "visual_hint": "코스 맵 전체 미니어처 + '구조 잡기/동작 다듬기' 두 그룹 라벨",
+      "speaker_affect": "정리, 다음 섹션으로 자연스럽게 이어주기"
+    }
+  ]
+}

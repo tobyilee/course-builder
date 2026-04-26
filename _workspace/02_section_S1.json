@@ -1,0 +1,40 @@
+{
+  "section_id": "S1",
+  "section_slug": "01-declarative-thinking",
+  "section_title": "사고방식 전환 — 선언형 UI와 visual states로 반응하기",
+  "duration_min": 35,
+  "classes": [
+    {
+      "id": "S1.C1",
+      "slug": "01-visual-states-and-triggers",
+      "title": "visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기",
+      "lo_ids": ["LO-S1.1"],
+      "duration_min": 12,
+      "depends_on": [],
+      "summary": "명령형(매 단계 직접 지시)과 선언형(상태별 UI 기술) 차이를 택시·운전 비유로 잡고 출발한다. Form 위젯을 예로 empty / typing / submitting / success / error 5개 visual state를 모두 펼쳐 보고, 각 전이를 일으키는 human(텍스트 입력·Submit 클릭) vs computer(네트워크 응답) 트리거를 표로 정리한다. 마지막 Practice는 학습자에게 익숙한 위젯(예: 좋아요 버튼) 하나를 골라 visual states 표를 직접 작성해 보는 활동이다. Hook = 명령형 코드의 '버튼 disable, spinner show…' 지옥 → Teach = 선언형 5단계 프로세스 큰 그림 제시 → Example = Form의 5개 상태 + 트리거 매트릭스 → Practice = 학습자 위젯 표 작성 → Recap = '상태와 트리거를 먼저 그리면 React가 알아서 그려준다.'",
+      "beats": ["hook", "teach", "example", "practice", "recap"]
+    },
+    {
+      "id": "S1.C2",
+      "slug": "02-modeling-state-and-removing-non-essential",
+      "title": "useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로",
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "duration_min": 12,
+      "depends_on": ["S1.C1"],
+      "summary": "C1에서 그린 visual states를 실제 useState 변수로 옮긴다. 먼저 순진하게 7개 boolean(isEmpty, isTyping, isSubmitting, isSuccess, isError …)으로 모델링한 Before 코드를 보여주고, 비핵심 state 제거 3대 질문(① 모순을 만드나? ② 다른 변수에서 얻을 수 있나? ③ 다른 변수의 역인가?)을 차례로 적용한다. 결과적으로 status enum('typing'|'submitting'|'success') 기반 3개 변수(answer, error, status)로 줄이는 리팩터링을 함께 따라간다. 이어서 isEmpty(=answer.length===0), isError(=error!==null) 같은 파생값(computed at render)과 진짜 state의 구분 기준을 명시화한다. Practice = 강사가 제시한 6~7개 boolean 폼 state 스니펫을 학습자가 직접 status enum으로 줄이기. Hook = '왜 7개가 동시에 true가 되면 안 될까?' → Teach = 3대 질문 + 파생값 규칙 → Example = Before/After diff → Practice = 직접 줄이기 → Recap = 'state 변수는 최소로, 나머지는 render 시 계산.'",
+      "beats": ["hook", "teach", "example", "practice", "recap"]
+    },
+    {
+      "id": "S1.C3",
+      "slug": "03-connect-handlers-end-to-end",
+      "title": "핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기",
+      "lo_ids": ["LO-S1.3"],
+      "duration_min": 11,
+      "depends_on": ["S1.C2"],
+      "summary": "마지막 5단계(이벤트 핸들러 연결)를 채워 Form 컴포넌트를 완성한다. handleSubmit이 setStatus('submitting') → await → setStatus('success' | 'typing'+setError) 흐름으로 어떻게 트리거 표를 그대로 코드에 옮기는지 본다. 그 다음 1~5단계 전 과정을 한 번에 되짚으며, 학습자가 새 컴포넌트(예: 인라인 코멘트 위젯, 파일 업로드 버튼 중 택1)를 5단계 프로세스로 처음부터 설계하는 미니 캡스톤을 수행한다. Living styleguide 패턴(모든 status를 동시 렌더해 디자인 회귀 검증)을 보너스로 소개한다. Hook = '상태와 트리거 표가 이미 있는데 왜 코드는 어렵게 느껴질까?' → Teach = 트리거 → set 호출 매핑 규칙 + 5단계 전체 회상 → Example = 완성된 Form 코드 워크스루 → Practice = 학습자 위젯 5단계 설계 → Recap = '상태 → 트리거 → useState → 비핵심 제거 → 핸들러, 이 순서가 곧 사고법.'",
+      "beats": ["hook", "teach", "example", "practice", "recap"]
+    }
+  ],
+  "lo_coverage": ["LO-S1.1", "LO-S1.2", "LO-S1.3", "LO-S1.4"],
+  "notes": "S1의 4개 LO를 모두 커버. C1=Apply(상태/트리거 열거), C2=Apply+Analyze(리팩터링·파생값 판별), C3=Create(처음부터 설계)로 Bloom 난이도가 점증한다. 의존성은 C1 → C2 → C3 선형. duration 합계 35분."
+}

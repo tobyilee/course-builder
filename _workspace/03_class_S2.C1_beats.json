@@ -1,0 +1,106 @@
+{
+  "class_id": "S2.C1",
+  "title": "5원칙 한눈에 + 관련 state 묶기·모순 회피",
+  "lo_ids": ["LO-S2.1", "LO-S2.2"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "useState 여러 개 선언했더니 한쪽만 갱신돼서 화면이 어긋난 경험 떠올리기",
+        "`isSending=true && isSent=true` 같은 '있을 수 없는 상태'가 실제로 발생하는 순간을 보여주기",
+        "버그의 80%는 로직이 아니라 state '구조'에서 비롯된다는 메시지로 동기 부여"
+      ],
+      "lo_ids": ["LO-S2.1"],
+      "visual_hint": "찢어진 UI 캡처 + impossible boolean 조합 표 (둘 다 true가 음영 처리)",
+      "speaker_affect": "공감 유발, 살짝 놀라움"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "5원칙 한 줄 요약: ①관련 state 묶기 ②모순 회피 ③redundant 제거 ④duplication 회피 ⑤deep nesting 평탄화",
+        "5원칙은 모두 '동기화 버그를 어떻게 차단할까?'라는 한 가지 질문의 다른 얼굴",
+        "오늘 class는 ①·② 두 원칙만 깊이 다루고 ③·④·⑤는 후속 class 예고",
+        "공통 슬로건: \"Make your state as simple as it can be — but no simpler.\""
+      ],
+      "lo_ids": ["LO-S2.1"],
+      "visual_hint": "5원칙 카드 그리드 (오늘 다룰 1·2번에 하이라이트)",
+      "speaker_affect": "차분하게 정리, 약간의 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "원칙①: 항상 함께 갱신되는 변수는 객체로 묶어라 (예: x, y → position)",
+        "판단 기준 한 문장: '한 변수만 바뀌는 경우가 실제로 존재하는가?' — 없으면 묶기",
+        "묶었을 때의 비용: 갱신 시 모든 필드 스프레드 복사 필요 (`setPosition({ ...position, x: 100 })`)",
+        "동적 키 컬렉션(예: 폼 필드 N개)이라면 객체보다 Map/배열이 더 적합할 수 있음"
+      ],
+      "lo_ids": ["LO-S2.2"],
+      "visual_hint": "MovingDot 예제: x/y 분리 코드 ↔ position 객체 코드 비교 (좌우 split)",
+      "speaker_affect": "친근하게 설명, 핵심 기준은 강조"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "원칙②: 두 boolean이 동시에 true가 될 수 있다면 '모순(contradiction)'",
+        "FeedbackForm 사례: isSending + isSent 두 boolean → 4가지 조합 중 1개는 impossible",
+        "해법은 status enum으로 단일화: `'typing' | 'sending' | 'sent'`",
+        "필요한 boolean은 enum에서 derive (`const isSending = status === 'sending'`)",
+        "원칙①과의 연결: 두 변수가 '항상 함께' 변한다 → 사실은 한 변수의 다른 표현이었다"
+      ],
+      "lo_ids": ["LO-S2.2"],
+      "visual_hint": "2x2 진리표 (impossible 셀에 X 표시) + status enum 상태 다이어그램",
+      "speaker_affect": "차분하게, '아하' 모먼트 강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "FeedbackForm의 before 코드를 함께 읽기: isSending/isSent 두 useState",
+        "submit 핸들러에서 setIsSending(true) 후 setIsSent(true)·setIsSending(false) 순서 의존",
+        "리팩터: status 단일 useState로 교체 → 'typing'에서 'sending', 'sending'에서 'sent'로 단순 전이",
+        "JSX에서 isSending/isSent를 derive 변수로 그대로 사용 → 마크업 변경 최소화",
+        "결과: 'sending && sent' 조합이 타입 시스템상 불가능해짐 = 컴파일 타임 보장"
+      ],
+      "lo_ids": ["LO-S2.2"],
+      "visual_hint": "before/after 코드 diff (status 단일화 부분에 강조 박스)",
+      "speaker_affect": "차근차근, 손으로 짚어가는 느낌"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 60,
+      "key_points": [
+        "퀴즈: `useState({ x, y })` 대신 두 useState로 둬도 무방한 시나리오는?",
+        "정답 가이드: x만 바뀌는 경우(예: 가로 스크롤)가 따로 존재하면 분리가 더 정확",
+        "추가 자문: 폼에 isLoading/isError/isSuccess가 있다면 status enum 후보 값은 몇 개?",
+        "정답 가이드: 'idle | loading | error | success' 4값 — boolean 3개(8조합) 중 4개만 합법"
+      ],
+      "lo_ids": ["LO-S2.2"],
+      "visual_hint": "질문 카드 2장 + 답변 영역 흐리게 처리",
+      "speaker_affect": "질문 던지듯, 사이 짧은 멈춤"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "5원칙은 '동기화 버그 차단' 하나의 질문",
+        "함께 변하는 변수는 묶고, 모순 가능한 boolean 쌍은 enum으로 단일화",
+        "다음 class: redundant state 제거 + props mirroring 안티패턴"
+      ],
+      "lo_ids": ["LO-S2.1", "LO-S2.2"],
+      "visual_hint": "체크리스트 3줄 (오늘 학습 항목에 체크)",
+      "speaker_affect": "마무리 톤, 차분하게"
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context로 깊이 데이터 전달하기 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Context로 깊이 데이터 전달하기 · 퀴즈</h1>
+  <p class="meta">8 문항 · Bloom: Understand:3, Apply:3, Evaluate:2</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>prop drilling 문제와 context의 차이를 데이터 흐름 측면에서 가장 정확하게 설명한 것은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. prop drilling은 부모→자식 한 방향이지만, context는 자식→부모로 데이터를 거꾸로 끌어올린다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. prop drilling은 중간 컴포넌트가 사용하지도 않는 prop을 단지 전달만 하지만, context는 Provider 하위 어느 자손이든 중간 단계를 건너뛰고 직접 값을 읽는다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. prop drilling은 동기적이고 context는 비동기적으로 값을 전파한다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. context는 트리 구조를 무시하고 앱 어디서나 값을 읽을 수 있는 전역 변수다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>context의 핵심은 &#x27;중간 컴포넌트를 통과하지 않고&#x27; Provider의 value를 자손이 직접 읽는다는 것이다. 여전히 Provider 하위 트리로 범위가 제한되며 전역 변수가 아니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> context도 위(Provider)에서 아래(consumer)로 흐른다. 방향이 반대가 아니다.</li><li><strong>C.</strong> 동기/비동기 차이가 아니라 &#x27;중간 prop 전달 생략&#x27; 차이다.</li><li><strong>D.</strong> context는 가장 가까운 Provider 하위에만 닿는 트리-범위 메커니즘이지 전역 변수가 아니다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>context를 사용하는 3단계 패턴의 올바른 순서는?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> A. useContext(Ctx) 호출 → createContext(default) → &lt;Ctx.Provider value=...&gt;로 감싸기</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> B. &lt;Ctx.Provider value=...&gt;로 감싸기 → createContext(default) → useContext(Ctx)</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> C. createContext(default)로 Ctx 객체 생성 → &lt;Ctx value=...&gt; Provider로 자손 트리를 감싸기 → 자손에서 useContext(Ctx)로 값 읽기</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> D. createContext()로 Ctx 객체 생성 → 자손에서 useContext(Ctx) → 그 결과를 &lt;Ctx.Provider&gt;에 전달</span></label>
+  <div class="explain"><strong>정답: C</strong><br>올바른 순서는 (1) createContext로 Context 객체를 만들고, (2) 그것을 Provider로 트리를 감싸 value를 주입한 뒤, (3) 자손에서 useContext로 읽는 흐름이다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> Context 객체가 만들어지기 전에 useContext를 부를 수 없다.</li><li><strong>B.</strong> Provider로 감싸려면 먼저 Context 객체가 존재해야 한다.</li><li><strong>D.</strong> useContext의 반환값을 Provider value로 다시 넣는 것은 의미상 순환이며 표준 패턴이 아니다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>createContext(defaultValue)의 default value가 실제로 사용되는 경우는?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> A. Provider가 value prop을 생략했을 때, 그 Provider 하위 자손이 받는 값</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> B. useContext를 호출한 컴포넌트의 조상에 매칭되는 Provider가 하나도 없을 때</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> C. Provider가 value={undefined}로 명시적으로 넘겼을 때만</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> D. 앱이 처음 마운트될 때 한 번, 이후에는 무시된다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>default value는 useContext가 호출된 컴포넌트의 위쪽 트리에 매칭되는 Provider가 전혀 없을 때만 사용된다. 테스트나 Provider 없이도 컴포넌트가 동작하도록 안전망 역할을 한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> Provider가 존재하면 value를 생략해도 그 Provider의 value(=undefined)가 우선이며, default가 채워주지는 않는다.</li><li><strong>C.</strong> Provider가 value={undefined}로 넘기면 그 undefined가 그대로 자손에게 전달된다 — default로 대체되지 않는다.</li><li><strong>D.</strong> default는 마운트 시점이 아니라 &#x27;Provider 미존재&#x27; 조건에서 사용된다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>Section 컴포넌트가 LevelContext를 useContext로 읽으면서 동시에 &lt;LevelContext value={level + 1}&gt;로 자식을 감싼다. &lt;Section&gt;&lt;Section&gt;&lt;Heading/&gt;&lt;/Section&gt;&lt;/Section&gt; 구조에서 가장 안쪽 Heading이 받는 level 값은? (최외곽 Provider value=1로 가정)</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> A. 1 — 최외곽 Provider 값이 그대로 전달된다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> B. 2 — 한 단계만 증가한다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> C. 3 — 안쪽 Section이 바깥 Section의 값(2)을 읽고 +1 해서 다시 제공한다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> D. 4 — Section 개수만큼 누적되며 Heading 자신도 +1 한다</span></label>
+  <div class="explain"><strong>정답: C</strong><br>consume + provide 패턴: 각 Section은 가장 가까운 위쪽 Provider에서 level을 읽고 level+1을 새 Provider로 자식에게 내려보낸다. 1 → 첫 Section에서 2로 → 둘째 Section에서 3으로 → Heading은 3을 읽는다. Heading은 읽기만 하므로 추가 증가는 없다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 각 Section이 새 Provider로 값을 덮어쓰므로 최외곽 값이 그대로 도달하지 않는다.</li><li><strong>B.</strong> Section이 두 개이므로 한 단계가 아니라 두 단계 증가한다.</li><li><strong>D.</strong> Heading은 consume만 하지 provide하지 않으므로 추가 +1이 발생하지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다음 중 context 사용이 적절한 사례를 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q4" value="A"><span><strong>A.</strong> A. 앱 전반의 theme(라이트/다크)을 수많은 컴포넌트가 읽어야 한다</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="B"><span><strong>B.</strong> B. 부모가 자식에게 콜백 1개를 1단계 아래로 내려보낸다</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="C"><span><strong>C.</strong> C. 로그인한 currentUser 정보를 헤더, 사이드바, 본문, 푸터 등 분산된 다수 컴포넌트가 참조한다</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="D"><span><strong>D.</strong> D. List가 ListItem에게 item 데이터를 전달하는 — composition 슬롯으로 충분히 해결되는 — 상황</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="E"><span><strong>E.</strong> E. 부모가 직속 자식에게 className 1개를 prop으로 넘긴다</span></label>
+  <div class="explain"><strong>정답: A, C</strong><br>context는 &#x27;여러 분산된 컴포넌트가 같은 값을 공유&#x27;하는 theming/auth/routing 같은 사례에 적합하다. 1~2단계 prop drilling이거나 children/composition으로 풀리는 경우는 context 남용이다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 1단계 prop drilling은 그냥 props가 더 명시적이고 읽기 쉽다.</li><li><strong>D.</strong> composition(자식 노드를 prop으로 받기)으로 충분히 해결되므로 context는 과한 도구다.</li><li><strong>E.</strong> 직속 자식 props는 context의 동기가 전혀 아니다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Understand</span>
+  <span class="tag">true_false</span>
+  <h3>useContext는 다른 Hook과 동일하게 컴포넌트 함수의 최상위(top-level)에서만 호출해야 하며, if문/for문/조건부 분기 안에서 호출하면 Hook 규칙 위반이다.</h3>
+  <label class="choice"><input type="radio" name="q5" value="T"><span>참 (True)</span></label>
+  <label class="choice"><input type="radio" name="q5" value="F"><span>거짓 (False)</span></label>
+  <div class="explain"><strong>정답: 참</strong><br>useContext는 Hook이므로 Rules of Hooks를 따른다 — 매 렌더에서 같은 순서로, 컴포넌트(또는 커스텀 훅) 최상위에서 호출되어야 한다. 조건/루프 안에서 호출하면 React가 Hook을 추적하지 못해 런타임 에러 또는 잘못된 값이 발생한다.</div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">short_answer</span>
+  <h3>어떤 팀원이 &#x27;Form 컴포넌트가 직속 자식 Input에게 onChange 콜백을 한 단계 내려보내는데, 글로벌하니까 FormContext를 만들자&#x27;고 제안했다. 이 결정에 대해 (1) 동의 여부, (2) 그 근거를 강의에서 배운 기준 2개 이상으로 제시하시오. (3~5문장)</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain">기대 답안: 동의하지 않는다. 근거 — (1) prop drilling이라 부를 만한 거리(3단계 이상)가 아니라 1단계뿐이므로 props가 더 명시적이고 읽기 쉽다. (2) &#x27;props로 흐를 거리를 짧게 만들었는데도 여전히 멀다&#x27;는 결정 트리거가 충족되지 않는다. (3) composition(예: &lt;Form&gt;&lt;Input /&gt;&lt;/Form&gt;) 또는 그냥 props로 충분히 해결되며, context는 분산된 다수 컴포넌트가 같은 값을 공유할 때만 정당화된다. (4) 무분별한 context 도입은 컴포넌트 재사용성을 떨어뜨리고 데이터 흐름을 암묵적으로 만든다.<strong>채점 기준:</strong><ul><li>[1pt] 결론: context 사용에 동의하지 않음을 명시</li><li>[1pt] 근거 1: 거리가 1단계뿐이라 prop drilling이 아니다 / 직접 props가 더 명시적이다</li><li>[1pt] 근거 2: composition 또는 children 패턴으로 대체 가능 / 분산된 다수 소비자가 없다</li><li>[1pt] context 남용의 비용(재사용성 저하, 암묵적 데이터 흐름) 언급</li></ul></div>
+</div>
+<div class="q" id="q7">
+  <span class="tag">Q8</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>&#x27;같은 컴포넌트가 context를 consume 하면서 동시에 새로운 값으로 provide 한다&#x27;는 패턴이 가장 자연스럽게 사용되는 사례는?</h3>
+  <label class="choice"><input type="radio" name="q7" value="A"><span><strong>A.</strong> A. 앱 루트에서 한 번 theme을 주입하고 모든 자손이 읽기만 하는 경우</span></label>
+  <label class="choice"><input type="radio" name="q7" value="B"><span><strong>B.</strong> B. Section의 깊이에 따라 Heading level(h1→h2→h3)이 자동으로 한 단계씩 증가해야 하는 경우</span></label>
+  <label class="choice"><input type="radio" name="q7" value="C"><span><strong>C.</strong> C. Form 전체에서 동일한 validation 규칙을 한 번 정의하고 모든 Input이 동일하게 읽는 경우</span></label>
+  <label class="choice"><input type="radio" name="q7" value="D"><span><strong>D.</strong> D. 라우팅 테이블을 최상단 한 곳에서만 정의해 모든 페이지가 참조하는 경우</span></label>
+  <div class="explain"><strong>정답: B</strong><br>consume+provide 패턴은 &#x27;현재 위쪽 값을 읽어 변형해서 자식에게 다시 내려준다&#x27;는 점이 핵심이다. Heading level의 깊이별 자동 증가가 정확히 이 형태다. 나머지는 한 번 주입하고 모두가 동일하게 읽는 단순 broadcast 패턴이다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 한 번 주입 후 읽기만 하므로 consume+provide가 아니다.</li><li><strong>C.</strong> 동일 값을 모두가 공유하는 단순 패턴이다.</li><li><strong>D.</strong> 라우팅 테이블도 단일 정의를 모두가 읽는 broadcast이지 단계별 변형이 아니다.</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S6.Q1", "type": "mcq_single", "stem": "prop drilling 문제와 context의 차이를 데이터 흐름 측면에서 가장 정확하게 설명한 것은?", "choices": ["A. prop drilling은 부모→자식 한 방향이지만, context는 자식→부모로 데이터를 거꾸로 끌어올린다.", "B. prop drilling은 중간 컴포넌트가 사용하지도 않는 prop을 단지 전달만 하지만, context는 Provider 하위 어느 자손이든 중간 단계를 건너뛰고 직접 값을 읽는다.", "C. prop drilling은 동기적이고 context는 비동기적으로 값을 전파한다.", "D. context는 트리 구조를 무시하고 앱 어디서나 값을 읽을 수 있는 전역 변수다."], "correct": ["B"], "explanation": "context의 핵심은 '중간 컴포넌트를 통과하지 않고' Provider의 value를 자손이 직접 읽는다는 것이다. 여전히 Provider 하위 트리로 범위가 제한되며 전역 변수가 아니다.", "distractor_rationales": {"A": "context도 위(Provider)에서 아래(consumer)로 흐른다. 방향이 반대가 아니다.", "C": "동기/비동기 차이가 아니라 '중간 prop 전달 생략' 차이다.", "D": "context는 가장 가까운 Provider 하위에만 닿는 트리-범위 메커니즘이지 전역 변수가 아니다."}, "lo_ids": ["LO-S6.1"], "bloom": "Understand", "difficulty": 2}, {"id": "S6.Q2", "type": "mcq_single", "stem": "context를 사용하는 3단계 패턴의 올바른 순서는?", "choices": ["A. useContext(Ctx) 호출 → createContext(default) → <Ctx.Provider value=...>로 감싸기", "B. <Ctx.Provider value=...>로 감싸기 → createContext(default) → useContext(Ctx)", "C. createContext(default)로 Ctx 객체 생성 → <Ctx value=...> Provider로 자손 트리를 감싸기 → 자손에서 useContext(Ctx)로 값 읽기", "D. createContext()로 Ctx 객체 생성 → 자손에서 useContext(Ctx) → 그 결과를 <Ctx.Provider>에 전달"], "correct": ["C"], "explanation": "올바른 순서는 (1) createContext로 Context 객체를 만들고, (2) 그것을 Provider로 트리를 감싸 value를 주입한 뒤, (3) 자손에서 useContext로 읽는 흐름이다.", "distractor_rationales": {"A": "Context 객체가 만들어지기 전에 useContext를 부를 수 없다.", "B": "Provider로 감싸려면 먼저 Context 객체가 존재해야 한다.", "D": "useContext의 반환값을 Provider value로 다시 넣는 것은 의미상 순환이며 표준 패턴이 아니다."}, "lo_ids": ["LO-S6.2"], "bloom": "Apply", "difficulty": 2}, {"id": "S6.Q3", "type": "mcq_single", "stem": "createContext(defaultValue)의 default value가 실제로 사용되는 경우는?", "choices": ["A. Provider가 value prop을 생략했을 때, 그 Provider 하위 자손이 받는 값", "B. useContext를 호출한 컴포넌트의 조상에 매칭되는 Provider가 하나도 없을 때", "C. Provider가 value={undefined}로 명시적으로 넘겼을 때만", "D. 앱이 처음 마운트될 때 한 번, 이후에는 무시된다"], "correct": ["B"], "explanation": "default value는 useContext가 호출된 컴포넌트의 위쪽 트리에 매칭되는 Provider가 전혀 없을 때만 사용된다. 테스트나 Provider 없이도 컴포넌트가 동작하도록 안전망 역할을 한다.", "distractor_rationales": {"A": "Provider가 존재하면 value를 생략해도 그 Provider의 value(=undefined)가 우선이며, default가 채워주지는 않는다.", "C": "Provider가 value={undefined}로 넘기면 그 undefined가 그대로 자손에게 전달된다 — default로 대체되지 않는다.", "D": "default는 마운트 시점이 아니라 'Provider 미존재' 조건에서 사용된다."}, "lo_ids": ["LO-S6.2"], "bloom": "Understand", "difficulty": 3}, {"id": "S6.Q4", "type": "mcq_single", "stem": "Section 컴포넌트가 LevelContext를 useContext로 읽으면서 동시에 <LevelContext value={level + 1}>로 자식을 감싼다. <Section><Section><Heading/></Section></Section> 구조에서 가장 안쪽 Heading이 받는 level 값은? (최외곽 Provider value=1로 가정)", "choices": ["A. 1 — 최외곽 Provider 값이 그대로 전달된다", "B. 2 — 한 단계만 증가한다", "C. 3 — 안쪽 Section이 바깥 Section의 값(2)을 읽고 +1 해서 다시 제공한다", "D. 4 — Section 개수만큼 누적되며 Heading 자신도 +1 한다"], "correct": ["C"], "explanation": "consume + provide 패턴: 각 Section은 가장 가까운 위쪽 Provider에서 level을 읽고 level+1을 새 Provider로 자식에게 내려보낸다. 1 → 첫 Section에서 2로 → 둘째 Section에서 3으로 → Heading은 3을 읽는다. Heading은 읽기만 하므로 추가 증가는 없다.", "distractor_rationales": {"A": "각 Section이 새 Provider로 값을 덮어쓰므로 최외곽 값이 그대로 도달하지 않는다.", "B": "Section이 두 개이므로 한 단계가 아니라 두 단계 증가한다.", "D": "Heading은 consume만 하지 provide하지 않으므로 추가 +1이 발생하지 않는다."}, "lo_ids": ["LO-S6.3"], "bloom": "Apply", "difficulty": 3}, {"id": "S6.Q5", "type": "mcq_multi", "stem": "다음 중 context 사용이 적절한 사례를 모두 고르시오. (정답 2개)", "choices": ["A. 앱 전반의 theme(라이트/다크)을 수많은 컴포넌트가 읽어야 한다", "B. 부모가 자식에게 콜백 1개를 1단계 아래로 내려보낸다", "C. 로그인한 currentUser 정보를 헤더, 사이드바, 본문, 푸터 등 분산된 다수 컴포넌트가 참조한다", "D. List가 ListItem에게 item 데이터를 전달하는 — composition 슬롯으로 충분히 해결되는 — 상황", "E. 부모가 직속 자식에게 className 1개를 prop으로 넘긴다"], "correct": ["A", "C"], "explanation": "context는 '여러 분산된 컴포넌트가 같은 값을 공유'하는 theming/auth/routing 같은 사례에 적합하다. 1~2단계 prop drilling이거나 children/composition으로 풀리는 경우는 context 남용이다.", "distractor_rationales": {"B": "1단계 prop drilling은 그냥 props가 더 명시적이고 읽기 쉽다.", "D": "composition(자식 노드를 prop으로 받기)으로 충분히 해결되므로 context는 과한 도구다.", "E": "직속 자식 props는 context의 동기가 전혀 아니다."}, "lo_ids": ["LO-S6.4"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S6.Q6", "type": "true_false", "stem": "useContext는 다른 Hook과 동일하게 컴포넌트 함수의 최상위(top-level)에서만 호출해야 하며, if문/for문/조건부 분기 안에서 호출하면 Hook 규칙 위반이다.", "choices": ["참", "거짓"], "correct": ["참"], "explanation": "useContext는 Hook이므로 Rules of Hooks를 따른다 — 매 렌더에서 같은 순서로, 컴포넌트(또는 커스텀 훅) 최상위에서 호출되어야 한다. 조건/루프 안에서 호출하면 React가 Hook을 추적하지 못해 런타임 에러 또는 잘못된 값이 발생한다.", "distractor_rationales": {}, "lo_ids": ["LO-S6.2"], "bloom": "Understand", "difficulty": 2}, {"id": "S6.Q7", "type": "short_answer", "stem": "어떤 팀원이 'Form 컴포넌트가 직속 자식 Input에게 onChange 콜백을 한 단계 내려보내는데, 글로벌하니까 FormContext를 만들자'고 제안했다. 이 결정에 대해 (1) 동의 여부, (2) 그 근거를 강의에서 배운 기준 2개 이상으로 제시하시오. (3~5문장)", "correct": [], "explanation": "기대 답안: 동의하지 않는다. 근거 — (1) prop drilling이라 부를 만한 거리(3단계 이상)가 아니라 1단계뿐이므로 props가 더 명시적이고 읽기 쉽다. (2) 'props로 흐를 거리를 짧게 만들었는데도 여전히 멀다'는 결정 트리거가 충족되지 않는다. (3) composition(예: <Form><Input /></Form>) 또는 그냥 props로 충분히 해결되며, context는 분산된 다수 컴포넌트가 같은 값을 공유할 때만 정당화된다. (4) 무분별한 context 도입은 컴포넌트 재사용성을 떨어뜨리고 데이터 흐름을 암묵적으로 만든다.", "distractor_rationales": {}, "lo_ids": ["LO-S6.4", "LO-S6.1"], "bloom": "Evaluate", "difficulty": 4, "rubric": ["[1pt] 결론: context 사용에 동의하지 않음을 명시", "[1pt] 근거 1: 거리가 1단계뿐이라 prop drilling이 아니다 / 직접 props가 더 명시적이다", "[1pt] 근거 2: composition 또는 children 패턴으로 대체 가능 / 분산된 다수 소비자가 없다", "[1pt] context 남용의 비용(재사용성 저하, 암묵적 데이터 흐름) 언급"]}, {"id": "S6.Q8", "type": "mcq_single", "stem": "'같은 컴포넌트가 context를 consume 하면서 동시에 새로운 값으로 provide 한다'는 패턴이 가장 자연스럽게 사용되는 사례는?", "choices": ["A. 앱 루트에서 한 번 theme을 주입하고 모든 자손이 읽기만 하는 경우", "B. Section의 깊이에 따라 Heading level(h1→h2→h3)이 자동으로 한 단계씩 증가해야 하는 경우", "C. Form 전체에서 동일한 validation 규칙을 한 번 정의하고 모든 Input이 동일하게 읽는 경우", "D. 라우팅 테이블을 최상단 한 곳에서만 정의해 모든 페이지가 참조하는 경우"], "correct": ["B"], "explanation": "consume+provide 패턴은 '현재 위쪽 값을 읽어 변형해서 자식에게 다시 내려준다'는 점이 핵심이다. Heading level의 깊이별 자동 증가가 정확히 이 형태다. 나머지는 한 번 주입하고 모두가 동일하게 읽는 단순 broadcast 패턴이다.", "distractor_rationales": {"A": "한 번 주입 후 읽기만 하므로 consume+provide가 아니다.", "C": "동일 값을 모두가 공유하는 단순 패턴이다.", "D": "라우팅 테이블도 단일 정의를 모두가 읽는 broadcast이지 단계별 변형이 아니다."}, "lo_ids": ["LO-S6.3"], "bloom": "Apply", "difficulty": 3}];
+const NEXT_HREF = "../07-reducer-context/classes/01-reducer-context-combine/player.html";
+const NEXT_TITLE = "Reducer와 Context를 결합하기 — 두 context 분리 전략";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

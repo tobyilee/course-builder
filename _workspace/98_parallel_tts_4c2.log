@@ -1,0 +1,19 @@
+Engine: openai / Language: ko / Voice: nova / Model: gpt-4o-mini-tts / Speed: 1.3x
+  → slide 1: 10 chunks
+  → slide 2: 12 chunks
+  → slide 3: 11 chunks
+  → slide 4: 13 chunks
+  → slide 5: 12 chunks
+  → slide 6: 15 chunks
+  → slide 7: 12 chunks
+  → slide 8: 12 chunks
+Traceback (most recent call last):
+  File "/Users/tobylee/workspace/ai/course-builder/scripts/synthesize-tts.py", line 395, in <module>
+    main()
+  File "/Users/tobylee/workspace/ai/course-builder/scripts/synthesize-tts.py", line 390, in main
+    total = sum(p.stat().st_size for p in slide_mp3s) + full.stat().st_size
+  File "/Users/tobylee/workspace/ai/course-builder/scripts/synthesize-tts.py", line 390, in <genexpr>
+    total = sum(p.stat().st_size for p in slide_mp3s) + full.stat().st_size
+  File "/Users/tobylee/.pyenv/versions/3.10.18/lib/python3.10/pathlib.py", line 1097, in stat
+    return self._accessor.stat(self, follow_symlinks=follow_symlinks)
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/tobylee/workspace/ai/course-builder/course/sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_04.mp3'

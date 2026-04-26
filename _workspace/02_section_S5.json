@@ -1,0 +1,41 @@
+{
+  "section_id": "S5",
+  "classes": [
+    {
+      "id": "S5.C1",
+      "slug": "01-why-reducer-and-signature",
+      "title": "왜 Reducer인가 — useReducer 시그니처와 도입 동기",
+      "lo_ids": ["LO-S5.1"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "여러 setState 호출이 흩어진 컴포넌트가 어떻게 통제 불능이 되는지 통증 사례로 시작한다. Reducer를 (state, action) => nextState 형태의 순수 함수로 정의하고, useReducer 훅의 시그니처(reducer, initialState) → [state, dispatch]를 머릿속에 고정한다. Array.prototype.reduce 비유로 '누적기에 입력을 적용해 다음 누적기를 만든다'는 모델을 친근하게 익힌다."
+    },
+    {
+      "id": "S5.C2",
+      "slug": "02-three-step-migration",
+      "title": "3단계 마이그레이션 — useState에서 useReducer로",
+      "lo_ids": ["LO-S5.2"],
+      "duration_min": 15,
+      "depends_on": ["S5.C1"],
+      "summary": "tasks 예시를 가지고 손으로 직접 마이그레이션을 따라간다. (1) 핸들러 안의 setTasks를 dispatch({type, ...}) 호출로 바꾸고, (2) switch로 분기하는 tasksReducer 함수를 컴포넌트 밖에 작성하고, (3) useState 자리에 useReducer를 끼워 넣는다. 각 단계에서 무엇이 바뀌고 무엇이 그대로 남는지 짚어, 단순한 기계적 변환임을 체득시킨다."
+    },
+    {
+      "id": "S5.C3",
+      "slug": "03-action-conventions-and-purity",
+      "title": "Action 컨벤션과 Reducer 순수성 — 결함 진단",
+      "lo_ids": ["LO-S5.3"],
+      "duration_min": 12,
+      "depends_on": ["S5.C2"],
+      "summary": "좋은 reducer를 가르는 두 축을 본다. (1) action.type은 동사 과거형(`'added'`, `'changed'`, `'deleted'`), '한 상호작용 = 한 action' 원칙 — 폼 리셋을 필드별 dispatch로 흩뿌리는 안티패턴을 단일 `'reset_form'`으로 모은다. (2) reducer 순수성 — 같은 입력 같은 출력, 부수효과 금지, mutation 금지. 결함이 박힌 reducer 코드를 진단하며 규칙을 내재화한다."
+    },
+    {
+      "id": "S5.C4",
+      "slug": "04-tradeoffs-and-immer",
+      "title": "useState vs useReducer 트레이드오프와 Immer 옵션",
+      "lo_ids": ["LO-S5.4", "LO-S5.5"],
+      "duration_min": 8,
+      "depends_on": ["S5.C3"],
+      "summary": "코드량·가독성·디버깅·테스트 용이성 4축으로 useState와 useReducer를 비교하고, 어느 시점에 reducer로 넘어가는 것이 합리적인지 판단 기준을 세운다. 한 컴포넌트에서 둘을 혼용해도 됨을 알린다. 마지막으로 Immer(useImmerReducer)를 mutation 스타일의 단축 표기로 소개하고, 일반 reducer와 의미상 동등한 형태로 변환해 보며 장단점을 짚는다."
+    }
+  ]
+}

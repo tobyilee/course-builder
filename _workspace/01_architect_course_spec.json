@@ -1,0 +1,103 @@
+{
+  "topic": "React 상태 관리 심화 — Managing State (react.dev/learn/managing-state 기반)",
+  "audience": "TypeScript / JavaScript / React UI 컴포넌트 개발은 능숙한 중급 개발자. 함수형 컴포넌트, useState 기본 사용, 이벤트 핸들링, props 흐름은 이미 안다. 다만 state 설계·구조화·공유·보존·리듀서·컨텍스트 영역에서 깊이가 부족하다.",
+  "depth": "deep",
+  "language": "ko",
+  "tone": "friendly",
+  "prerequisites": [
+    "함수형 컴포넌트 작성 경험 (props, children, 이벤트 핸들링)",
+    "useState 훅 기본 사용 — 원시값/객체/배열 모두",
+    "JavaScript ES2015+ (구조 분해, 스프레드, 화살표 함수, 모듈)",
+    "TypeScript 또는 modern JavaScript의 타입/구조 감각",
+    "JSX 렌더링과 조건부 렌더, 리스트의 key prop 기본 개념",
+    "불변 갱신(spread, map/filter)에 대한 익숙함"
+  ],
+  "total_duration_min": 300,
+  "bloom_coverage_plan": [
+    "Remember",
+    "Understand",
+    "Apply",
+    "Analyze",
+    "Evaluate",
+    "Create"
+  ],
+  "caveats": [
+    "본 강의는 react.dev/learn/managing-state 7개 챕터의 한국어 grounding 자료에 기반한다. React 19+ 기준 Provider 단축 문법(<Context value=…>)을 채택했다.",
+    "Immer/useImmerReducer는 옵션으로 소개하며 필수 학습 항목은 아니다.",
+    "Redux/Zustand 등 외부 상태 관리 라이브러리는 비교 맥락에서만 언급한다."
+  ],
+  "sections": [
+    {
+      "id": "S0",
+      "slug": "00-orientation",
+      "title": "오리엔테이션 — 왜 state 설계가 따로 필요한가",
+      "summary": "강의 전체 지도와 학습 목표를 잡는다. 중급 개발자가 흔히 부딪히는 state 관련 통증(중복, 동기화 버그, prop drilling, 의도치 않은 리셋)을 사례로 보고, 7개 챕터가 어떻게 그 통증을 해결하는지 큰 그림으로 미리 본다.",
+      "duration_min": 20,
+      "depends_on": []
+    },
+    {
+      "id": "S1",
+      "slug": "01-declarative-thinking",
+      "title": "사고방식 전환 — 선언형 UI와 visual states로 반응하기",
+      "summary": "명령형 vs 선언형 차이를 짚고, 컴포넌트의 가능한 visual states를 모두 열거한 뒤 트리거를 식별·useState로 모델링·비핵심 state를 제거하는 5단계 프로세스를 익힌다. status enum 패턴으로 boolean paradox를 해소한다.",
+      "duration_min": 35,
+      "depends_on": ["S0"]
+    },
+    {
+      "id": "S2",
+      "slug": "02-state-structure",
+      "title": "state 구조 설계 — 5가지 원칙으로 동기화 버그 차단",
+      "summary": "관련 state 묶기, 모순 회피, redundant 제거, duplication 회피, deep nesting 평탄화 5원칙을 적용한다. props mirroring 안티패턴을 진단하고, 객체 대신 id를 저장하는 정규화 패턴을 실습한다.",
+      "duration_min": 40,
+      "depends_on": ["S1"]
+    },
+    {
+      "id": "S3",
+      "slug": "03-sharing-state",
+      "title": "컴포넌트 간 state 공유 — Lifting State Up",
+      "summary": "형제 컴포넌트가 협조해야 할 때 상태를 공통 부모로 끌어올리는 3단계 절차를 익힌다. controlled vs uncontrolled 트레이드오프를 이해하고, single source of truth 원칙으로 컴포넌트 책임을 정리한다.",
+      "duration_min": 35,
+      "depends_on": ["S2"]
+    },
+    {
+      "id": "S4",
+      "slug": "04-preserving-resetting-state",
+      "title": "state 보존과 리셋 — 트리 위치와 key prop",
+      "summary": "React가 컴포넌트 인스턴스가 아닌 '트리에서의 위치'로 state를 추적한다는 모델을 내재화한다. 같은 위치/같은 타입 = 보존, 다른 타입/다른 key = 리셋 규칙을 적용해 의도된 리셋 전략을 설계한다. 컴포넌트 정의 중첩 안티패턴을 짚는다.",
+      "duration_min": 40,
+      "depends_on": ["S3"]
+    },
+    {
+      "id": "S5",
+      "slug": "05-reducer",
+      "title": "Reducer로 state 로직 추출하기",
+      "summary": "복잡한 setState 호출들을 (state, action) => nextState 형태의 순수 함수로 통합한다. action 컨벤션, dispatch 흐름, useState↔useReducer 트레이드오프를 분석한다. reducer 순수성 규칙과 Immer 옵션도 다룬다.",
+      "duration_min": 45,
+      "depends_on": ["S2", "S3"]
+    },
+    {
+      "id": "S6",
+      "slug": "06-context",
+      "title": "Context로 깊이 데이터 전달하기",
+      "summary": "prop drilling을 createContext / Provider / useContext 3단계로 해소한다. 같은 컴포넌트가 consume과 provide를 동시에 하는 패턴, context 적합 사례 vs 남용 사례, composition으로 우회 가능한 상황을 판별한다.",
+      "duration_min": 40,
+      "depends_on": ["S3"]
+    },
+    {
+      "id": "S7",
+      "slug": "07-reducer-context",
+      "title": "Reducer + Context로 확장하기",
+      "summary": "state context와 dispatch context를 분리해 분산된 컴포넌트가 직접 read/dispatch 하도록 만든다. TasksProvider + useTasks/useTasksDispatch 커스텀 훅 패턴으로 단일 파일에 응집하고, 다중 도메인(Tasks/Auth/Theme) 확장 전략을 본다.",
+      "duration_min": 30,
+      "depends_on": ["S5", "S6"]
+    },
+    {
+      "id": "S8",
+      "slug": "08-capstone-antipatterns",
+      "title": "종합 — 안티패턴 진단과 통합 케이스 스터디",
+      "summary": "지금까지 배운 7개 패턴을 한 번에 적용한다. 실제 코드 스멜(redundant state, props mirroring, key 누락, 컴포넌트 중첩 정의, context 남용)을 진단·리팩터링한다. 마지막으로 mini Kanban 앱 설계를 통해 state shape → lifting → reducer + context 의사결정 사슬을 직접 정당화한다.",
+      "duration_min": 15,
+      "depends_on": ["S4", "S7"]
+    }
+  ]
+}

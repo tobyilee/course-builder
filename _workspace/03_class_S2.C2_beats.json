@@ -1,0 +1,91 @@
+{
+  "class_id": "S2.C2",
+  "title": "redundant state 제거와 props mirroring 안티패턴",
+  "lo_ids": ["LO-S2.4"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "firstName을 바꿨는데 fullName이 그대로? 흔한 동기화 버그 1초 데모",
+        "원인은 로직이 아니라 fullName을 'state로 보관'했다는 구조적 결정",
+        "오늘의 질문: 어떤 값이 state여야 하고, 어떤 값은 매 렌더 계산해야 하는가?"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "입력란에 'Bob' 타이핑되는데 fullName 영역만 옛 값 그대로 (gif/sequence)",
+      "speaker_affect": "호기심 유발, 살짝 답답함을 연출"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "원칙③: '다른 state나 props로부터 계산 가능한 값'은 state로 두지 말 것",
+        "판단 기준: 매 렌더마다 같은 입력으로 같은 출력이 나오면 그건 derived value",
+        "fullName = firstName + ' ' + lastName 같은 단순 결합은 무조건 변수로 계산",
+        "useMemo는 비용이 클 때만 — 작은 string 결합엔 오히려 오버헤드"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "fullName useState 코드에 빨간 X, const fullName = ... 코드에 초록 체크",
+      "speaker_affect": "친근하게, 핵심 기준 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 140,
+      "key_points": [
+        "안티패턴: props를 useState 초기값으로 mirror — `useState(messageColor)`",
+        "왜 버그인가: useState 초기값은 첫 렌더에만 사용됨. 부모가 prop을 바꿔도 자식의 state는 갱신되지 않음",
+        "해법 A — 직접 사용: `const color = messageColor` (대부분 이게 정답)",
+        "해법 B — initial 접두사: `Message({ initialColor })` 후 `useState(initialColor)`. 이름이 '의도적으로 무시한다'는 신호",
+        "선택 기준: 부모 변경을 반영해야 하면 A, '폼 초기값처럼 첫 값만 시드'로 쓸 거면 B"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "3-way 비교: ❌ mirror / ✅ 직접 사용 / ✅ initial 접두사 (각 케이스의 부모-자식 동기화 흐름 화살표)",
+      "speaker_affect": "차분하게, 분기 기준은 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 175,
+      "key_points": [
+        "예제 1 (fullName): firstName/lastName useState만 두고 fullName은 render에서 계산 → 영원히 동기 상태",
+        "예제 2 (Message): 부모가 messageColor='blue'→'red'로 바꿀 때, mirror 방식은 'blue' 고정. 직접 사용은 즉시 'red' 반영",
+        "예제 3 (EditableForm): initialName prop을 받아 편집 가능한 input — 사용자 편집을 부모 prop이 덮으면 안 되므로 'initial' 접두사가 정답",
+        "공통 디버깅 신호: '왜 갱신 안 되지?' 의문이 들면 useState 초기값 자리에 prop이 들어가 있는지 먼저 확인"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "세 예제 미니 코드 카드 + 부모/자식 데이터 흐름 다이어그램",
+      "speaker_affect": "차근차근, 디버깅 팁은 강조"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "자가 진단 1: `const [items, setItems] = useState(props.items)` — A인가 B인가?",
+        "정답 가이드: 부모 items가 갱신되면 자식이 stale. 거의 항상 직접 사용(A) 또는 lifting state up이 맞음",
+        "자가 진단 2: `Modal({ defaultOpen })` 안에서 `useState(defaultOpen)` — 적절한가?",
+        "정답 가이드: 이름을 `initialOpen`으로 바꾸는 게 더 솔직 — '첫 값 시드'라는 의도를 API에 노출"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "코드 스니펫 2장 + '진단해 보세요' 라벨",
+      "speaker_affect": "질문 던지듯, 짧은 멈춤"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "계산 가능한 값은 state가 아니다 — render에서 derive",
+        "props를 useState 초기값으로 mirror 하지 않기. 직접 사용 or 'initial' 접두사",
+        "다음 class: 객체 자체를 보관하면 생기는 duplication 문제 — id만 저장하기"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "체크리스트 3줄",
+      "speaker_affect": "마무리 톤, 차분하게"
+    }
+  ]
+}

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>deep nesting 평탄화 — 트리 데이터를 정규화하기</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.55}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  header{padding:12px 20px;border-bottom:1px solid #1f2430;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:600}
+  .meta{color:#8b95a7;font-size:13px}
+  button.menu-toggle{background:transparent;border:1px solid #2a3345;color:#e8eaed;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer}
+  button.menu-toggle:hover{background:#222a3a}
+  /* Progress bar */
+  #progress{padding:10px 20px;background:#12151c;border-bottom:1px solid #1f2430;display:flex;gap:14px;align-items:center;font-size:13px;color:#8b95a7}
+  #progress .bar{flex:1;height:4px;background:#1f2430;border-radius:2px;overflow:hidden}
+  #progress .bar .fill{height:100%;background:linear-gradient(90deg,#2d6cdf,#5ea0ff);border-radius:2px;transition:width .3s ease}
+  #progress .label{white-space:nowrap}
+  #progress strong{color:#e8eaed;font-weight:600}
+  /* Sidebar */
+  aside#toc{background:#12151c;border-right:1px solid #1f2430;padding:16px 14px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0}
+  aside#toc h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#8b95a7;margin:14px 0 6px 0;font-weight:500}
+  aside#toc h3:first-child{margin-top:0}
+  aside#toc ul{list-style:none;padding:0;margin:0 0 12px 0}
+  aside#toc li{padding:6px 8px;border-radius:6px;margin-bottom:2px;font-size:13px}
+  aside#toc a{color:#c4cad6;text-decoration:none;display:block}
+  aside#toc a:hover{color:#fff}
+  aside#toc li:hover{background:#1a1f29}
+  aside#toc li.current{background:#1a2e4a;border-left:3px solid #2d6cdf}
+  aside#toc li.current a{color:#fff;font-weight:600}
+  aside#toc li.quiz a{color:#3a8a4f}
+  main{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;padding:16px;max-width:1700px;margin:0 auto;align-items:start}
+  @media(max-width:1280px){main{grid-template-columns:1fr 320px} aside#toc{display:none} aside#toc.open{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.4);max-height:100vh}}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  #stage{background:#181c26;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  #slide-wrap{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #slide{max-width:100%;max-height:100%;display:block}
+  #controls{display:flex;gap:8px;align-items:center;padding:6px 2px}
+  button{background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}
+  button:hover{background:#2a3547}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.play{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}
+  button.play:hover{background:#3578e5}
+  button.speed{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}
+  #pos{color:#8b95a7;font-size:13px;margin-left:auto}
+  audio{width:100%}
+  aside#transcript{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}
+  aside#transcript h2{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  #tx-body p{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}
+  #tx-body p.active{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}
+  #thumbs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}
+  .thumb{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}
+  .thumb.current{border-color:#2d6cdf}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb span{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}
+  #end-panel{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}
+  #end-panel.active{display:block;animation:slideIn .4s ease-out}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #end-panel h2{margin:0 0 4px 0;font-size:18px;color:#fff}
+  #end-panel .sub{color:#8fb3e8;margin-bottom:12px;font-size:13px}
+  .end-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}
+  .btn-cta.primary{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}
+  .btn-cta.primary:hover{background:#3578e5;transform:translateY(-1px)}
+  .btn-cta.secondary{background:#222a3a;color:#e8eaed;border:1px solid #2a3345}
+  .btn-cta.secondary:hover{background:#2a3547}
+  .btn-cta .label{font-size:12px;opacity:.75;font-weight:400;display:block;margin-bottom:1px}
+  .btn-cta .title{display:block}
+  footer{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}
+  footer a{margin:0 10px}
+  /* Resume banner */
+  #resume-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}
+  #resume-banner.show{display:flex}
+  #resume-banner .text{font-size:13px;color:#c4cad6}
+  #resume-banner .text strong{color:#fff}
+  #resume-banner button{padding:6px 12px;font-size:13px;margin:0}
+  #resume-banner button.primary{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <button class="menu-toggle" id="menu-toggle" title="목차 열기/닫기">☰</button>
+  <a href="../../../index.html">← 홈</a>
+  <h1>deep nesting 평탄화 — 트리 데이터를 정규화하기</h1>
+  <span class="meta">LOs: LO-S2.5 · 8장 · 6.4분</span>
+</header>
+
+<div id="progress">
+  <span class="label"><strong>Class 9</strong> / 26</span>
+  <div class="bar"><div class="fill" id="course-fill" style="width:34.6%"></div></div>
+  <span class="label">슬라이드 <strong id="slide-num">1</strong> / 8</span>
+  <div class="bar"><div class="fill" id="slide-fill"></div></div>
+</div>
+
+<main>
+  <aside id="toc">
+    <h3>오리엔테이션 — 왜 state 설계가 따로 필요한가</h3>
+    <ul>
+      <li class=""><a href="../../../00-orientation/classes/01-why-state-design-matters/player.html">왜 state 설계가 따로 필요한가 — 4가지 통증 진단</a></li>
+      <li class=""><a href="../../../00-orientation/classes/02-course-map-and-self-diagnosis/player.html">코스 맵 — 7개 챕터가 어떤 통증을 푸는가</a></li>
+      <li class="quiz"><a href="../../../00-orientation/quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+    <h3>사고방식 전환 — 선언형 UI와 visual states로 반응하기</h3>
+    <ul>
+      <li class=""><a href="../../../01-declarative-thinking/classes/01-visual-states-and-triggers/player.html">visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기</a></li>
+      <li class=""><a href="../../../01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/player.html">useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로</a></li>
+      <li class=""><a href="../../../01-declarative-thinking/classes/03-connect-handlers-end-to-end/player.html">핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기</a></li>
+      <li class="quiz"><a href="../../../01-declarative-thinking/quiz.html">📝 섹션 퀴즈 (9문항)</a></li>
+    </ul>
+    <h3>state 구조 설계 — 5가지 원칙으로 동기화 버그 차단</h3>
+    <ul>
+      <li class=""><a href="../01-five-principles-and-grouping/player.html">5원칙 한눈에 + 관련 state 묶기·모순 회피</a></li>
+      <li class=""><a href="../02-redundant-state-and-props-mirroring/player.html">redundant state 제거와 props mirroring 안티패턴</a></li>
+      <li class=""><a href="../03-store-id-not-object/player.html">duplication 회피 — 객체 대신 id를 저장하라</a></li>
+      <li class="current"><a href="../04-flatten-deep-nesting/player.html">deep nesting 평탄화 — 트리 데이터를 정규화하기</a></li>
+      <li class="quiz"><a href="../../quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>컴포넌트 간 state 공유 — Lifting State Up</h3>
+    <ul>
+      <li class=""><a href="../../../03-sharing-state/classes/01-lifting-state-up-3-steps/player.html">Lifting State Up — 형제 컴포넌트를 협조시키는 3단계</a></li>
+      <li class=""><a href="../../../03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/player.html">Controlled vs Uncontrolled와 Single Source of Truth</a></li>
+      <li class=""><a href="../../../03-sharing-state/classes/03-accordion-and-list-patterns/player.html">케이스 스터디 — Accordion·Synced Inputs·Filterable List</a></li>
+      <li class="quiz"><a href="../../../03-sharing-state/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>state 보존과 리셋 — 트리 위치와 key prop</h3>
+    <ul>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/01-state-tied-to-tree-position/player.html">state는 트리 위치에 묶인다 — 보존과 리셋의 기본 규칙</a></li>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/02-reset-strategies-key-prop/player.html">의도된 리셋 — 다른 위치 vs key prop 두 전략</a></li>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/player.html">함정 — JSX 위치 ≠ 트리 위치 &amp; 컴포넌트 정의 중첩 금지</a></li>
+      <li class="quiz"><a href="../../../04-preserving-resetting-state/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Reducer로 state 로직 추출하기</h3>
+    <ul>
+      <li class=""><a href="../../../05-reducer/classes/01-why-reducer-and-signature/player.html">왜 Reducer인가 — useReducer 시그니처와 도입 동기</a></li>
+      <li class=""><a href="../../../05-reducer/classes/02-three-step-migration/player.html">3단계 마이그레이션 — useState에서 useReducer로</a></li>
+      <li class=""><a href="../../../05-reducer/classes/03-action-conventions-and-purity/player.html">Action 컨벤션과 Reducer 순수성 — 결함 진단</a></li>
+      <li class=""><a href="../../../05-reducer/classes/04-tradeoffs-and-immer/player.html">useState vs useReducer 트레이드오프와 Immer 옵션</a></li>
+      <li class="quiz"><a href="../../../05-reducer/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Context로 깊이 데이터 전달하기</h3>
+    <ul>
+      <li class=""><a href="../../../06-context/classes/01-prop-drilling-and-3-step-pattern/player.html">prop drilling 문제와 createContext / Provider / useContext 3단계</a></li>
+      <li class=""><a href="../../../06-context/classes/02-consume-and-provide-pattern/player.html">같은 컴포넌트가 consume + provide — 자동 level 증가 패턴</a></li>
+      <li class=""><a href="../../../06-context/classes/03-context-vs-alternatives/player.html">context를 쓸 때와 쓰지 말 때 — props·composition과 비교</a></li>
+      <li class="quiz"><a href="../../../06-context/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Reducer + Context로 확장하기</h3>
+    <ul>
+      <li class=""><a href="../../../07-reducer-context/classes/01-reducer-context-combine/player.html">Reducer와 Context를 결합하기 — 두 context 분리 전략</a></li>
+      <li class=""><a href="../../../07-reducer-context/classes/02-provider-custom-hooks-scaling/player.html">TasksProvider + 커스텀 훅으로 응집하고 다중 도메인으로 확장하기</a></li>
+      <li class="quiz"><a href="../../../07-reducer-context/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>종합 — 안티패턴 진단과 통합 케이스 스터디</h3>
+    <ul>
+      <li class=""><a href="../../../08-capstone-antipatterns/classes/01-antipattern-clinic/player.html">안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기</a></li>
+      <li class=""><a href="../../../08-capstone-antipatterns/classes/02-mini-kanban-capstone/player.html">통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬</a></li>
+      <li class="quiz"><a href="../../../08-capstone-antipatterns/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+  </aside>
+  <div id="stage">
+    <div id="slide-wrap"><img id="slide" alt="slide"/></div>
+    <div id="controls">
+      <button id="prev">◀ 이전</button>
+      <button id="play" class="play">▶ 재생</button>
+      <button id="next">다음 ▶</button>
+      <button id="speed" class="speed" title="재생 속도">1×</button>
+      <span id="pos">1 / 8</span>
+    </div>
+    <audio id="audio" preload="auto"></audio>
+    <section id="end-panel">
+      <h2>🎉 수업을 완료했어요!</h2>
+      <p class="sub">다음으로 이동하거나 배운 내용을 점검해보세요.</p>
+      <div class="end-actions"><a class="btn-cta primary" href="../../quiz.html"><span><span class="label">이 섹션 점검</span><span class="title">📝 섹션 퀴즈 풀기</span></span></a>
+    <a class="btn-cta secondary" href="../../../03-sharing-state/classes/01-lifting-state-up-3-steps/player.html"><span><span class="label">다음 섹션</span><span class="title">▶ Lifting State Up — 형제 컴포넌트를 협조시키는 3단계</span></span></a></div>
+    </section>
+  </div>
+  <aside id="transcript">
+    <h2>발화 스크립트</h2>
+    <div id="tx-body"></div>
+  </aside>
+</main>
+
+<section id="thumbs"></section>
+
+<div id="resume-banner" role="dialog" aria-live="polite">
+  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">이어 듣기</button>
+  <button id="resume-no">처음부터</button>
+</div>
+
+<footer>
+  <a href="../../quiz.html">📝 섹션 퀴즈 풀기</a>
+  <a href="../../../index.html">목차로</a>
+</footer>
+
+<script>
+const SLIDES = [{"png": "slides_png/slide.001.png", "mp3": "audio/slide_01.mp3", "transcript": ["드디어 Section 2의 마지막 원칙입니다.", "이번 시간엔 deep nesting 평탄화, 즉 트리 데이터를 정규화하는 패턴을 다룹니다.", "오늘 슬로건 한 번 더 되새겨 볼까요.", "\"Make your state as simple as it can be — but no simpler.\"", "가능한 한 단순하게, 그러나 그 이상으로 단순하지는 말 것.", "이 class를 마치고 나면, 5원칙 전부에 체크가 들어갑니다."], "transcriptTimes": [{"start": 0.0, "end": 2.847}, {"start": 2.847, "end": 8.54}, {"start": 8.54, "end": 10.931}, {"start": 10.931, "end": 17.534}, {"start": 17.534, "end": 21.292}, {"start": 21.292, "end": 25.277}]}, {"png": "slides_png/slide.002.png", "mp3": "audio/slide_02.mp3", "transcript": ["이런 상황 상상해 보세요.", "childPlaces라는 자식 배열이 다섯 단계 깊이로 중첩된 트리 데이터가 있습니다.", "가장 깊은 곳의 leaf 하나를 삭제하려면, 부모 체인 다섯 개를 모두 새 객체로 복사해야 해요.", "React의 불변 갱신 규칙 때문이죠.", "state는 그대로 두고, 변경된 새 객체를 setState에 넘겨야 하니까요.", "불변 갱신 코드가 화면을 가득 채웁니다.", "spread 연산자가 다섯 줄, 새 배열 생성이 다섯 줄, 인덱싱이 또 다섯 줄.", "읽기도, 디버깅도 거의 지옥이죠.", "그래서 오늘의 질문.", "트리 모양을 그대로 두는 게, 정말 최선일까요?"], "transcriptTimes": [{"start": 0.0, "end": 2.058}, {"start": 2.058, "end": 9.114}, {"start": 9.114, "end": 17.051}, {"start": 17.051, "end": 20.138}, {"start": 20.138, "end": 26.606}, {"start": 26.606, "end": 29.84}, {"start": 29.84, "end": 36.454}, {"start": 36.454, "end": 39.1}, {"start": 39.1, "end": 40.717}, {"start": 40.717, "end": 44.539}]}, {"png": "slides_png/slide.003.png", "mp3": "audio/slide_03.mp3", "transcript": ["다섯 번째 원칙입니다.", "깊게 중첩된 state는 갱신이 어려우므로, 평탄화하세요.", "평탄화는 데이터베이스 정규화 스타일과 비슷합니다.", "id를 키로 한 객체, 즉 map을 만들고, 자식은 객체 배열 대신 id 배열인 childIds로 참조하는 구조죠.", "before는 Earth 안에 Africa, Africa 안에 또 자식들 같은 식으로 객체가 객체 안에 박혀 있어요.", "after는 다릅니다.", "키 0에는 Earth 노드, 키 1에는 Africa 노드, 이렇게 모든 노드가 평평한 map에 들어가고, 각 노드는 자기 자식의 id 배열만 갖습니다.", "장점이 분명합니다.", "어떤 노드든 O(1)로 즉시 접근.", "갱신할 때는 해당 노드와 부모의 childIds만 수정하면 끝."], "transcriptTimes": [{"start": 0.0, "end": 1.575}, {"start": 1.575, "end": 5.773}, {"start": 5.773, "end": 9.316}, {"start": 9.316, "end": 17.714}, {"start": 17.714, "end": 26.243}, {"start": 26.243, "end": 27.817}, {"start": 27.817, "end": 38.839}, {"start": 38.839, "end": 40.151}, {"start": 40.151, "end": 42.645}, {"start": 42.645, "end": 47.237}]}, {"png": "slides_png/slide.004.png", "mp3": "audio/slide_04.mp3", "transcript": ["변환 절차는 세 단계예요.", "첫째, 모든 노드를 id별로 수집합니다.", "둘째, 각 노드의 자식 객체 배열을 childIds 배열로 교체합니다.", "셋째, 루트에는 root id만 보관합니다.", "이제 시나리오 두 개를 보죠.", "삭제 시나리오.", "노드 N을 지운다면, 부모의 childIds 배열에서 N을 제거하고, map에서 N 키를 삭제합니다.", "부모 체인을 따라 위로 복사할 필요가 전혀 없어요.", "이동 시나리오.", "부모 A의 childIds에서 N을 빼고, 부모 B의 childIds에 N을 추가합니다.", "딱 두 곳만 수정하면 됩니다.", "비용도 솔직히 말씀드리면, 계층 구조를 보고 싶을 땐 매번 map과 childIds를 따라가며 트리를 재구성해야 해요.", "그건 보통 재귀 컴포넌트가 담당합니다."], "transcriptTimes": [{"start": 0.0, "end": 1.976}, {"start": 1.976, "end": 5.081}, {"start": 5.081, "end": 10.586}, {"start": 10.586, "end": 13.974}, {"start": 13.974, "end": 16.232}, {"start": 16.232, "end": 17.361}, {"start": 17.361, "end": 25.265}, {"start": 25.265, "end": 29.217}, {"start": 29.217, "end": 30.347}, {"start": 30.347, "end": 37.263}, {"start": 37.263, "end": 39.521}, {"start": 39.521, "end": 48.837}, {"start": 48.837, "end": 51.801}]}, {"png": "slides_png/slide.005.png", "mp3": "audio/slide_05.mp3", "transcript": ["TravelPlan 예제의 before를 봅시다.", "plan이라는 useState 하나에 다섯 단계 중첩된 객체 트리를 통째로 보관합니다.", "Earth가 루트, 그 아래 Americas, 그 아래 North America, 그 아래 USA, 그 아래 Pasadena 같은 식이죠.", "'Pasadena'를 삭제하려면 어떻게 될까요.", "USA, North America, Americas, Earth, 네 단계 부모를 모두 새 객체로 복사하고, 각 단계마다 childPlaces 배열도 새로 만들어야 합니다.", "spread, filter, 또 spread, 또 filter.", "중간에 인덱스 한 번 잘못 쓰면 아예 다른 노드가 사라지는 위험까지 안고 가야 해요.", "setState 한 번에 spread만 수십 줄이 들어가요.", "깊이가 깊어질수록 코드는 기하급수로 부풀어 오릅니다.", "유지보수도, 코드 리뷰도, 테스트도 모두 부담이 커져요."], "transcriptTimes": [{"start": 0.0, "end": 3.108}, {"start": 3.108, "end": 8.634}, {"start": 8.634, "end": 17.499}, {"start": 17.499, "end": 20.492}, {"start": 20.492, "end": 31.544}, {"start": 31.544, "end": 35.574}, {"start": 35.574, "end": 40.984}, {"start": 40.984, "end": 44.784}, {"start": 44.784, "end": 48.122}, {"start": 48.122, "end": 51.691}]}, {"png": "slides_png/slide.006.png", "mp3": "audio/slide_06.mp3", "transcript": ["이제 after 코드입니다.", "plan의 모양은 id를 키로 한 map.", "각 항목은 id, title, childIds를 갖는 노드입니다.", "삭제 핸들러는 단순합니다.", "부모를 plan에서 꺼내, childIds에서 target id만 filter로 제거한 새 부모를 만들고, 그 다음 plan에서 삭제할 자식 키를 구조 분해 할당으로 빼낸 나머지 객체를 만들어, 새 부모를 합쳐 setPlan에 넘기는 거죠.", "한 번의 setPlan 호출, 변경되는 곳은 두 군데뿐입니다.", "참고로 Immer를 쓰면 useImmerReducer로 plan에서 키를 delete 하는 mutation 스타일도 가능합니다.", "다만 본 강의의 필수 학습 항목은 아니에요."], "transcriptTimes": [{"start": 0.0, "end": 1.79}, {"start": 1.79, "end": 4.536}, {"start": 4.536, "end": 8.833}, {"start": 8.833, "end": 10.504}, {"start": 10.504, "end": 26.498}, {"start": 26.498, "end": 30.556}, {"start": 30.556, "end": 39.03}, {"start": 39.03, "end": 41.895}]}, {"png": "slides_png/slide.007.png", "mp3": "audio/slide_07.mp3", "transcript": ["자가 진단 시간입니다.", "댓글 트리, 즉 id와 replies 배열, 그리고 그 replies 안에 또 replies가 들어 있는 구조를 평탄화하면 어떤 모양이 될까요?", "정답.", "byId라는 map에 id별 노드, 각 노드는 id, text, replyIds를 갖고요.", "rootIds 배열로 최상위 댓글만 따로 보관합니다.", "관계형 데이터베이스에서 'comments' 테이블과 'parent_id' 컬럼을 본떠 만든 모양이라고 보시면 됩니다.", "새 답글을 추가할 때 변경되는 셀은 어디일까요?", "byId에 새 id 항목을 추가하고, byId에서 부모 id의 replyIds에 새 id를 push 하면 끝.", "딱 두 곳입니다.", "중첩 구조였다면 부모 체인을 모두 복사해야 했을 일이, 두 줄로 끝나는 거예요.", "마지막으로 트레이드오프 자가 점검 하나.", "깊이가 두 단계뿐이고 갱신이 거의 없는 데이터라면, 평탄화는 오히려 과잉일 수 있습니다.", "도구는 문제에 맞게 고르세요.", "모든 트리에 byId map을 강제로 적용할 필요는 없어요.", "\"갱신 시나리오가 복잡한가, 깊이가 깊은가\"라는 두 질문에 yes일 때만 평탄화의 가치가 분명해집니다."], "transcriptTimes": [{"start": 0.0, "end": 1.549}, {"start": 1.549, "end": 11.874}, {"start": 11.874, "end": 12.261}, {"start": 12.261, "end": 18.714}, {"start": 18.714, "end": 22.457}, {"start": 22.457, "end": 30.846}, {"start": 30.846, "end": 34.202}, {"start": 34.202, "end": 42.075}, {"start": 42.075, "end": 43.237}, {"start": 43.237, "end": 48.916}, {"start": 48.916, "end": 51.755}, {"start": 51.755, "end": 58.079}, {"start": 58.079, "end": 60.144}, {"start": 60.144, "end": 64.403}, {"start": 64.403, "end": 71.76}]}, {"png": "slides_png/slide.008.png", "mp3": "audio/slide_08.mp3", "transcript": ["Section 2 마무리입니다.", "오늘로 5원칙 전부에 체크가 들어갔습니다.", "묶기, 모순 회피, redundant 제거, duplication 회피, 그리고 평탄화.", "깊은 중첩은 byId map과 childIds 배열로 펴면, 변경 범위가 깊이에 비례하던 것에서, 한두 곳으로 줄어듭니다.", "삭제도, 이동도, 추가도 모두 핸들러 한두 줄이면 끝나죠.", "다시 한번, 5원칙은 모두 동기화 버그 차단의 다른 얼굴입니다.", "\"Make your state as simple as it can be — but no simpler.\"", "이 슬로건이 5원칙을 한 줄로 압축한 표어예요.", "다음 Section에서는 컴포넌트 간 state 공유, Lifting State Up을 다룹니다.", "형제 컴포넌트가 서로 협조해야 할 때 어떻게 state를 끌어올리는지가 주제예요.", "거기서 만나요."], "transcriptTimes": [{"start": 0.0, "end": 2.101}, {"start": 2.101, "end": 4.943}, {"start": 4.943, "end": 10.998}, {"start": 10.998, "end": 19.401}, {"start": 19.401, "end": 23.355}, {"start": 23.355, "end": 27.68}, {"start": 27.68, "end": 34.848}, {"start": 34.848, "end": 38.061}, {"start": 38.061, "end": 44.734}, {"start": 44.734, "end": 50.294}, {"start": 50.294, "end": 51.283}]}];
+let current = 0;
+const img = document.getElementById('slide');
+const audio = document.getElementById('audio');
+const txBody = document.getElementById('tx-body');
+const pos = document.getElementById('pos');
+const thumbs = document.getElementById('thumbs');
+const btnPrev = document.getElementById('prev');
+const btnPlay = document.getElementById('play');
+const btnNext = document.getElementById('next');
+
+SLIDES.forEach((s, i) => {
+  const t = document.createElement('div');
+  t.className = 'thumb';
+  t.dataset.i = i;
+  t.innerHTML = '<img src="' + s.png + '"/><span>' + (i+1) + '</span>';
+  t.onclick = () => loadSlide(i, true);
+  thumbs.appendChild(t);
+});
+
+function loadSlide(i, autoplay, resumeTime) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, i));
+  const s = SLIDES[current];
+  img.src = s.png;
+  audio.src = s.mp3;
+  if (resumeTime && resumeTime > 1) {
+    audio.addEventListener('loadedmetadata', () => {
+      const dur = audio.duration;
+      if (isFinite(dur)) audio.currentTime = Math.min(resumeTime, Math.max(0, dur - 1));
+    }, { once: true });
+  }
+  pos.textContent = (current + 1) + ' / ' + SLIDES.length;
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === SLIDES.length - 1;
+
+  txBody.innerHTML = '';
+  const times = s.transcriptTimes || [];
+  s.transcript.forEach((line, idx) => {
+    const p = document.createElement('p');
+    p.textContent = line;
+    const t = times[idx];
+    if (t && typeof t.start === 'number' && typeof t.end === 'number') {
+      p.dataset.start = t.start;
+      p.dataset.end = t.end;
+    }
+    txBody.appendChild(p);
+  });
+
+  document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('current', idx === current));
+  const cur = document.querySelector('.thumb.current');
+  if (cur) cur.scrollIntoView({block:'nearest', inline:'center'});
+
+  maybeShowEnd();
+  saveState();
+
+  if (autoplay) audio.play().catch(() => {});
+}
+
+// localStorage resume — key = page path so each class gets its own slot
+const STORAGE_KEY = 'course-builder:' + location.pathname;
+const STATE_MAX_AGE_MS = 30 * 86400 * 1000;
+let lastSaveTs = 0;
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      slide: current,
+      time: audio.currentTime || 0,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadResumeState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > STATE_MAX_AGE_MS) return null;
+    if (typeof s.slide !== 'number' || s.slide < 0 || s.slide >= SLIDES.length) return null;
+    // Don't bother prompting if they barely started
+    if (s.slide === 0 && (s.time || 0) < 3) return null;
+    return s;
+  } catch(e) { return null; }
+}
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+function fmtTime(t) {
+  const sec = Math.max(0, Math.floor(t || 0));
+  return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}
+
+let lastActiveLine = null;
+audio.addEventListener('timeupdate', () => {
+  const now = Date.now();
+  if (now - lastSaveTs > 3000) { saveState(); lastSaveTs = now; }
+  // Highlight the transcript line whose [start, end) range contains currentTime.
+  // Line timings come from char-proportional splitting of the slide's MP3 duration.
+  const t = audio.currentTime;
+  const lines = txBody.children;
+  let newActive = null;
+  for (let i = 0; i < lines.length; i++) {
+    const el = lines[i];
+    const s = parseFloat(el.dataset.start);
+    const e = parseFloat(el.dataset.end);
+    if (!isNaN(s) && !isNaN(e) && t >= s && t < e) { newActive = el; break; }
+  }
+  if (newActive !== lastActiveLine) {
+    if (lastActiveLine) lastActiveLine.classList.remove('active');
+    if (newActive) {
+      newActive.classList.add('active');
+      newActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    lastActiveLine = newActive;
+  }
+});
+
+// Playback speed — single cycle button, global across classes
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const SPEED_KEY = 'course-builder:playback-speed';
+const btnSpeed = document.getElementById('speed');
+
+function loadSpeed() {
+  try {
+    const v = parseFloat(localStorage.getItem(SPEED_KEY));
+    if (SPEEDS.includes(v)) return v;
+  } catch(e) {}
+  return 1;
+}
+function applySpeed(v) {
+  audio.playbackRate = v;
+  if ('preservesPitch' in audio) audio.preservesPitch = true;
+  // Display: 1× (no decimal) / 1.25× / 1.5× etc.
+  btnSpeed.textContent = (Number.isInteger(v) ? v : v.toString()) + '×';
+  btnSpeed.classList.toggle('speed-fast', v > 1);
+  btnSpeed.classList.toggle('speed-slow', v < 1);
+}
+let currentSpeed = loadSpeed();
+applySpeed(currentSpeed);
+btnSpeed.onclick = () => {
+  const idx = SPEEDS.indexOf(currentSpeed);
+  currentSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+  applySpeed(currentSpeed);
+  try { localStorage.setItem(SPEED_KEY, String(currentSpeed)); } catch(e) {}
+};
+audio.addEventListener('loadedmetadata', () => { audio.playbackRate = currentSpeed; });
+
+const endPanel = document.getElementById('end-panel');
+const slideFill = document.getElementById('slide-fill');
+const slideNumEl = document.getElementById('slide-num');
+const toc = document.getElementById('toc');
+const menuToggle = document.getElementById('menu-toggle');
+menuToggle.addEventListener('click', () => toc.classList.toggle('open'));
+
+function maybeShowEnd() {
+  if (current === SLIDES.length - 1) {
+    endPanel.classList.add('active');
+  } else {
+    endPanel.classList.remove('active');
+  }
+  // Update progress bar
+  const pct = ((current + 1) / SLIDES.length) * 100;
+  slideFill.style.width = pct + '%';
+  slideNumEl.textContent = current + 1;
+}
+
+btnPrev.onclick = () => loadSlide(current - 1, true);
+btnNext.onclick = () => loadSlide(current + 1, true);
+btnPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
+
+audio.addEventListener('play', () => btnPlay.textContent = '⏸ 일시정지');
+audio.addEventListener('pause', () => btnPlay.textContent = '▶ 재생');
+audio.addEventListener('ended', () => {
+  if (current < SLIDES.length - 1) {
+    loadSlide(current + 1, true);
+  } else {
+    maybeShowEnd();
+    endPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); btnPlay.click(); }
+  else if (e.key === 'ArrowRight') btnNext.click();
+  else if (e.key === 'ArrowLeft') btnPrev.click();
+});
+
+// Initial load — show resume banner if prior state exists, otherwise start at slide 0
+const resumeState = loadResumeState();
+loadSlide(0, false);
+if (resumeState) {
+  document.getElementById('resume-pos').textContent =
+    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+  const banner = document.getElementById('resume-banner');
+  banner.classList.add('show');
+  document.getElementById('resume-yes').onclick = () => {
+    banner.classList.remove('show');
+    loadSlide(resumeState.slide, true, resumeState.time);
+  };
+  document.getElementById('resume-no').onclick = () => {
+    banner.classList.remove('show');
+    clearState();
+  };
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+{
+  "class_id": "S6.C1",
+  "title": "prop drilling 문제와 createContext / Provider / useContext 3단계",
+  "lo_ids": ["LO-S6.1", "LO-S6.2"],
+  "target_duration_sec": 840,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 60,
+      "key_points": [
+        "App → Page → Layout → Sidebar → UserBadge 5단계 트리",
+        "currentUser는 UserBadge만 쓰는데 중간 4개 컴포넌트가 줄줄이 props 전달",
+        "다크모드 추가하면 같은 4개 컴포넌트를 또 수정해야 하는 통증",
+        "중간 컴포넌트는 데이터를 쓰지도 않는데 시그니처가 더러워짐"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "5단 트리 다이어그램, 같은 prop이 4개 화살표를 타고 내려가는 모습 강조",
+      "speaker_affect": "호기심 유발"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "prop drilling 정의 — 중간 컴포넌트가 단지 통과시키기 위해 prop을 받는 패턴",
+        "Heading 예제: level prop을 Section→Heading까지 매번 명시해야 함",
+        "context는 '컴포넌트 트리에 직접 꽂는 백채널'로 비유",
+        "데이터 흐름이 props는 위→아래 직렬, context는 Provider→임의 자손 점프",
+        "중간 컴포넌트는 context의 존재조차 모르고 통과 가능"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "props drilling vs context 흐름을 좌우 대비 다이어그램 (왼쪽 직렬 화살표, 오른쪽 Provider에서 자손으로 점프)",
+      "speaker_affect": "차분하게 설명"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 210,
+      "key_points": [
+        "1단계 createContext(defaultValue) — context 객체 생성, default는 Provider 없을 때 fallback",
+        "2단계 Provider — <LevelContext value={level}>로 값 공급, value는 매 렌더 새 값 가능",
+        "3단계 useContext(Ctx) — 자손에서 가장 가까운 Provider 값을 읽음",
+        "useContext는 훅 — 컴포넌트 최상단에서만 호출, 조건/루프 안 금지",
+        "Provider가 없으면 createContext의 default가 반환됨"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "visual_hint": "3단계를 단계별 코드 카드로 분할 (create → provide → consume)",
+      "speaker_affect": "명료하게, 단계마다 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 240,
+      "key_points": [
+        "props 버전 Heading: <Heading level={3}>처럼 매번 level을 명시",
+        "context 버전 Heading: useContext(LevelContext)로 level을 트리에서 읽음",
+        "Section이 <LevelContext value={level}>로 자식들에게 공급",
+        "Page에서 <Section level={1}><Heading>title</Heading></Section> — Heading이 level prop 없이 동작",
+        "중간 컴포넌트들은 LevelContext를 import조차 안 해도 통과"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "examples": [
+        {
+          "lang": "js",
+          "snippet": "// LevelContext.js\nimport { createContext } from 'react';\nexport const LevelContext = createContext(1);\n\n// Heading.js\nimport { useContext } from 'react';\nimport { LevelContext } from './LevelContext.js';\nexport function Heading({ children }) {\n  const level = useContext(LevelContext);\n  switch (level) {\n    case 1: return <h1>{children}</h1>;\n    case 2: return <h2>{children}</h2>;\n    case 3: return <h3>{children}</h3>;\n    default: return <h4>{children}</h4>;\n  }\n}\n\n// Section.js\nexport function Section({ level, children }) {\n  return (\n    <section>\n      <LevelContext value={level}>{children}</LevelContext>\n    </section>\n  );\n}",
+          "why": "react.dev 원전과 동일 예제로, props 버전과 context 버전을 한 코드베이스에서 직접 비교 가능. Heading 시그니처에서 level prop이 사라지는 시각적 효과가 강력함."
+        }
+      ],
+      "visual_hint": "좌측 props 버전 / 우측 context 버전 코드 분할 화면, Heading 시그니처 차이를 화살표로 강조",
+      "speaker_affect": "흥분 섞인 설명, 변화 지점에서 강조"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "Provider 없이 useContext(LevelContext)를 호출하면 어떤 값이 반환될까?",
+        "<LevelContext value={2}>로 감싼 안에서 또 <LevelContext value={4}>로 감싸면 가장 안쪽 Heading은 몇을 읽을까?",
+        "왜 createContext의 인자가 1이라는 '의미 있는 기본값'이어야 하는지 자문",
+        "답은 다음 class에서 nesting 패턴으로 자연스럽게 드러남"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "visual_hint": "두 개 질문을 카드로 병치, 각 카드 아래 빈 답 영역",
+      "speaker_affect": "질문하는 톤, 침묵 허용"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "prop drilling — 중간 컴포넌트가 통과시키기만 하는 props는 트리가 깊어질수록 통증이 커진다",
+        "3단계 패턴 — createContext(default) → <Ctx value=…> Provider → useContext(Ctx) consumer",
+        "다음 class 예고 — 같은 컴포넌트가 동시에 consume + provide 하면 level이 자동 증가한다"
+      ],
+      "lo_ids": ["LO-S6.1", "LO-S6.2"],
+      "visual_hint": "3단계 패턴을 한 줄 코드로 압축한 요약 카드",
+      "speaker_affect": "힘 실린 확신"
+    }
+  ]
+}

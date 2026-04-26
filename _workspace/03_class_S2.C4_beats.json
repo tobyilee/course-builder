@@ -1,0 +1,93 @@
+{
+  "class_id": "S2.C4",
+  "title": "deep nesting 평탄화 — 트리 데이터를 정규화하기",
+  "lo_ids": ["LO-S2.5"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "5단계 깊이의 childPlaces 트리에서 leaf 하나 삭제하려면 부모 체인 5개를 모두 복사해야 한다",
+        "불변 갱신 코드가 화면 한가득 — 읽기도 디버깅도 지옥",
+        "오늘의 질문: 트리 모양을 그대로 두는 게 정말 최선일까?"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "중첩 객체 트리 + 빨간 박스가 부모 체인을 따라 위로 올라가며 모두 복사되는 애니메이션",
+      "speaker_affect": "공감 유발, 살짝 한숨"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 120,
+      "key_points": [
+        "원칙⑤: 깊이 중첩된 state는 갱신이 어려우므로 '평탄화(flatten)'하라",
+        "평탄화 = DB 정규화 스타일: id를 키로 한 객체(map) + 자식은 id 배열로 참조(`childIds`)",
+        "before 모양: `{ id:0, childPlaces:[{ id:1, childPlaces:[...] }] }`",
+        "after 모양: `{ 0:{ id:0, childIds:[1,42,46] }, 1:{ id:1, childIds:[2,10,19] }, ... }`",
+        "장점: 어떤 노드든 O(1) 접근. 갱신은 해당 노드 + 부모의 childIds만 수정"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "트리 그림 → '관계형 테이블' 스타일 그리드로 변환되는 시각화",
+      "speaker_affect": "차분하게, 변환 단계 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "변환 절차 3단계: ①모든 노드를 id별로 수집 ②각 노드에서 자식 객체 배열을 childIds로 교체 ③루트에는 root id만 보관",
+        "삭제 시나리오: 노드 N 삭제 → 부모의 childIds에서 N 제거 + map[N] 삭제. 부모 체인 복사 불필요",
+        "이동 시나리오: 부모A의 childIds에서 N 제거, 부모B의 childIds에 N 추가. 두 곳만 수정",
+        "비용: '계층 구조'를 보고 싶을 땐 매번 map+childIds로 재구성 — UI 렌더는 재귀 컴포넌트가 담당"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "삭제·이동 시나리오 step-by-step 다이어그램 (변경되는 셀만 하이라이트)",
+      "speaker_affect": "차근차근, 비용 부분은 솔직하게"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "TravelPlan 예제: 'Earth → Americas → North America → USA → ...' 트리",
+        "before 코드: `const [plan, setPlan] = useState(initialTravelPlan)` — 5단계 중첩",
+        "'Pasadena' 노드 삭제하려면 USA → North America → Americas → Earth까지 4단계 복사 + map",
+        "after 코드: `const [plan, setPlan] = useState(initialTravelPlan)` 단, plan은 `{ [id]: { id, title, childIds } }` 형태",
+        "삭제 핸들러: parent.childIds.filter(id !== target) + 새 객체에서 [target] 키 제거 — 단일 setPlan 호출",
+        "Immer 옵션 짧게: useImmerReducer 쓰면 `delete plan[id]` 같은 mutation 스타일도 가능. 단, 본 강의 필수 학습은 아님"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "before/after 코드 split + 삭제 시 변경 범위 빨간 박스 비교",
+      "speaker_affect": "친근하게, Immer는 가볍게 소개"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 95,
+      "key_points": [
+        "자가 진단: 댓글 트리 `{ id, replies:[{ id, replies:[...] }] }` 를 평탄화하면 어떤 모양?",
+        "정답 가이드: `byId: { [id]: { id, text, replyIds:[...] } }`, `rootIds: [...]`",
+        "추가: 새 답글 추가 시 변경되는 셀은? — `byId[newId]` 추가 + `byId[parentId].replyIds`에 newId push",
+        "트레이드오프 자가 점검: 깊이가 2단계뿐이고 갱신이 거의 없다면 평탄화는 과잉일 수도 있다"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "댓글 UI 와이어프레임 + 변경 영역 표시",
+      "speaker_affect": "질문 던지듯, 트레이드오프는 솔직하게"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "깊은 중첩 → byId map + childIds 배열로 평탄화",
+        "삭제·이동 시 변경 범위가 O(깊이)에서 O(1~2)로 축소",
+        "Section 마무리: 5원칙(묶기·모순·redundant·duplication·평탄화)이 모두 동기화 버그 차단의 다른 얼굴"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "5원칙 카드 그리드에 모두 체크 마크",
+      "speaker_affect": "마무리 톤, 살짝 뿌듯하게"
+    }
+  ]
+}

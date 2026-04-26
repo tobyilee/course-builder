@@ -1,0 +1,93 @@
+{
+  "class_id": "S2.C3",
+  "title": "duplication 회피 — 객체 대신 id를 저장하라",
+  "lo_ids": ["LO-S2.3"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "장바구니에서 'Pretzels' 가격을 수정했는데, 선택된 아이템 패널은 옛 가격 그대로",
+        "원인: state에 객체 자체(`selectedItem`)를 박아두고 list 갱신과 분리됨",
+        "오늘의 질문: 같은 데이터를 두 군데 보관하는 순간 무엇이 깨지는가?"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "travel-snack UI: 리스트의 가격은 $2 → $5로 바뀌었는데 하단 'Selected' 박스는 $2 표시",
+      "speaker_affect": "호기심 유발, 미스터리 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "원칙④: 같은 정보를 두 state에 넣지 말 것 (duplication = 동기화 버그의 정의)",
+        "흔한 실수: `useState(items[0])` — items 배열도 state, selectedItem도 state. 진실의 원천이 두 개",
+        "처방: id만 보관하고 매 렌더에서 list로부터 derive (`items.find(i => i.id === selectedId)`)",
+        "이 패턴은 SSOT(single source of truth) 원칙의 핵심 실천법"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "두 박스(items, selectedItem)에서 화살표로 동기화 깨지는 그림 → id 단일 참조 그림으로 전환",
+      "speaker_affect": "차분하게, 핵심은 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "트레이드오프 표로 비교: 객체 보관 vs id 보관",
+        "객체 보관 — 장점: 즉시 접근. 단점: list 변경 시 stale, JSON 직렬화 시 중복 데이터",
+        "id 보관 — 장점: 항상 최신, 메모리 절약. 단점: 매 렌더 find() 비용, item 삭제 시 selectedId 정리 필요",
+        "결정 기준: list가 변하지 않으면 객체도 OK. 변할 가능성이 1%라도 있으면 id가 안전"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "2-column 트레이드오프 표 (장점/단점 색상 코드)",
+      "speaker_affect": "분석적, 차분하게"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 185,
+      "key_points": [
+        "travel-snack 예제 before: items 배열 + selectedItem 객체 두 useState",
+        "체크박스 토글 시 items 갱신만 하고 selectedItem은 갱신 안 함 → '선택된 아이템' 패널이 stale",
+        "리팩터 1: `selectedItem` → `selectedId` (number)로 교체",
+        "리팩터 2: 렌더에서 `const selectedItem = items.find(i => i.id === selectedId)` 로 derive",
+        "결과 검증: items의 어떤 필드를 바꿔도 패널이 즉시 따라옴",
+        "엣지 케이스: 선택된 아이템이 삭제되면? → find가 undefined. selectedId 초기화 또는 빈 상태 UI 필요"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "before/after 코드 diff + 동기화 깨지는 시나리오 → 동기화 유지되는 시나리오 비교 애니메이션",
+      "speaker_affect": "차근차근, 엣지 케이스에 살짝 강조"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "시나리오 자가 진단: 다음 코드에서 동기화 버그가 터질 트리거 1가지를 찾으세요",
+        "코드: `const [user, setUser] = useState(users[0]); ... users.map(u => u.name = await fetchName(u.id))`",
+        "정답 가이드: users가 갱신되어도 user는 옛 객체. id 저장 + derive로 변경",
+        "추가 질문: id로 바꾸면 매 렌더 find()가 도는데, list가 1만 개면 어떻게 할까?",
+        "정답 가이드: Map으로 인덱싱하거나 useMemo. 단, 측정 후 최적화"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "코드 스니펫 + 답변 흐리게 처리한 카드",
+      "speaker_affect": "질문 던지듯, 사이 멈춤"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "duplication = 동기화 버그. 같은 데이터는 한 곳에만",
+        "객체 자체보다 id 저장 + derive가 SSOT 실천법",
+        "다음 class: 깊게 중첩된 트리를 정규화로 평탄화하기"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "체크리스트 3줄",
+      "speaker_affect": "마무리 톤, 차분하게"
+    }
+  ]
+}

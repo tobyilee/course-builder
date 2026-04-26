@@ -1,0 +1,165 @@
+{
+  "section_id": "S5",
+  "items": [
+    {
+      "id": "S5.Q1",
+      "type": "mcq_single",
+      "stem": "useReducer 훅의 시그니처와 반환값을 가장 정확히 설명한 것은?",
+      "choices": [
+        "useReducer(initialState, reducer) 형태로 호출하며 [dispatch, state]를 반환한다.",
+        "useReducer(reducer, initialState) 형태로 호출하며 [state, dispatch]를 반환한다.",
+        "useReducer(reducer, action) 형태로 호출하며 [state, setState]를 반환한다.",
+        "useReducer(initialState) 형태로 호출하며 reducer 함수를 반환한다."
+      ],
+      "correct": ["B"],
+      "explanation": "useReducer는 첫 인자로 (state, action) => nextState 형태의 reducer 함수, 두 번째 인자로 initialState를 받고, 현재 state와 dispatch 함수를 담은 튜플 [state, dispatch]를 반환한다.",
+      "distractor_rationales": {
+        "A": "흔한 오해: 인자 순서와 반환 튜플 순서를 모두 뒤집은 형태. React는 reducer가 먼저, state가 나중이며 반환은 [state, dispatch] 순서.",
+        "C": "두 번째 인자는 action이 아니라 초기 state. action은 dispatch 호출 시점에 전달된다.",
+        "D": "useReducer는 reducer를 반환하지 않는다. reducer는 사용자가 정의해서 인자로 넘긴다."
+      },
+      "lo_ids": ["LO-S5.1"],
+      "bloom": "Remember",
+      "difficulty": 2
+    },
+    {
+      "id": "S5.Q2",
+      "type": "mcq_single",
+      "stem": "Reducer 함수의 정의로 가장 정확한 것은?",
+      "choices": [
+        "(action, state) => void 형태로 state를 직접 mutate 하는 함수",
+        "(state, action) => nextState 형태의 순수 함수",
+        "(prevProps, nextProps) => boolean 형태로 재렌더 여부를 결정하는 함수",
+        "(state) => Promise<nextState> 형태로 비동기 갱신을 수행하는 함수"
+      ],
+      "correct": ["B"],
+      "explanation": "Reducer는 현재 state와 action을 입력받아 다음 state를 '계산해서 반환'하는 순수 함수다. 부수효과·mutation·비동기 작업이 들어가서는 안 된다.",
+      "distractor_rationales": {
+        "A": "mutation을 허용한다는 가정은 reducer 순수성 규칙을 정면으로 위반한다. 또한 반환값 없이 void 형태로는 다음 state를 알 수 없다.",
+        "C": "이는 React.memo의 비교 함수 시그니처. reducer와 무관하다.",
+        "D": "reducer는 동기 순수 함수여야 한다. 비동기 작업은 핸들러나 effect 쪽에서 처리하고 dispatch만 동기로 호출한다."
+      },
+      "lo_ids": ["LO-S5.1"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S5.Q3",
+      "type": "mcq_single",
+      "stem": "useState로 작성된 컴포넌트를 useReducer로 마이그레이션할 때, 강의에서 제시한 3단계 순서로 가장 적절한 것은?",
+      "choices": [
+        "(1) useReducer 끼워 넣기 → (2) reducer 함수 작성 → (3) setState를 dispatch로 변환",
+        "(1) reducer 함수 작성 → (2) setState를 dispatch로 변환 → (3) useReducer 끼워 넣기",
+        "(1) setState를 dispatch로 변환 → (2) reducer 함수 작성 → (3) useState 자리를 useReducer로 교체",
+        "(1) action 타입 enum 정의 → (2) Immer 도입 → (3) reducer 분리"
+      ],
+      "correct": ["C"],
+      "explanation": "강의의 3단계는 (1) 핸들러 안의 setState 호출을 dispatch({type, ...})로 바꾸고, (2) switch로 분기하는 reducer 함수를 컴포넌트 밖에 작성하고, (3) useState 자리를 useReducer로 교체하는 순서다. dispatch 호출부를 먼저 정의해야 어떤 action이 필요한지 자연스럽게 드러난다.",
+      "distractor_rationales": {
+        "A": "useReducer 훅을 먼저 끼우면 아직 reducer가 없어 컴파일 자체가 실패한다. 훅 교체는 마지막 단계.",
+        "B": "reducer를 먼저 쓰려면 어떤 action이 있을지 추측해야 하는데, 그것은 dispatch 호출부에서 자연스럽게 도출되는 정보다. 순서가 비효율적.",
+        "D": "action enum이나 Immer는 마이그레이션 본 단계가 아니라 선택적 개선/대안. 3단계 핵심 절차에 포함되지 않는다."
+      },
+      "lo_ids": ["LO-S5.2"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "S5.Q4",
+      "type": "mcq_multi",
+      "stem": "다음 reducer 코드 조각들 중 '순수성 규칙'을 위반하는 것을 모두 고르시오. (정답 3개)\n\nA) `case 'added': return [...state, action.task];`\nB) `case 'logged': console.log(action); return state;`\nC) `case 'changed': state.find(t => t.id === action.id).text = action.text; return state;`\nD) `case 'fetched': fetch('/api').then(r => r.json()); return state;`\nE) `case 'reset': return initialTasks;`",
+      "choices": ["A", "B", "C", "D", "E"],
+      "correct": ["B", "C", "D"],
+      "explanation": "Reducer는 (1) 같은 입력에 같은 출력, (2) 부수효과 금지, (3) mutation 금지를 지켜야 한다. B는 console.log 부수효과, C는 기존 state 객체를 직접 변경하는 mutation, D는 네트워크 호출이라는 부수효과를 일으킨다. A·E는 새 배열/초기값을 반환하는 정상 패턴.",
+      "distractor_rationales": {
+        "A": "스프레드로 새 배열을 만들어 반환하므로 mutation이 없다. 정상.",
+        "E": "초기 상수를 반환하는 것은 부수효과도 mutation도 아니다. 순수하다."
+      },
+      "lo_ids": ["LO-S5.3"],
+      "bloom": "Analyze",
+      "difficulty": 4
+    },
+    {
+      "id": "S5.Q5",
+      "type": "mcq_single",
+      "stem": "다음 중 강의에서 권장하는 action.type 컨벤션을 가장 잘 따르는 것은?",
+      "choices": [
+        "`{type: 'SET_TASK_TEXT', payload: {...}}` — 대문자 SCREAMING_SNAKE에 payload 래퍼 필수",
+        "`{type: 'changed_task', id, text}` — 동사 과거형, 한 상호작용 = 한 action, 필요한 필드를 평탄히 동봉",
+        "폼 리셋 시 `dispatch({type:'reset_name'})`, `dispatch({type:'reset_email'})`, `dispatch({type:'reset_phone'})`을 순차 호출",
+        "`{type: 'setState', updater: state => ({...})}` — reducer 안에서 updater를 실행"
+      ],
+      "correct": ["B"],
+      "explanation": "강의 컨벤션은 동사 과거형 type(`'added'`, `'changed'`, `'deleted'`)과 '한 상호작용 = 한 action' 원칙이다. 필요한 데이터는 action 객체에 평탄히 담는다(payload 래퍼 강제 X).",
+      "distractor_rationales": {
+        "A": "SCREAMING_SNAKE_CASE와 payload 래퍼는 Redux의 오래된 관습으로, react.dev 강의는 더 가벼운 형태를 권장. 절대 규칙이 아니다.",
+        "C": "한 사용자 상호작용(폼 리셋)이 여러 dispatch로 흩어진 안티패턴. 단일 `'reset_form'` action으로 모아야 한다.",
+        "D": "reducer 안에서 updater 함수를 실행하는 것은 reducer를 setState 흉내로 만들어 reducer의 장점(action 로그, 디버깅 가능성)을 모두 잃게 한다."
+      },
+      "lo_ids": ["LO-S5.3"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "S5.Q6",
+      "type": "mcq_single",
+      "stem": "다음 시나리오 중 useState보다 useReducer가 더 합리적인 선택일 가능성이 가장 높은 경우는?",
+      "choices": [
+        "체크박스 하나의 on/off 상태만 관리하는 컴포넌트",
+        "input 한 개의 입력값을 부모로 lifting up 하는 controlled 컴포넌트",
+        "여러 핸들러에 setState 호출이 흩어지고, 같은 state를 다양한 방식(추가/수정/삭제/일괄 리셋)으로 갱신하는 task 리스트",
+        "마운트 시 한 번 fetch 해서 결과만 보관하는 단일 read-only 데이터"
+      ],
+      "correct": ["C"],
+      "explanation": "useReducer는 state 갱신 로직이 여러 곳에 흩어지고 갱신 패턴이 다양할 때 빛난다. 모든 갱신 로직을 한 reducer에 모으면 추적·디버깅·테스트가 쉬워진다. 단순 boolean이나 단일 값에는 useState가 코드량 면에서 유리.",
+      "distractor_rationales": {
+        "A": "boolean 토글 하나를 위해 reducer를 도입하는 것은 코드량 증가만 가져오는 과잉 설계.",
+        "B": "단일 input controlled 패턴은 useState로 충분하다.",
+        "D": "단일 read-only 값은 갱신 로직이 거의 없으므로 reducer 패턴의 이점을 누리지 못한다."
+      },
+      "lo_ids": ["LO-S5.4"],
+      "bloom": "Evaluate",
+      "difficulty": 3
+    },
+    {
+      "id": "S5.Q7",
+      "type": "true_false",
+      "stem": "useImmerReducer를 사용하면 reducer 안에서 `draft.tasks.push(...)`처럼 mutation 스타일로 작성해도 되며, 이는 일반 reducer의 순수성 규칙을 깨는 것이 아니다.",
+      "choices": ["참(True)", "거짓(False)"],
+      "correct": ["A"],
+      "explanation": "참. useImmerReducer가 받는 `draft`는 Immer가 만든 프록시이므로, draft를 직접 변경해도 Immer가 내부적으로 새 불변 객체를 생성해 반환한다. 외부에서 보면 여전히 (state, action) => nextState 순수 함수이며 React가 보는 결과 state는 새 참조다. 즉 mutation 스타일은 '단축 표기'일 뿐 순수성을 보존한다.",
+      "distractor_rationales": {
+        "B": "흔한 오해: mutation처럼 보이는 코드를 보고 순수성 위반이라 단정하는 것. Immer의 핵심 가치는 정확히 그 외양적 mutation을 안전하게 만드는 데 있다."
+      },
+      "lo_ids": ["LO-S5.5"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S5.Q8",
+      "type": "short_answer",
+      "stem": "다음 reducer 코드를 보고 결함을 모두 진단하시오. 각 결함이 어느 규칙(action 컨벤션 / 순수성)을 위반하는지 명시하고, 수정된 코드 또는 수정 방향을 간단히 서술하시오.\n\n```js\nfunction tasksReducer(state, action) {\n  switch (action.type) {\n    case 'SET_TEXT': {\n      localStorage.setItem('lastEdit', Date.now());\n      const task = state.find(t => t.id === action.id);\n      task.text = action.text;\n      return state;\n    }\n    case 'add': {\n      return [...state, {id: Math.random(), text: action.text}];\n    }\n  }\n}\n```",
+      "choices": [],
+      "correct": [],
+      "explanation": "예시 정답: (1) 'SET_TEXT'는 동사 과거형이 아니다 → 'changed' 또는 'text_changed'로 변경 (action 컨벤션). (2) localStorage.setItem은 부수효과 → reducer 밖(이벤트 핸들러나 effect)으로 옮김 (순수성). (3) `task.text = action.text`는 기존 객체 mutation → `state.map(t => t.id === action.id ? {...t, text: action.text} : t)` 반환 (순수성). (4) Math.random()은 같은 입력에 다른 출력을 만드는 비결정성 → id를 action에 담아 dispatch 쪽에서 생성하거나 외부 카운터 사용 (순수성). 'add' type은 'added'로 과거형 통일 권장.",
+      "distractor_rationales": {},
+      "lo_ids": ["LO-S5.3", "LO-S5.1"],
+      "bloom": "Analyze",
+      "difficulty": 4,
+      "rubric": [
+        {"criterion": "action.type 컨벤션 결함 식별 (대문자 SNAKE / 동사 과거형 아님)", "points": 1},
+        {"criterion": "localStorage 호출이 부수효과임을 지적", "points": 1},
+        {"criterion": "task.text = ... 가 mutation임을 지적하고 새 객체 반환 방향 제시", "points": 1},
+        {"criterion": "Math.random()의 비결정성(같은 입력 다른 출력) 지적", "points": 1},
+        {"criterion": "수정 방향이 reducer를 (state, action) => nextState 순수 함수로 복원함", "points": 1}
+      ]
+    }
+  ],
+  "bloom_distribution": {
+    "Remember": 1,
+    "Understand": 2,
+    "Apply": 1,
+    "Analyze": 3,
+    "Evaluate": 1
+  }
+}

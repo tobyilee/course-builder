@@ -1,0 +1,41 @@
+{
+  "section_id": "S2",
+  "classes": [
+    {
+      "id": "S2.C1",
+      "slug": "01-five-principles-and-grouping",
+      "title": "5원칙 한눈에 + 관련 state 묶기·모순 회피",
+      "lo_ids": ["LO-S2.1", "LO-S2.2"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "동기화 버그를 차단하는 state 구조 설계 5원칙을 한 줄씩 빠르게 훑은 뒤, 첫 두 원칙(관련 state 묶기·모순 회피)을 깊게 다룬다. '항상 함께 갱신되는가'를 기준으로 객체로 합칠지 결정하는 감각을 키우고, 두 boolean이 만드는 impossible state를 status enum으로 단일화하는 패턴을 실습한다."
+    },
+    {
+      "id": "S2.C2",
+      "slug": "02-redundant-state-and-props-mirroring",
+      "title": "redundant state 제거와 props mirroring 안티패턴",
+      "lo_ids": ["LO-S2.4"],
+      "duration_min": 10,
+      "depends_on": ["S2.C1"],
+      "summary": "render 시점에 계산 가능한 값(fullName 같은 파생값)을 state로 보관하면 왜 동기화 버그가 생기는지 짚는다. 특히 props를 useState 초기값으로 mirror 하는 흔한 안티패턴을 진단하고, '직접 사용' vs 'initial 접두사로 명시적 무시' 두 해법 중 어느 쪽이 적절한지 결정하는 기준을 익힌다."
+    },
+    {
+      "id": "S2.C3",
+      "slug": "03-store-id-not-object",
+      "title": "duplication 회피 — 객체 대신 id를 저장하라",
+      "lo_ids": ["LO-S2.3"],
+      "duration_min": 10,
+      "depends_on": ["S2.C2"],
+      "summary": "selectedItem처럼 객체 자체를 state에 박아두면 원본 list가 바뀔 때 동기화가 깨진다. id만 저장하고 list에서 derive 하는 패턴으로 전환했을 때의 이득과 비용을 트레이드오프 표로 비교 평가하고, 동기화 버그가 터지는 시나리오를 직접 짚어낸다."
+    },
+    {
+      "id": "S2.C4",
+      "slug": "04-flatten-deep-nesting",
+      "title": "deep nesting 평탄화 — 트리 데이터를 정규화하기",
+      "lo_ids": ["LO-S2.5"],
+      "duration_min": 10,
+      "depends_on": ["S2.C3"],
+      "summary": "childPlaces처럼 깊게 중첩된 트리 구조는 삭제·이동 시 부모 체인 전체를 복사해야 해서 불변 갱신이 지옥이 된다. id-맵 + childIds 형태의 DB 정규화 스타일로 평탄화하는 기법을 실습하고, mutation 스타일 단순화가 필요할 때 Immer(useImmerReducer)가 어떤 옵션이 되는지 짧게 소개한다."
+    }
+  ]
+}

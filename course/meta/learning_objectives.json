@@ -1,0 +1,313 @@
+[
+  {
+    "id": "LO-S0.1",
+    "section_id": "S0",
+    "text": "이 강의가 다루는 7개 react.dev 챕터의 학습 흐름과 각 챕터가 해결하는 state 관련 통증(중복, 동기화 버그, prop drilling, 의도치 않은 리셋)을 자기 언어로 요약할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": []
+  },
+  {
+    "id": "LO-S0.2",
+    "section_id": "S0",
+    "text": "자신의 최근 프로젝트에서 발생했던 state 관련 버그 또는 코드 스멜 1개 이상을 식별하고, 어느 챕터의 패턴으로 해결될지 가설을 세울 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S0.1"
+    ]
+  },
+  {
+    "id": "LO-S0.3",
+    "section_id": "S0",
+    "text": "선언형 UI의 핵심 명제 — '상태 → UI 자동 반영' — 가 명령형 DOM 조작과 어떻게 다른지 한 문장으로 진술할 수 있다.",
+    "bloom": "Remember",
+    "prerequisites": []
+  },
+  {
+    "id": "LO-S1.1",
+    "section_id": "S1",
+    "text": "주어진 폼/위젯 컴포넌트의 가능한 visual states를 모두 열거하고, 각 상태 사이의 전이를 일으키는 human/computer 트리거를 표로 작성할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S0.3"
+    ]
+  },
+  {
+    "id": "LO-S1.2",
+    "section_id": "S1",
+    "text": "비핵심 state 제거 3대 질문(모순/중복/역수)을 적용해 7개 boolean 변수로 구성된 폼 state를 status enum 기반 3개 변수로 리팩터링할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S1.1"
+    ]
+  },
+  {
+    "id": "LO-S1.3",
+    "section_id": "S1",
+    "text": "선언형 5단계 프로세스(상태 열거 → 트리거 식별 → useState 모델링 → 비핵심 제거 → 핸들러 연결)를 따라 실제 컴포넌트를 처음부터 설계할 수 있다.",
+    "bloom": "Create",
+    "prerequisites": [
+      "LO-S1.2"
+    ]
+  },
+  {
+    "id": "LO-S1.4",
+    "section_id": "S1",
+    "text": "state 변수와 파생값(computed at render)을 구분 기준에 따라 분류하고, 어떤 값이 state로 남아야 하는지 판단할 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S1.2"
+    ]
+  },
+  {
+    "id": "LO-S2.1",
+    "section_id": "S2",
+    "text": "5가지 state 구조 원칙(관련 state 묶기·모순 회피·redundant 제거·duplication 회피·deep nesting 평탄화)을 각각 한 줄로 설명할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": [
+      "LO-S1.4"
+    ]
+  },
+  {
+    "id": "LO-S2.2",
+    "section_id": "S2",
+    "text": "관련 state를 객체로 묶을지 분리할지 결정하는 기준(항상 함께 갱신되는가)을 적용해 주어진 state 변수 묶음을 재구조화할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S2.1"
+    ]
+  },
+  {
+    "id": "LO-S2.3",
+    "section_id": "S2",
+    "text": "객체를 직접 보관하는 state와 id만 보관하고 derive 하는 state의 트레이드오프를 비교 평가하고, 동기화 버그가 발생할 시나리오를 짚어낼 수 있다.",
+    "bloom": "Evaluate",
+    "prerequisites": [
+      "LO-S2.2"
+    ]
+  },
+  {
+    "id": "LO-S2.4",
+    "section_id": "S2",
+    "text": "props를 useState 초기값으로 mirror 하는 안티패턴을 식별하고, '직접 사용' 또는 'initial 접두사' 둘 중 어느 해법이 적절한지 결정할 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S2.1"
+    ]
+  },
+  {
+    "id": "LO-S2.5",
+    "section_id": "S2",
+    "text": "깊게 중첩된 트리 형태 데이터를 정규화된 평탄 구조(id-맵 + childIds)로 변환할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S2.2"
+    ]
+  },
+  {
+    "id": "LO-S3.1",
+    "section_id": "S3",
+    "text": "lifting state up 3단계(자식에서 제거 → 부모에 하드코딩 → 부모에 state 추가) 절차를 적용해 형제 간 협조가 필요한 컴포넌트를 리팩터링할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S2.2"
+    ]
+  },
+  {
+    "id": "LO-S3.2",
+    "section_id": "S3",
+    "text": "controlled 컴포넌트와 uncontrolled 컴포넌트의 차이를 상태 위치·부모 영향·재사용성 관점에서 비교할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": []
+  },
+  {
+    "id": "LO-S3.3",
+    "section_id": "S3",
+    "text": "주어진 UI 시나리오에서 state를 어느 컴포넌트에 둘지(single source of truth) 결정하고, 그 결정을 정당화할 수 있다.",
+    "bloom": "Evaluate",
+    "prerequisites": [
+      "LO-S3.1",
+      "LO-S3.2"
+    ]
+  },
+  {
+    "id": "LO-S3.4",
+    "section_id": "S3",
+    "text": "Accordion(한 번에 하나만 열림) 또는 Filterable List 같은 표준 패턴을 lifting state up으로 직접 구현할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S3.1"
+    ]
+  },
+  {
+    "id": "LO-S4.1",
+    "section_id": "S4",
+    "text": "React가 state를 컴포넌트 인스턴스가 아닌 '렌더 트리에서의 위치'로 추적한다는 모델을 그림 또는 의사 트리로 설명할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": []
+  },
+  {
+    "id": "LO-S4.2",
+    "section_id": "S4",
+    "text": "주어진 JSX 코드 변경(조건부 렌더, 컴포넌트 타입 교체)이 state를 보존할지 리셋할지 예측하고, 그 근거를 트리 위치 규칙으로 설명할 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S4.1"
+    ]
+  },
+  {
+    "id": "LO-S4.3",
+    "section_id": "S4",
+    "text": "key prop을 사용해 같은 위치의 컴포넌트 state를 의도적으로 리셋하는 전략을 채팅 폼·플레이어 카운터 같은 사례에 적용할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S4.2"
+    ]
+  },
+  {
+    "id": "LO-S4.4",
+    "section_id": "S4",
+    "text": "컴포넌트 정의를 다른 컴포넌트 안에 중첩 정의하면 매 렌더마다 state가 리셋되는 이유를 설명하고, 안티패턴을 리팩터링할 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S4.1"
+    ]
+  },
+  {
+    "id": "LO-S5.1",
+    "section_id": "S5",
+    "text": "Reducer가 (state, action) => nextState 형태의 순수 함수임을 정의하고, useReducer 훅의 시그니처와 반환값을 기억할 수 있다.",
+    "bloom": "Remember",
+    "prerequisites": []
+  },
+  {
+    "id": "LO-S5.2",
+    "section_id": "S5",
+    "text": "여러 setState 호출이 흩어진 컴포넌트를 dispatch + reducer 패턴으로 마이그레이션하는 3단계(dispatch 변환 → reducer 작성 → useReducer 사용)를 수행할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S5.1"
+    ]
+  },
+  {
+    "id": "LO-S5.3",
+    "section_id": "S5",
+    "text": "action.type 컨벤션(동사 과거형, 한 상호작용 = 한 action)과 reducer 순수성 규칙(부수효과 금지, mutation 금지)을 평가 기준으로 삼아 주어진 reducer 코드의 결함을 진단할 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S5.2"
+    ]
+  },
+  {
+    "id": "LO-S5.4",
+    "section_id": "S5",
+    "text": "useState와 useReducer 사이의 트레이드오프(코드량·가독성·디버깅·테스트 용이성)를 비교해, 주어진 시나리오에서 어느 쪽을 선택할지 결정할 수 있다.",
+    "bloom": "Evaluate",
+    "prerequisites": [
+      "LO-S5.2"
+    ]
+  },
+  {
+    "id": "LO-S5.5",
+    "section_id": "S5",
+    "text": "Immer(useImmerReducer) 사용 시 mutation 스타일 코드의 장단점을 설명하고, 일반 reducer와 의미상 동등한 형태로 변환할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": [
+      "LO-S5.2"
+    ]
+  },
+  {
+    "id": "LO-S6.1",
+    "section_id": "S6",
+    "text": "prop drilling 문제 상황을 컴포넌트 트리로 그려 설명하고, context가 어떻게 그것을 해소하는지 데이터 흐름 측면에서 비교할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": []
+  },
+  {
+    "id": "LO-S6.2",
+    "section_id": "S6",
+    "text": "createContext / Provider(<Ctx value=...>) / useContext 3단계 패턴으로 깊이 있는 컴포넌트 트리에 데이터를 전달하는 코드를 작성할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S6.1"
+    ]
+  },
+  {
+    "id": "LO-S6.3",
+    "section_id": "S6",
+    "text": "같은 컴포넌트가 context를 consume 하면서 동시에 새로운 값으로 provide 하는 nesting 패턴(예: Heading level 자동 증가)을 구현할 수 있다.",
+    "bloom": "Apply",
+    "prerequisites": [
+      "LO-S6.2"
+    ]
+  },
+  {
+    "id": "LO-S6.4",
+    "section_id": "S6",
+    "text": "context를 써야 하는 사례(theming/auth/routing)와 props·composition으로 충분한 사례를 구분 기준으로 평가하고, context 남용을 회피하는 결정을 정당화할 수 있다.",
+    "bloom": "Evaluate",
+    "prerequisites": [
+      "LO-S6.2"
+    ]
+  },
+  {
+    "id": "LO-S7.1",
+    "section_id": "S7",
+    "text": "state context와 dispatch context를 분리하는 이유(불필요한 재렌더 방지, 관심사 분리)를 설명할 수 있다.",
+    "bloom": "Understand",
+    "prerequisites": [
+      "LO-S5.4",
+      "LO-S6.4"
+    ]
+  },
+  {
+    "id": "LO-S7.2",
+    "section_id": "S7",
+    "text": "useReducer + 두 context를 결합한 Provider 컴포넌트와 커스텀 훅(useTasks, useTasksDispatch)을 단일 파일로 응집해 작성할 수 있다.",
+    "bloom": "Create",
+    "prerequisites": [
+      "LO-S7.1",
+      "LO-S5.2",
+      "LO-S6.2"
+    ]
+  },
+  {
+    "id": "LO-S7.3",
+    "section_id": "S7",
+    "text": "다중 도메인(Tasks/Auth/Theme)에 reducer+context 쌍을 여러 개 두는 확장 전략을 설계하고, 도메인 경계 결정의 근거를 제시할 수 있다.",
+    "bloom": "Create",
+    "prerequisites": [
+      "LO-S7.2"
+    ]
+  },
+  {
+    "id": "LO-S7.4",
+    "section_id": "S7",
+    "text": "reducer+context 패턴이 적합한 시점과 외부 라이브러리(Redux/Zustand 등)를 도입해야 하는 시점을 비교 기준(스케일·디버깅·미들웨어 필요성)으로 평가할 수 있다.",
+    "bloom": "Evaluate",
+    "prerequisites": [
+      "LO-S7.2"
+    ]
+  },
+  {
+    "id": "LO-S8.1",
+    "section_id": "S8",
+    "text": "주어진 코드 샘플에서 5대 안티패턴(redundant state, props mirroring, key 누락, 컴포넌트 중첩 정의, context 남용)을 진단하고, 어느 챕터의 원칙으로 고칠지 매핑할 수 있다.",
+    "bloom": "Analyze",
+    "prerequisites": [
+      "LO-S2.4",
+      "LO-S4.4",
+      "LO-S6.4"
+    ]
+  },
+  {
+    "id": "LO-S8.2",
+    "section_id": "S8",
+    "text": "mini Kanban 앱의 state shape → lifting 위치 → reducer 도입 → context 분리 의사결정 사슬을 직접 설계하고, 각 결정의 근거를 강의의 7개 원칙으로 정당화할 수 있다.",
+    "bloom": "Create",
+    "prerequisites": [
+      "LO-S7.2",
+      "LO-S2.5",
+      "LO-S3.3"
+    ]
+  }
+]

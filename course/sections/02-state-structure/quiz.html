@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>state 구조 설계 — 5가지 원칙으로 동기화 버그 차단 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>state 구조 설계 — 5가지 원칙으로 동기화 버그 차단 · 퀴즈</h1>
+  <p class="meta">8 문항 · Bloom: Understand:2, Apply:2, Analyze:2, Evaluate:2</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 중 Section 2에서 다룬 &#x27;state 구조 설계 5원칙&#x27;에 해당하지 않는 것은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. 관련 state는 함께 갱신된다면 객체로 묶어라</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. 모순되는 boolean 조합을 만들지 말고 status enum으로 단일화하라</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. 다른 state나 props로 계산 가능한 값은 state로 두지 말라</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. 가능한 모든 state는 useReducer로 옮겨 단일 store에 보관하라</span></label>
+  <div class="explain"><strong>정답: D</strong><br>5원칙은 &#x27;관련 state 묶기 / 모순 회피 / redundant 제거 / duplication 회피 / deep nesting 평탄화&#x27;다. useReducer는 Section S5 주제이며, 구조 설계 원칙과는 결이 다르다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 원칙①(관련 state 묶기)을 정확히 기술한다.</li><li><strong>B.</strong> 원칙②(모순 회피)를 정확히 기술한다.</li><li><strong>C.</strong> 원칙③(redundant 제거)을 정확히 기술한다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>마우스 위치를 추적하는 컴포넌트가 다음과 같이 두 개의 state를 가지고 있다.
+
+```jsx
+const [x, setX] = useState(0);
+const [y, setY] = useState(0);
+// onPointerMove 안에서 항상 둘 다 setX, setY를 함께 호출한다
+```
+
+원칙①(관련 state 묶기)을 적용한다면 어떻게 재구조화하는 것이 가장 적절한가?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> A. `useState({ x: 0, y: 0 })` 단일 객체 state로 묶고 `setPosition({ x: e.clientX, y: e.clientY })`로 한 번에 갱신한다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> B. 그대로 두 개의 state로 유지한다 — 변수가 분리되어 있을수록 항상 더 안전하다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> C. `useReducer`로 옮겨 ACTION_MOVE를 dispatch 한다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> D. `useRef({ x, y })`로 옮겨 렌더를 줄인다</span></label>
+  <div class="explain"><strong>정답: A</strong><br>묶기 결정 기준은 &#x27;항상 함께 갱신되는가&#x27;다. x와 y는 한 이벤트에서 동시에 갱신되므로 객체로 묶어 단일 setState로 만든다. 이러면 한쪽만 갱신되어 모순이 생기는 일이 구조적으로 차단된다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 분리 보관은 &#x27;항상 함께 갱신&#x27; 시 두 setState가 흩어져 일관성을 잃을 위험을 키운다. &#x27;분리가 항상 안전하다&#x27;는 명제는 거짓이다.</li><li><strong>C.</strong> useReducer는 액션이 다양하거나 전이가 복잡할 때 가치가 있다. 좌표 동시 갱신만을 위해 도입하면 과잉이다.</li><li><strong>D.</strong> 위치 변화로 UI가 갱신되어야 하는 컴포넌트라면 useRef는 화면을 다시 그리지 않아 부적절하다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드는 어떤 안티패턴을 위반하고 있으며, `fullName`은 어떻게 다뤄야 하는가?
+
+```jsx
+function Form() {
+  const [firstName, setFirstName] = useState(&#x27;&#x27;);
+  const [lastName, setLastName]   = useState(&#x27;&#x27;);
+  const [fullName, setFullName]   = useState(&#x27;&#x27;);
+
+  function handleFirst(e) {
+    setFirstName(e.target.value);
+    setFullName(e.target.value + &#x27; &#x27; + lastName);
+  }
+}
+```</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> A. redundant state — `fullName`은 state에서 제거하고 렌더 시 `const fullName = firstName + &#x27; &#x27; + lastName`으로 derive 한다</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> B. props mirroring — `initialFullName` prop으로 바꾼다</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> C. duplication — `fullName`을 id로 바꿔 보관한다</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> D. deep nesting — fullName을 객체로 묶어 평탄화한다</span></label>
+  <div class="explain"><strong>정답: A</strong><br>`fullName`은 `firstName`과 `lastName`으로 매 렌더 동일하게 계산할 수 있는 derived value다. state로 두면 갱신 경로 하나가 누락되는 순간 동기화가 깨진다. 처방은 state 제거 후 렌더 시 변수로 계산하기.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> props가 등장하지 않는 코드이므로 mirroring 안티패턴이 아니다.</li><li><strong>C.</strong> 선택된 객체 보관 문제(원칙④)는 list와 selectedItem 같은 시나리오에 해당한다. 단순 결합값과는 무관하다.</li><li><strong>D.</strong> 트리 형태 데이터가 아니므로 deep nesting과 무관하다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 두 컴포넌트 모두 `useState(props.X)` 형태로 prop을 초기값에 넣고 있다. 이 중 &#x27;initial 접두사로 의도를 드러내는&#x27; 해법(해법 B)이 적절한 사례는 어느 것인가?
+
+```jsx
+// 사례 ① — 부모가 사용자의 테마 변경에 따라 동적으로 messageColor를 바꾼다
+function Message({ messageColor }) {
+  const [color, setColor] = useState(messageColor);
+  return &lt;div style={{ color }}&gt;...&lt;/div&gt;;
+}
+
+// 사례 ② — 부모는 첫 렌더 때만 defaultName을 넘겨주고, 이후엔 사용자가 입력란에서 자유롭게 편집한다
+function EditableForm({ defaultName }) {
+  const [name, setName] = useState(defaultName);
+  return &lt;input value={name} onChange={e =&gt; setName(e.target.value)} /&gt;;
+}
+```</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> A. 사례 ②만 — `defaultName`을 `initialName`으로 이름 바꾸고 useState 시드로 둔다. 사례 ①은 `const color = messageColor`로 직접 사용한다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> B. 사례 ①만 — initial 접두사로 부모 변경을 의도적으로 무시해야 한다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> C. 둘 다 initial 접두사가 정답이다 — props를 초기값으로 받는 모든 경우에 적용된다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> D. 둘 다 직접 사용으로 바꿔야 한다 — useState로 prop을 받는 것은 항상 잘못이다</span></label>
+  <div class="explain"><strong>정답: A</strong><br>선택 기준은 &#x27;부모의 갱신을 자식이 따라가야 하나, 아니면 첫 값만 시드로 쓰나?&#x27;다. 사례 ①은 부모 변경을 즉시 반영해야 하므로 직접 사용. 사례 ②는 사용자가 편집 중일 때 부모 덮어쓰기가 오히려 버그이므로 initial 접두사로 &#x27;시드일 뿐&#x27;임을 API에 노출한다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 사례 ①에서 부모의 색상 변경이 자식에게 반영되지 않으면 그 자체가 버그다. initial 접두사는 의미가 다르다.</li><li><strong>C.</strong> 직접 사용이 적절한 경우(사례 ①)도 있으므로 일률 적용은 틀렸다.</li><li><strong>D.</strong> 편집 폼 시드 같은 합법적 use case가 존재하므로 &#x27;항상 잘못&#x27;은 거짓이다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>장바구니 컴포넌트가 다음과 같이 selectedItem 객체 자체를 state에 보관하고 있다.
+
+```jsx
+const [items, setItems] = useState(initialItems);
+const [selectedItem, setSelectedItem] = useState(items[0]);
+
+function handlePriceChange(id, newPrice) {
+  setItems(items.map(i =&gt; i.id === id ? { ...i, price: newPrice } : i));
+}
+```
+
+사용자가 &#x27;Pretzels&#x27;(현재 selectedItem)의 가격을 $2 → $5로 수정했지만 &#x27;Selected&#x27; 패널은 여전히 $2를 보여준다. 이 시나리오에서 어느 진단과 처방이 가장 적절한가?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> A. 진단: items와 selectedItem이 같은 정보를 두 곳에 보관해 SSOT가 깨졌다. 처방: `selectedId`만 state에 두고 `selectedItem = items.find(i =&gt; i.id === selectedId)`로 derive 한다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> B. 진단: handlePriceChange가 selectedItem을 함께 갱신하지 않은 단순 누락 버그다. 처방: setItems 다음 줄에 setSelectedItem도 호출한다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> C. 진단: items가 객체 배열이라 불변 갱신이 잘못됐다. 처방: items를 평탄화된 byId map으로 바꾼다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> D. 진단: useState가 객체 참조를 비교하지 못한다. 처방: useReducer로 옮긴다</span></label>
+  <div class="explain"><strong>정답: A</strong><br>원인은 duplication이다. items와 selectedItem이 진실의 원천을 둘로 쪼개고 있어 한쪽 갱신이 다른 쪽에 자동 반영되지 않는다. 처방은 id만 보관하고 list에서 derive — SSOT 실천. 동기화 호출을 양쪽에 추가하는 방법(B)도 동작은 하지만 새 갱신 경로가 추가되는 순간 다시 깨진다. 구조로 차단해야 한다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 동작은 하지만 똑같은 일을 두 곳에서 해야 하는 빚을 떠안는다. 새 갱신 경로 한 군데만 누락돼도 다시 stale이 된다 — 구조적 해결이 아니다.</li><li><strong>C.</strong> items의 불변 갱신은 정상(map + spread)이다. 평탄화는 깊이 있는 트리 데이터에 적용하는 다른 원칙이다.</li><li><strong>D.</strong> useReducer는 동기화 버그를 자동으로 막아주지 않는다. 같은 duplication 버그가 dispatch 안에서 똑같이 재현된다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다음은 깊이 5단계 `childPlaces` 트리를 byId map + childIds 배열로 평탄화한 상태다.
+
+```js
+{
+  0: { id:0, title:&#x27;Earth&#x27;,    childIds:[1,42,46] },
+  1: { id:1, title:&#x27;Americas&#x27;, childIds:[2,10] },
+  2: { id:2, title:&#x27;USA&#x27;,      childIds:[5] },
+  5: { id:5, title:&#x27;Pasadena&#x27;, childIds:[] }
+}
+```
+
+이 평탄화 구조의 이점으로 옳은 것을 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q5" value="A"><span><strong>A.</strong> A. 깊이 D의 노드 삭제 시 부모 체인 전체를 복사할 필요 없이 부모의 childIds와 byId 항목 두 곳만 수정하면 된다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="B"><span><strong>B.</strong> B. 다른 부모로 이동(move)할 때 두 부모의 childIds만 손대면 된다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="C"><span><strong>C.</strong> C. 화면에 계층 구조를 그릴 때 트리 재구성 비용이 사라진다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="D"><span><strong>D.</strong> D. state 자체에서 부모-자식 관계가 자동으로 추론되어 childIds 배열이 필요 없게 된다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="E"><span><strong>E.</strong> E. React가 평탄화된 객체를 자동으로 얕은 비교에서 깊은 비교로 전환한다</span></label>
+  <div class="explain"><strong>정답: A, B</strong><br>평탄화의 핵심 이득은 갱신 범위 축소다. 삭제는 부모 childIds + byId[N] 삭제 두 군데, 이동은 두 부모 childIds 두 군데로 끝난다. 트리 재구성은 렌더 시점 비용으로 그대로 남으며(C 오답), 부모-자식 관계는 childIds 배열로 명시적으로 표현해야 한다(D 오답).<br><strong>오답 해설:</strong><ul><li><strong>C.</strong> 오히려 화면에 계층 구조를 그릴 때마다 byId+childIds로 트리를 재구성해야 한다. 다만 재귀 컴포넌트가 자연스럽게 처리한다.</li><li><strong>D.</strong> 평탄화 구조에서 부모-자식 관계는 명시적으로 childIds 배열에 보관해야 하며 자동 추론되지 않는다.</li><li><strong>E.</strong> React의 비교 정책은 state 모양과 무관하다. 얕은 비교 의미론은 그대로 유지된다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Understand</span>
+  <span class="tag">true_false</span>
+  <h3>참/거짓: &#x27;두 개의 boolean 변수 isLoading, isError가 동시에 true가 되면 의미상 불가능한 상태&#x27;라면 원칙②(모순 회피)를 적용해 `status: &#x27;idle&#x27; | &#x27;loading&#x27; | &#x27;error&#x27; | &#x27;success&#x27;` 같은 enum 하나로 단일화하는 것이 적절하다.</h3>
+  <label class="choice"><input type="radio" name="q6" value="T"><span>참 (True)</span></label>
+  <label class="choice"><input type="radio" name="q6" value="F"><span>거짓 (False)</span></label>
+  <div class="explain"><strong>정답: 참</strong><br>참. 모순 가능한 boolean 조합은 impossible state를 허용하므로 status enum으로 단일화해 구조적으로 차단한다. S2.C1에서 다룬 원칙②의 정확한 적용이다.<br><strong>오답 해설:</strong><ul><li><strong>거짓.</strong> boolean 분리 보관은 isLoading=true &amp;&amp; isError=true 같은 불가능 상태를 코드 차원에서 막지 못한다.</li></ul></div>
+</div>
+<div class="q" id="q7">
+  <span class="tag">Q8</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">short_answer</span>
+  <h3>팀원이 &#x27;평탄화된 byId 구조도 좋지만, 트리 모양 그대로 보관한 뒤 list 갱신 핸들러에서 selectedItem도 함께 setState 해주면 동기화 버그를 막을 수 있다&#x27;고 주장한다. 두세 문장으로 이 주장에 대해 평가하시오 — 어떤 부분은 동작하고, 어떤 부분이 결국 깨지는가?</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain"><strong>정답: rubric</strong><br>모범 답안 핵심: (1) &#x27;함께 setState&#x27;가 단기적으로는 동작하지만 똑같은 일을 두 곳에서 해야 하므로 새 갱신 경로가 추가되는 순간 다시 깨진다. (2) 동기화는 코드 컨벤션이 아니라 구조로 차단해야 한다 — id만 보관하고 derive 하면 누락 가능한 호출 자체가 사라진다. (3) 깊은 트리의 경우 부모 체인 전체 복사 비용도 따로 남아 평탄화의 동기는 또 다르다.<strong>채점 기준:</strong><ul><li>[1점] &#x27;동작은 한다&#x27;는 단기적 사실을 인정한다</li><li>[1점] 새 갱신 경로 누락 시 다시 깨진다는 근본 한계를 지적한다</li><li>[1점] &#x27;구조로 차단 vs 컨벤션으로 보완&#x27;의 대비 또는 SSOT 개념을 명시한다</li><li>[+1점 보너스] 깊은 트리에서는 평탄화의 동기가 동기화 버그가 아니라 갱신 비용이라는 점을 분리해 짚는다</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S2.Q1", "type": "mcq_single", "bloom": "Understand", "lo_ids": ["LO-S2.1"], "difficulty": 2, "stem": "다음 중 Section 2에서 다룬 'state 구조 설계 5원칙'에 해당하지 않는 것은?", "prompt": "다음 중 Section 2에서 다룬 'state 구조 설계 5원칙'에 해당하지 않는 것은?", "choices": ["A. 관련 state는 함께 갱신된다면 객체로 묶어라", "B. 모순되는 boolean 조합을 만들지 말고 status enum으로 단일화하라", "C. 다른 state나 props로 계산 가능한 값은 state로 두지 말라", "D. 가능한 모든 state는 useReducer로 옮겨 단일 store에 보관하라"], "options": ["A. 관련 state는 함께 갱신된다면 객체로 묶어라", "B. 모순되는 boolean 조합을 만들지 말고 status enum으로 단일화하라", "C. 다른 state나 props로 계산 가능한 값은 state로 두지 말라", "D. 가능한 모든 state는 useReducer로 옮겨 단일 store에 보관하라"], "answer": "D", "correct": ["D"], "explanation": "5원칙은 '관련 state 묶기 / 모순 회피 / redundant 제거 / duplication 회피 / deep nesting 평탄화'다. useReducer는 Section S5 주제이며, 구조 설계 원칙과는 결이 다르다.", "distractor_rationales": {"A": "원칙①(관련 state 묶기)을 정확히 기술한다.", "B": "원칙②(모순 회피)를 정확히 기술한다.", "C": "원칙③(redundant 제거)을 정확히 기술한다."}}, {"id": "S2.Q2", "type": "mcq_single", "bloom": "Apply", "lo_ids": ["LO-S2.2"], "difficulty": 3, "stem": "마우스 위치를 추적하는 컴포넌트가 다음과 같이 두 개의 state를 가지고 있다.\n\n```jsx\nconst [x, setX] = useState(0);\nconst [y, setY] = useState(0);\n// onPointerMove 안에서 항상 둘 다 setX, setY를 함께 호출한다\n```\n\n원칙①(관련 state 묶기)을 적용한다면 어떻게 재구조화하는 것이 가장 적절한가?", "prompt": "마우스 위치를 추적하는 컴포넌트가 다음과 같이 두 개의 state를 가지고 있다.\n\n```jsx\nconst [x, setX] = useState(0);\nconst [y, setY] = useState(0);\n// onPointerMove 안에서 항상 둘 다 setX, setY를 함께 호출한다\n```\n\n원칙①(관련 state 묶기)을 적용한다면 어떻게 재구조화하는 것이 가장 적절한가?", "choices": ["A. `useState({ x: 0, y: 0 })` 단일 객체 state로 묶고 `setPosition({ x: e.clientX, y: e.clientY })`로 한 번에 갱신한다", "B. 그대로 두 개의 state로 유지한다 — 변수가 분리되어 있을수록 항상 더 안전하다", "C. `useReducer`로 옮겨 ACTION_MOVE를 dispatch 한다", "D. `useRef({ x, y })`로 옮겨 렌더를 줄인다"], "options": ["A. `useState({ x: 0, y: 0 })` 단일 객체 state로 묶고 `setPosition({ x: e.clientX, y: e.clientY })`로 한 번에 갱신한다", "B. 그대로 두 개의 state로 유지한다 — 변수가 분리되어 있을수록 항상 더 안전하다", "C. `useReducer`로 옮겨 ACTION_MOVE를 dispatch 한다", "D. `useRef({ x, y })`로 옮겨 렌더를 줄인다"], "answer": "A", "correct": ["A"], "explanation": "묶기 결정 기준은 '항상 함께 갱신되는가'다. x와 y는 한 이벤트에서 동시에 갱신되므로 객체로 묶어 단일 setState로 만든다. 이러면 한쪽만 갱신되어 모순이 생기는 일이 구조적으로 차단된다.", "distractor_rationales": {"B": "분리 보관은 '항상 함께 갱신' 시 두 setState가 흩어져 일관성을 잃을 위험을 키운다. '분리가 항상 안전하다'는 명제는 거짓이다.", "C": "useReducer는 액션이 다양하거나 전이가 복잡할 때 가치가 있다. 좌표 동시 갱신만을 위해 도입하면 과잉이다.", "D": "위치 변화로 UI가 갱신되어야 하는 컴포넌트라면 useRef는 화면을 다시 그리지 않아 부적절하다."}}, {"id": "S2.Q3", "type": "mcq_single", "bloom": "Apply", "lo_ids": ["LO-S2.4"], "difficulty": 3, "stem": "다음 코드는 어떤 안티패턴을 위반하고 있으며, `fullName`은 어떻게 다뤄야 하는가?\n\n```jsx\nfunction Form() {\n  const [firstName, setFirstName] = useState('');\n  const [lastName, setLastName]   = useState('');\n  const [fullName, setFullName]   = useState('');\n\n  function handleFirst(e) {\n    setFirstName(e.target.value);\n    setFullName(e.target.value + ' ' + lastName);\n  }\n}\n```", "prompt": "다음 코드는 어떤 안티패턴을 위반하고 있으며, `fullName`은 어떻게 다뤄야 하는가?\n\n```jsx\nfunction Form() {\n  const [firstName, setFirstName] = useState('');\n  const [lastName, setLastName]   = useState('');\n  const [fullName, setFullName]   = useState('');\n\n  function handleFirst(e) {\n    setFirstName(e.target.value);\n    setFullName(e.target.value + ' ' + lastName);\n  }\n}\n```", "choices": ["A. redundant state — `fullName`은 state에서 제거하고 렌더 시 `const fullName = firstName + ' ' + lastName`으로 derive 한다", "B. props mirroring — `initialFullName` prop으로 바꾼다", "C. duplication — `fullName`을 id로 바꿔 보관한다", "D. deep nesting — fullName을 객체로 묶어 평탄화한다"], "options": ["A. redundant state — `fullName`은 state에서 제거하고 렌더 시 `const fullName = firstName + ' ' + lastName`으로 derive 한다", "B. props mirroring — `initialFullName` prop으로 바꾼다", "C. duplication — `fullName`을 id로 바꿔 보관한다", "D. deep nesting — fullName을 객체로 묶어 평탄화한다"], "answer": "A", "correct": ["A"], "explanation": "`fullName`은 `firstName`과 `lastName`으로 매 렌더 동일하게 계산할 수 있는 derived value다. state로 두면 갱신 경로 하나가 누락되는 순간 동기화가 깨진다. 처방은 state 제거 후 렌더 시 변수로 계산하기.", "distractor_rationales": {"B": "props가 등장하지 않는 코드이므로 mirroring 안티패턴이 아니다.", "C": "선택된 객체 보관 문제(원칙④)는 list와 selectedItem 같은 시나리오에 해당한다. 단순 결합값과는 무관하다.", "D": "트리 형태 데이터가 아니므로 deep nesting과 무관하다."}}, {"id": "S2.Q4", "type": "mcq_single", "bloom": "Analyze", "lo_ids": ["LO-S2.4"], "difficulty": 4, "stem": "다음 두 컴포넌트 모두 `useState(props.X)` 형태로 prop을 초기값에 넣고 있다. 이 중 'initial 접두사로 의도를 드러내는' 해법(해법 B)이 적절한 사례는 어느 것인가?\n\n```jsx\n// 사례 ① — 부모가 사용자의 테마 변경에 따라 동적으로 messageColor를 바꾼다\nfunction Message({ messageColor }) {\n  const [color, setColor] = useState(messageColor);\n  return <div style={{ color }}>...</div>;\n}\n\n// 사례 ② — 부모는 첫 렌더 때만 defaultName을 넘겨주고, 이후엔 사용자가 입력란에서 자유롭게 편집한다\nfunction EditableForm({ defaultName }) {\n  const [name, setName] = useState(defaultName);\n  return <input value={name} onChange={e => setName(e.target.value)} />;\n}\n```", "prompt": "다음 두 컴포넌트 모두 `useState(props.X)` 형태로 prop을 초기값에 넣고 있다. 이 중 'initial 접두사로 의도를 드러내는' 해법(해법 B)이 적절한 사례는 어느 것인가?\n\n```jsx\n// 사례 ① — 부모가 사용자의 테마 변경에 따라 동적으로 messageColor를 바꾼다\nfunction Message({ messageColor }) {\n  const [color, setColor] = useState(messageColor);\n  return <div style={{ color }}>...</div>;\n}\n\n// 사례 ② — 부모는 첫 렌더 때만 defaultName을 넘겨주고, 이후엔 사용자가 입력란에서 자유롭게 편집한다\nfunction EditableForm({ defaultName }) {\n  const [name, setName] = useState(defaultName);\n  return <input value={name} onChange={e => setName(e.target.value)} />;\n}\n```", "choices": ["A. 사례 ②만 — `defaultName`을 `initialName`으로 이름 바꾸고 useState 시드로 둔다. 사례 ①은 `const color = messageColor`로 직접 사용한다", "B. 사례 ①만 — initial 접두사로 부모 변경을 의도적으로 무시해야 한다", "C. 둘 다 initial 접두사가 정답이다 — props를 초기값으로 받는 모든 경우에 적용된다", "D. 둘 다 직접 사용으로 바꿔야 한다 — useState로 prop을 받는 것은 항상 잘못이다"], "options": ["A. 사례 ②만 — `defaultName`을 `initialName`으로 이름 바꾸고 useState 시드로 둔다. 사례 ①은 `const color = messageColor`로 직접 사용한다", "B. 사례 ①만 — initial 접두사로 부모 변경을 의도적으로 무시해야 한다", "C. 둘 다 initial 접두사가 정답이다 — props를 초기값으로 받는 모든 경우에 적용된다", "D. 둘 다 직접 사용으로 바꿔야 한다 — useState로 prop을 받는 것은 항상 잘못이다"], "answer": "A", "correct": ["A"], "explanation": "선택 기준은 '부모의 갱신을 자식이 따라가야 하나, 아니면 첫 값만 시드로 쓰나?'다. 사례 ①은 부모 변경을 즉시 반영해야 하므로 직접 사용. 사례 ②는 사용자가 편집 중일 때 부모 덮어쓰기가 오히려 버그이므로 initial 접두사로 '시드일 뿐'임을 API에 노출한다.", "distractor_rationales": {"B": "사례 ①에서 부모의 색상 변경이 자식에게 반영되지 않으면 그 자체가 버그다. initial 접두사는 의미가 다르다.", "C": "직접 사용이 적절한 경우(사례 ①)도 있으므로 일률 적용은 틀렸다.", "D": "편집 폼 시드 같은 합법적 use case가 존재하므로 '항상 잘못'은 거짓이다."}}, {"id": "S2.Q5", "type": "mcq_single", "bloom": "Evaluate", "lo_ids": ["LO-S2.3"], "difficulty": 4, "stem": "장바구니 컴포넌트가 다음과 같이 selectedItem 객체 자체를 state에 보관하고 있다.\n\n```jsx\nconst [items, setItems] = useState(initialItems);\nconst [selectedItem, setSelectedItem] = useState(items[0]);\n\nfunction handlePriceChange(id, newPrice) {\n  setItems(items.map(i => i.id === id ? { ...i, price: newPrice } : i));\n}\n```\n\n사용자가 'Pretzels'(현재 selectedItem)의 가격을 $2 → $5로 수정했지만 'Selected' 패널은 여전히 $2를 보여준다. 이 시나리오에서 어느 진단과 처방이 가장 적절한가?", "prompt": "장바구니 컴포넌트가 다음과 같이 selectedItem 객체 자체를 state에 보관하고 있다.\n\n```jsx\nconst [items, setItems] = useState(initialItems);\nconst [selectedItem, setSelectedItem] = useState(items[0]);\n\nfunction handlePriceChange(id, newPrice) {\n  setItems(items.map(i => i.id === id ? { ...i, price: newPrice } : i));\n}\n```\n\n사용자가 'Pretzels'(현재 selectedItem)의 가격을 $2 → $5로 수정했지만 'Selected' 패널은 여전히 $2를 보여준다. 이 시나리오에서 어느 진단과 처방이 가장 적절한가?", "choices": ["A. 진단: items와 selectedItem이 같은 정보를 두 곳에 보관해 SSOT가 깨졌다. 처방: `selectedId`만 state에 두고 `selectedItem = items.find(i => i.id === selectedId)`로 derive 한다", "B. 진단: handlePriceChange가 selectedItem을 함께 갱신하지 않은 단순 누락 버그다. 처방: setItems 다음 줄에 setSelectedItem도 호출한다", "C. 진단: items가 객체 배열이라 불변 갱신이 잘못됐다. 처방: items를 평탄화된 byId map으로 바꾼다", "D. 진단: useState가 객체 참조를 비교하지 못한다. 처방: useReducer로 옮긴다"], "options": ["A. 진단: items와 selectedItem이 같은 정보를 두 곳에 보관해 SSOT가 깨졌다. 처방: `selectedId`만 state에 두고 `selectedItem = items.find(i => i.id === selectedId)`로 derive 한다", "B. 진단: handlePriceChange가 selectedItem을 함께 갱신하지 않은 단순 누락 버그다. 처방: setItems 다음 줄에 setSelectedItem도 호출한다", "C. 진단: items가 객체 배열이라 불변 갱신이 잘못됐다. 처방: items를 평탄화된 byId map으로 바꾼다", "D. 진단: useState가 객체 참조를 비교하지 못한다. 처방: useReducer로 옮긴다"], "answer": "A", "correct": ["A"], "explanation": "원인은 duplication이다. items와 selectedItem이 진실의 원천을 둘로 쪼개고 있어 한쪽 갱신이 다른 쪽에 자동 반영되지 않는다. 처방은 id만 보관하고 list에서 derive — SSOT 실천. 동기화 호출을 양쪽에 추가하는 방법(B)도 동작은 하지만 새 갱신 경로가 추가되는 순간 다시 깨진다. 구조로 차단해야 한다.", "distractor_rationales": {"B": "동작은 하지만 똑같은 일을 두 곳에서 해야 하는 빚을 떠안는다. 새 갱신 경로 한 군데만 누락돼도 다시 stale이 된다 — 구조적 해결이 아니다.", "C": "items의 불변 갱신은 정상(map + spread)이다. 평탄화는 깊이 있는 트리 데이터에 적용하는 다른 원칙이다.", "D": "useReducer는 동기화 버그를 자동으로 막아주지 않는다. 같은 duplication 버그가 dispatch 안에서 똑같이 재현된다."}}, {"id": "S2.Q6", "type": "mcq_multi", "bloom": "Analyze", "lo_ids": ["LO-S2.5", "LO-S2.1"], "difficulty": 4, "stem": "다음은 깊이 5단계 `childPlaces` 트리를 byId map + childIds 배열로 평탄화한 상태다.\n\n```js\n{\n  0: { id:0, title:'Earth',    childIds:[1,42,46] },\n  1: { id:1, title:'Americas', childIds:[2,10] },\n  2: { id:2, title:'USA',      childIds:[5] },\n  5: { id:5, title:'Pasadena', childIds:[] }\n}\n```\n\n이 평탄화 구조의 이점으로 옳은 것을 모두 고르시오. (정답 2개)", "prompt": "다음은 깊이 5단계 `childPlaces` 트리를 byId map + childIds 배열로 평탄화한 상태다.\n\n```js\n{\n  0: { id:0, title:'Earth',    childIds:[1,42,46] },\n  1: { id:1, title:'Americas', childIds:[2,10] },\n  2: { id:2, title:'USA',      childIds:[5] },\n  5: { id:5, title:'Pasadena', childIds:[] }\n}\n```\n\n이 평탄화 구조의 이점으로 옳은 것을 모두 고르시오. (정답 2개)", "choices": ["A. 깊이 D의 노드 삭제 시 부모 체인 전체를 복사할 필요 없이 부모의 childIds와 byId 항목 두 곳만 수정하면 된다", "B. 다른 부모로 이동(move)할 때 두 부모의 childIds만 손대면 된다", "C. 화면에 계층 구조를 그릴 때 트리 재구성 비용이 사라진다", "D. state 자체에서 부모-자식 관계가 자동으로 추론되어 childIds 배열이 필요 없게 된다", "E. React가 평탄화된 객체를 자동으로 얕은 비교에서 깊은 비교로 전환한다"], "options": ["A. 깊이 D의 노드 삭제 시 부모 체인 전체를 복사할 필요 없이 부모의 childIds와 byId 항목 두 곳만 수정하면 된다", "B. 다른 부모로 이동(move)할 때 두 부모의 childIds만 손대면 된다", "C. 화면에 계층 구조를 그릴 때 트리 재구성 비용이 사라진다", "D. state 자체에서 부모-자식 관계가 자동으로 추론되어 childIds 배열이 필요 없게 된다", "E. React가 평탄화된 객체를 자동으로 얕은 비교에서 깊은 비교로 전환한다"], "answer": "A,B", "correct": ["A", "B"], "explanation": "평탄화의 핵심 이득은 갱신 범위 축소다. 삭제는 부모 childIds + byId[N] 삭제 두 군데, 이동은 두 부모 childIds 두 군데로 끝난다. 트리 재구성은 렌더 시점 비용으로 그대로 남으며(C 오답), 부모-자식 관계는 childIds 배열로 명시적으로 표현해야 한다(D 오답).", "distractor_rationales": {"C": "오히려 화면에 계층 구조를 그릴 때마다 byId+childIds로 트리를 재구성해야 한다. 다만 재귀 컴포넌트가 자연스럽게 처리한다.", "D": "평탄화 구조에서 부모-자식 관계는 명시적으로 childIds 배열에 보관해야 하며 자동 추론되지 않는다.", "E": "React의 비교 정책은 state 모양과 무관하다. 얕은 비교 의미론은 그대로 유지된다."}}, {"id": "S2.Q7", "type": "true_false", "bloom": "Understand", "lo_ids": ["LO-S2.1", "LO-S2.4"], "difficulty": 2, "stem": "참/거짓: '두 개의 boolean 변수 isLoading, isError가 동시에 true가 되면 의미상 불가능한 상태'라면 원칙②(모순 회피)를 적용해 `status: 'idle' | 'loading' | 'error' | 'success'` 같은 enum 하나로 단일화하는 것이 적절하다.", "prompt": "참/거짓: '두 개의 boolean 변수 isLoading, isError가 동시에 true가 되면 의미상 불가능한 상태'라면 원칙②(모순 회피)를 적용해 `status: 'idle' | 'loading' | 'error' | 'success'` 같은 enum 하나로 단일화하는 것이 적절하다.", "choices": ["참", "거짓"], "options": ["참", "거짓"], "answer": "참", "correct": ["참"], "explanation": "참. 모순 가능한 boolean 조합은 impossible state를 허용하므로 status enum으로 단일화해 구조적으로 차단한다. S2.C1에서 다룬 원칙②의 정확한 적용이다.", "distractor_rationales": {"거짓": "boolean 분리 보관은 isLoading=true && isError=true 같은 불가능 상태를 코드 차원에서 막지 못한다."}}, {"id": "S2.Q8", "type": "short_answer", "bloom": "Evaluate", "lo_ids": ["LO-S2.3", "LO-S2.5"], "difficulty": 4, "stem": "팀원이 '평탄화된 byId 구조도 좋지만, 트리 모양 그대로 보관한 뒤 list 갱신 핸들러에서 selectedItem도 함께 setState 해주면 동기화 버그를 막을 수 있다'고 주장한다. 두세 문장으로 이 주장에 대해 평가하시오 — 어떤 부분은 동작하고, 어떤 부분이 결국 깨지는가?", "prompt": "팀원이 '평탄화된 byId 구조도 좋지만, 트리 모양 그대로 보관한 뒤 list 갱신 핸들러에서 selectedItem도 함께 setState 해주면 동기화 버그를 막을 수 있다'고 주장한다. 두세 문장으로 이 주장에 대해 평가하시오 — 어떤 부분은 동작하고, 어떤 부분이 결국 깨지는가?", "choices": [], "options": [], "answer": "rubric", "correct": ["rubric"], "explanation": "모범 답안 핵심: (1) '함께 setState'가 단기적으로는 동작하지만 똑같은 일을 두 곳에서 해야 하므로 새 갱신 경로가 추가되는 순간 다시 깨진다. (2) 동기화는 코드 컨벤션이 아니라 구조로 차단해야 한다 — id만 보관하고 derive 하면 누락 가능한 호출 자체가 사라진다. (3) 깊은 트리의 경우 부모 체인 전체 복사 비용도 따로 남아 평탄화의 동기는 또 다르다.", "distractor_rationales": {}, "rubric": ["[1점] '동작은 한다'는 단기적 사실을 인정한다", "[1점] 새 갱신 경로 누락 시 다시 깨진다는 근본 한계를 지적한다", "[1점] '구조로 차단 vs 컨벤션으로 보완'의 대비 또는 SSOT 개념을 명시한다", "[+1점 보너스] 깊은 트리에서는 평탄화의 동기가 동기화 버그가 아니라 갱신 비용이라는 점을 분리해 짚는다"]}];
+const NEXT_HREF = "../03-sharing-state/classes/01-lifting-state-up-3-steps/player.html";
+const NEXT_TITLE = "Lifting State Up — 형제 컴포넌트를 협조시키는 3단계";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

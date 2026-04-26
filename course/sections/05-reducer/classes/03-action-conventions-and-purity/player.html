@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Action 컨벤션과 Reducer 순수성 — 결함 진단</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.55}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  header{padding:12px 20px;border-bottom:1px solid #1f2430;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:600}
+  .meta{color:#8b95a7;font-size:13px}
+  button.menu-toggle{background:transparent;border:1px solid #2a3345;color:#e8eaed;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer}
+  button.menu-toggle:hover{background:#222a3a}
+  /* Progress bar */
+  #progress{padding:10px 20px;background:#12151c;border-bottom:1px solid #1f2430;display:flex;gap:14px;align-items:center;font-size:13px;color:#8b95a7}
+  #progress .bar{flex:1;height:4px;background:#1f2430;border-radius:2px;overflow:hidden}
+  #progress .bar .fill{height:100%;background:linear-gradient(90deg,#2d6cdf,#5ea0ff);border-radius:2px;transition:width .3s ease}
+  #progress .label{white-space:nowrap}
+  #progress strong{color:#e8eaed;font-weight:600}
+  /* Sidebar */
+  aside#toc{background:#12151c;border-right:1px solid #1f2430;padding:16px 14px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0}
+  aside#toc h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#8b95a7;margin:14px 0 6px 0;font-weight:500}
+  aside#toc h3:first-child{margin-top:0}
+  aside#toc ul{list-style:none;padding:0;margin:0 0 12px 0}
+  aside#toc li{padding:6px 8px;border-radius:6px;margin-bottom:2px;font-size:13px}
+  aside#toc a{color:#c4cad6;text-decoration:none;display:block}
+  aside#toc a:hover{color:#fff}
+  aside#toc li:hover{background:#1a1f29}
+  aside#toc li.current{background:#1a2e4a;border-left:3px solid #2d6cdf}
+  aside#toc li.current a{color:#fff;font-weight:600}
+  aside#toc li.quiz a{color:#3a8a4f}
+  main{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;padding:16px;max-width:1700px;margin:0 auto;align-items:start}
+  @media(max-width:1280px){main{grid-template-columns:1fr 320px} aside#toc{display:none} aside#toc.open{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.4);max-height:100vh}}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  #stage{background:#181c26;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  #slide-wrap{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #slide{max-width:100%;max-height:100%;display:block}
+  #controls{display:flex;gap:8px;align-items:center;padding:6px 2px}
+  button{background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}
+  button:hover{background:#2a3547}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.play{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}
+  button.play:hover{background:#3578e5}
+  button.speed{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}
+  #pos{color:#8b95a7;font-size:13px;margin-left:auto}
+  audio{width:100%}
+  aside#transcript{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}
+  aside#transcript h2{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  #tx-body p{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}
+  #tx-body p.active{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}
+  #thumbs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}
+  .thumb{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}
+  .thumb.current{border-color:#2d6cdf}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb span{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}
+  #end-panel{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}
+  #end-panel.active{display:block;animation:slideIn .4s ease-out}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #end-panel h2{margin:0 0 4px 0;font-size:18px;color:#fff}
+  #end-panel .sub{color:#8fb3e8;margin-bottom:12px;font-size:13px}
+  .end-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}
+  .btn-cta.primary{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}
+  .btn-cta.primary:hover{background:#3578e5;transform:translateY(-1px)}
+  .btn-cta.secondary{background:#222a3a;color:#e8eaed;border:1px solid #2a3345}
+  .btn-cta.secondary:hover{background:#2a3547}
+  .btn-cta .label{font-size:12px;opacity:.75;font-weight:400;display:block;margin-bottom:1px}
+  .btn-cta .title{display:block}
+  footer{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}
+  footer a{margin:0 10px}
+  /* Resume banner */
+  #resume-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}
+  #resume-banner.show{display:flex}
+  #resume-banner .text{font-size:13px;color:#c4cad6}
+  #resume-banner .text strong{color:#fff}
+  #resume-banner button{padding:6px 12px;font-size:13px;margin:0}
+  #resume-banner button.primary{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <button class="menu-toggle" id="menu-toggle" title="목차 열기/닫기">☰</button>
+  <a href="../../../index.html">← 홈</a>
+  <h1>Action 컨벤션과 Reducer 순수성 — 결함 진단</h1>
+  <span class="meta">LOs: LO-S5.3 · 9장 · 9.2분</span>
+</header>
+
+<div id="progress">
+  <span class="label"><strong>Class 18</strong> / 26</span>
+  <div class="bar"><div class="fill" id="course-fill" style="width:69.2%"></div></div>
+  <span class="label">슬라이드 <strong id="slide-num">1</strong> / 9</span>
+  <div class="bar"><div class="fill" id="slide-fill"></div></div>
+</div>
+
+<main>
+  <aside id="toc">
+    <h3>오리엔테이션 — 왜 state 설계가 따로 필요한가</h3>
+    <ul>
+      <li class=""><a href="../../../00-orientation/classes/01-why-state-design-matters/player.html">왜 state 설계가 따로 필요한가 — 4가지 통증 진단</a></li>
+      <li class=""><a href="../../../00-orientation/classes/02-course-map-and-self-diagnosis/player.html">코스 맵 — 7개 챕터가 어떤 통증을 푸는가</a></li>
+      <li class="quiz"><a href="../../../00-orientation/quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+    <h3>사고방식 전환 — 선언형 UI와 visual states로 반응하기</h3>
+    <ul>
+      <li class=""><a href="../../../01-declarative-thinking/classes/01-visual-states-and-triggers/player.html">visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기</a></li>
+      <li class=""><a href="../../../01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/player.html">useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로</a></li>
+      <li class=""><a href="../../../01-declarative-thinking/classes/03-connect-handlers-end-to-end/player.html">핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기</a></li>
+      <li class="quiz"><a href="../../../01-declarative-thinking/quiz.html">📝 섹션 퀴즈 (9문항)</a></li>
+    </ul>
+    <h3>state 구조 설계 — 5가지 원칙으로 동기화 버그 차단</h3>
+    <ul>
+      <li class=""><a href="../../../02-state-structure/classes/01-five-principles-and-grouping/player.html">5원칙 한눈에 + 관련 state 묶기·모순 회피</a></li>
+      <li class=""><a href="../../../02-state-structure/classes/02-redundant-state-and-props-mirroring/player.html">redundant state 제거와 props mirroring 안티패턴</a></li>
+      <li class=""><a href="../../../02-state-structure/classes/03-store-id-not-object/player.html">duplication 회피 — 객체 대신 id를 저장하라</a></li>
+      <li class=""><a href="../../../02-state-structure/classes/04-flatten-deep-nesting/player.html">deep nesting 평탄화 — 트리 데이터를 정규화하기</a></li>
+      <li class="quiz"><a href="../../../02-state-structure/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>컴포넌트 간 state 공유 — Lifting State Up</h3>
+    <ul>
+      <li class=""><a href="../../../03-sharing-state/classes/01-lifting-state-up-3-steps/player.html">Lifting State Up — 형제 컴포넌트를 협조시키는 3단계</a></li>
+      <li class=""><a href="../../../03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/player.html">Controlled vs Uncontrolled와 Single Source of Truth</a></li>
+      <li class=""><a href="../../../03-sharing-state/classes/03-accordion-and-list-patterns/player.html">케이스 스터디 — Accordion·Synced Inputs·Filterable List</a></li>
+      <li class="quiz"><a href="../../../03-sharing-state/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>state 보존과 리셋 — 트리 위치와 key prop</h3>
+    <ul>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/01-state-tied-to-tree-position/player.html">state는 트리 위치에 묶인다 — 보존과 리셋의 기본 규칙</a></li>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/02-reset-strategies-key-prop/player.html">의도된 리셋 — 다른 위치 vs key prop 두 전략</a></li>
+      <li class=""><a href="../../../04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/player.html">함정 — JSX 위치 ≠ 트리 위치 &amp; 컴포넌트 정의 중첩 금지</a></li>
+      <li class="quiz"><a href="../../../04-preserving-resetting-state/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Reducer로 state 로직 추출하기</h3>
+    <ul>
+      <li class=""><a href="../01-why-reducer-and-signature/player.html">왜 Reducer인가 — useReducer 시그니처와 도입 동기</a></li>
+      <li class=""><a href="../02-three-step-migration/player.html">3단계 마이그레이션 — useState에서 useReducer로</a></li>
+      <li class="current"><a href="../03-action-conventions-and-purity/player.html">Action 컨벤션과 Reducer 순수성 — 결함 진단</a></li>
+      <li class=""><a href="../04-tradeoffs-and-immer/player.html">useState vs useReducer 트레이드오프와 Immer 옵션</a></li>
+      <li class="quiz"><a href="../../quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Context로 깊이 데이터 전달하기</h3>
+    <ul>
+      <li class=""><a href="../../../06-context/classes/01-prop-drilling-and-3-step-pattern/player.html">prop drilling 문제와 createContext / Provider / useContext 3단계</a></li>
+      <li class=""><a href="../../../06-context/classes/02-consume-and-provide-pattern/player.html">같은 컴포넌트가 consume + provide — 자동 level 증가 패턴</a></li>
+      <li class=""><a href="../../../06-context/classes/03-context-vs-alternatives/player.html">context를 쓸 때와 쓰지 말 때 — props·composition과 비교</a></li>
+      <li class="quiz"><a href="../../../06-context/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Reducer + Context로 확장하기</h3>
+    <ul>
+      <li class=""><a href="../../../07-reducer-context/classes/01-reducer-context-combine/player.html">Reducer와 Context를 결합하기 — 두 context 분리 전략</a></li>
+      <li class=""><a href="../../../07-reducer-context/classes/02-provider-custom-hooks-scaling/player.html">TasksProvider + 커스텀 훅으로 응집하고 다중 도메인으로 확장하기</a></li>
+      <li class="quiz"><a href="../../../07-reducer-context/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>종합 — 안티패턴 진단과 통합 케이스 스터디</h3>
+    <ul>
+      <li class=""><a href="../../../08-capstone-antipatterns/classes/01-antipattern-clinic/player.html">안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기</a></li>
+      <li class=""><a href="../../../08-capstone-antipatterns/classes/02-mini-kanban-capstone/player.html">통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬</a></li>
+      <li class="quiz"><a href="../../../08-capstone-antipatterns/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+  </aside>
+  <div id="stage">
+    <div id="slide-wrap"><img id="slide" alt="slide"/></div>
+    <div id="controls">
+      <button id="prev">◀ 이전</button>
+      <button id="play" class="play">▶ 재생</button>
+      <button id="next">다음 ▶</button>
+      <button id="speed" class="speed" title="재생 속도">1×</button>
+      <span id="pos">1 / 9</span>
+    </div>
+    <audio id="audio" preload="auto"></audio>
+    <section id="end-panel">
+      <h2>🎉 수업을 완료했어요!</h2>
+      <p class="sub">다음으로 이동하거나 배운 내용을 점검해보세요.</p>
+      <div class="end-actions"><a class="btn-cta primary" href="../04-tradeoffs-and-immer/player.html"><span><span class="label">다음 수업</span><span class="title">▶ useState vs useReducer 트레이드오프와 Immer 옵션</span></span></a>
+    <a class="btn-cta secondary" href="../../quiz.html"><span><span class="label">먼저 점검</span><span class="title">📝 섹션 퀴즈</span></span></a></div>
+    </section>
+  </div>
+  <aside id="transcript">
+    <h2>발화 스크립트</h2>
+    <div id="tx-body"></div>
+  </aside>
+</main>
+
+<section id="thumbs"></section>
+
+<div id="resume-banner" role="dialog" aria-live="polite">
+  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">이어 듣기</button>
+  <button id="resume-no">처음부터</button>
+</div>
+
+<footer>
+  <a href="../../quiz.html">📝 섹션 퀴즈 풀기</a>
+  <a href="../../../index.html">목차로</a>
+</footer>
+
+<script>
+const SLIDES = [{"png": "slides_png/slide.001.png", "mp3": "audio/slide_01.mp3", "transcript": ["안녕하세요.", "오늘은 액션 컨벤션과 리듀서 순수성, 두 축으로 결함을 진단해 보는 시간입니다.", "약 십이 분짜리 클래스고요, 섹션 5의 세 번째 시간입니다.", "지난 시간에 만든 tasksReducer를 들고 와서, 동료가 망쳐 놓은 변형 코드를 같이 진단하고 수정해 보겠습니다.", "\"좋은 리듀서\"의 기준이 머릿속에 한 번 박히고 나면, 코드 리뷰에서도 이 두 축으로 빠르게 짚어 내실 수 있어요."], "transcriptTimes": [{"start": 0.0, "end": 0.699}, {"start": 0.699, "end": 5.825}, {"start": 5.825, "end": 9.67}, {"start": 9.67, "end": 17.359}, {"start": 17.359, "end": 24.815}]}, {"png": "slides_png/slide.002.png", "mp3": "audio/slide_02.mp3", "transcript": ["지난 시간에 마이그레이션은 잘 끝냈습니다.", "그런데 한 달이 지나서 다시 그 파일을 열어 보면 어떤 일이 벌어질까요?", "동료가 어떤 핸들러에는 taskAdd라는 type을, 어떤 데에는 UPDATE_TASK를, 또 어떤 데에는 그냥 remove라는 짧은 이름을 넣어 두었습니다.", "어휘가 사람마다 다른 거죠.", "심지어 리듀서 안에서 fetch로 외부 API를 호출하고, tasks 닷 push로 mutate한 코드까지 끼어들어 있어요.", "이게 일주일에 한 번씩 사람이 손대다 보면 자연스럽게 벌어지는 일입니다.", "처음 설계할 땐 깔끔했어도, 컨벤션 가드가 없으면 빠르게 무너져요.", "오늘은 \"좋은 리듀서\"를 가르는 두 축, 즉 액션 컨벤션과 순수성으로 이런 결함을 진단합니다.", "진단 모드 시작합니다."], "transcriptTimes": [{"start": 0.0, "end": 2.768}, {"start": 2.768, "end": 7.582}, {"start": 7.582, "end": 18.172}, {"start": 18.172, "end": 19.977}, {"start": 19.977, "end": 28.281}, {"start": 28.281, "end": 33.094}, {"start": 33.094, "end": 37.547}, {"start": 37.547, "end": 43.805}, {"start": 43.805, "end": 45.249}]}, {"png": "slides_png/slide.003.png", "mp3": "audio/slide_03.mp3", "transcript": ["첫 번째 축은 액션 어휘 컨벤션입니다.", "원칙은 단순합니다.", "action 닷 type은 \"발생한 사건\"을 묘사하는, 동사 과거형으로 짓습니다.", "좋은 예는 added, changed, deleted, reset_form 같은 이름들입니다.", "사용자 입장에서 \"방금 무슨 일이 일어났나\"가 그대로 드러나죠.", "나쁜 예는 SET_TASKS, UPDATE, handle_x 같은 이름이에요.", "이런 이름은 리듀서가 \"뭘 할지\"라는 구현을 누설합니다.", "사용자가 \"뭘 했는가\"가 아니라, 코드가 \"뭘 할 것인가\"를 적어 둔 거죠.", "이런 이름은 시간이 지나면 의미가 퇴색되기 쉽습니다.", "type 필드 외 추가 데이터는 평탄하게 깔아 두는 걸 권장합니다.", "id, text, task 같은 키를 객체 최상위에 두는 거예요.", "payload 키 안에 한 번 더 감싸는 스타일도 있는데, 이건 팀 선호 차이입니다.", "케이싱도 팀 안에서 한 가지로 통일하세요.", "스네이크 케이스든 카멜 케이스든, 섞이지만 않으면 됩니다.", "이 어휘들이 결국 \"앱의 인터랙션 사전\"이 됩니다.", "리듀서만 봐도 사용자가 뭘 할 수 있는 앱인지 보이는 게 이상적이에요."], "transcriptTimes": [{"start": 0.0, "end": 2.669}, {"start": 2.669, "end": 3.941}, {"start": 3.941, "end": 9.661}, {"start": 9.661, "end": 16.271}, {"start": 16.271, "end": 20.72}, {"start": 20.72, "end": 26.186}, {"start": 26.186, "end": 30.127}, {"start": 30.127, "end": 35.466}, {"start": 35.466, "end": 39.152}, {"start": 39.152, "end": 43.856}, {"start": 43.856, "end": 48.432}, {"start": 48.432, "end": 54.407}, {"start": 54.407, "end": 57.33}, {"start": 57.33, "end": 61.398}, {"start": 61.398, "end": 64.957}, {"start": 64.957, "end": 69.915}]}, {"png": "slides_png/slide.004.png", "mp3": "audio/slide_04.mp3", "transcript": ["첫 번째 축의 다음 원칙은 \"한 사용자 상호작용에는 한 액션\"입니다.", "안티패턴부터 보겠습니다.", "폼을 리셋한다고 가정해 봅시다.", "필드별로 디스패치를 다섯 번 부르는 코드가 종종 보여요.", "이름 필드, 이메일 필드, 전화번호 필드, 주소 필드, 메모 필드, 각각 set_field라는 액션을 따로따로 보냅니다.", "권장 형태는 단일 reset_form 액션 하나입니다.", "디스패치 한 번이면 끝입니다.", "이렇게 하면 두 가지 큰 이득이 있어요.", "첫 번째 이득은 디버그 로그가 의미 단위로 깔끔하게 보입니다.", "\"reset_form\" 한 줄로 정리되거든요.", "다섯 번의 set_field 로그를 사람이 읽고 의미를 추론할 필요가 없어집니다.", "두 번째 이득은 리듀서가 한 번만 돌기 때문에, 중간 상태가 리액트에 노출되지 않는다는 점입니다.", "배치 효과 덕분에 화면 깜박임도 없고, 렌더 횟수도 줄어듭니다.", "다섯 번 디스패치를 부르면 리액트가 그걸 모아 처리하긴 하지만, 의미상 깔끔한 건 아니에요.", "\"한 사용자 동작 = 한 액션\"이라는 원칙이 결국 디버깅과 성능 두 마리 토끼를 같이 잡아 줍니다."], "transcriptTimes": [{"start": 0.0, "end": 5.04}, {"start": 5.04, "end": 6.764}, {"start": 6.764, "end": 9.018}, {"start": 9.018, "end": 13.13}, {"start": 13.13, "end": 22.015}, {"start": 22.015, "end": 25.994}, {"start": 25.994, "end": 28.116}, {"start": 28.116, "end": 31.034}, {"start": 31.034, "end": 35.543}, {"start": 35.543, "end": 38.859}, {"start": 38.859, "end": 44.827}, {"start": 44.827, "end": 51.988}, {"start": 51.988, "end": 56.63}, {"start": 56.63, "end": 63.394}, {"start": 63.394, "end": 70.688}]}, {"png": "slides_png/slide.005.png", "mp3": "audio/slide_05.mp3", "transcript": ["두 번째 축, 리듀서 순수성 3대 규칙입니다.", "첫 번째 규칙, 결정성.", "같은 입력이 들어오면 항상 같은 출력이 나와야 합니다.", "Math 닷 random이나 Date 닷 now 같은 비결정적 호출을, 리듀서 본문 안에 넣으면 안 됩니다.", "호출할 때마다 다른 값이 나오니까, 리듀서가 결정 함수가 아니게 되거든요.", "이런 비결정 값이 필요하다면, 핸들러에서 미리 계산해서 액션에 실어 보내는 패턴을 쓰세요.", "두 번째 규칙, 무부수효과.", "fetch, setTimeout, console에 외부 시스템에 영향을 주는 호출은 리듀서 안에 두면 안 됩니다.", "이런 것들은 핸들러나 useEffect 쪽으로 옮기세요.", "리듀서는 \"이 사건이 일어나면 다음 state는 뭔가\"라는 질문에만 답하는 함수여야 합니다.", "부수효과를 일으키는 함수에서는 그 답이 호출 시점마다 달라질 수 있거든요.", "세 번째 규칙, 불변.", "state 닷 push, state 닷 x에 직접 할당, 이런 코드는 절대 금지입니다.", "항상 새 배열이나 새 객체를 만들어서 반환해야 합니다.", "스프레드 연산자, map, filter, 이 셋이 가장 자주 쓰는 도구입니다.", "중첩 객체라면 위에서부터 차례로 새 객체로 갈아 끼워야 해요.", "이 세 규칙이 왜 필요할까요?", "이유는, 리액트가 같은 state로 리듀서를 두 번 호출해도 결과가 같아야 하기 때문입니다.", "이게 보장되어야 동시성 모드와 StrictMode가 안전하게 동작해요.", "StrictMode는 개발 중에 의도적으로 함수를 두 번씩 실행해 보거든요.", "순수하지 않은 리듀서는 여기서 즉시 깨집니다.", "한 마디로, \"두 번 불러도 같은 결과\"라는 게 순수성의 실용적 정의입니다."], "transcriptTimes": [{"start": 0.0, "end": 3.079}, {"start": 3.079, "end": 4.68}, {"start": 4.68, "end": 8.375}, {"start": 8.375, "end": 15.764}, {"start": 15.764, "end": 20.813}, {"start": 20.813, "end": 26.971}, {"start": 26.971, "end": 28.818}, {"start": 28.818, "end": 36.577}, {"start": 36.577, "end": 40.395}, {"start": 40.395, "end": 46.676}, {"start": 46.676, "end": 51.725}, {"start": 51.725, "end": 53.203}, {"start": 53.203, "end": 59.115}, {"start": 59.115, "end": 62.809}, {"start": 62.809, "end": 68.105}, {"start": 68.105, "end": 72.292}, {"start": 72.292, "end": 74.263}, {"start": 74.263, "end": 80.544}, {"start": 80.544, "end": 85.347}, {"start": 85.347, "end": 90.52}, {"start": 90.52, "end": 93.598}, {"start": 93.598, "end": 98.771}]}, {"png": "slides_png/slide.006.png", "mp3": "audio/slide_06.mp3", "transcript": ["이제 결함이 박힌 리듀서를 진단해 봅시다.", "Tasks 앱 변형 코드입니다.", "단 한 case 안에 빨간 마커가 무려 네 개 박혀 있어요.", "첫 번째 결함, case가 addTask일 때 tasks 닷 push로 새 항목을 직접 밀어 넣고 있습니다.", "mutation 위반이죠.", "원본 배열의 참조가 그대로 돌아가니, 리액트가 변경을 감지하지 못할 위험까지 있습니다.", "화면에 새 항목이 보였다 안 보였다 하는, 디버깅 악몽 같은 증상이 여기서 시작됩니다.", "두 번째 결함, 그 case 안에서 fetch로 로깅 API를 부르고 있습니다.", "부수효과 위반입니다.", "StrictMode 환경에서는 이게 두 번 호출돼 서버에 중복 요청이 갑니다.", "서버에 똑같은 로그가 두 번씩 쌓이는 미묘한 버그가 여기서 비롯돼요.", "세 번째 결함, 새 항목의 id를 Date 닷 now로 만들고 있어요.", "호출할 때마다 다른 값이 나오는 비결정 호출이라 위반입니다.", "같은 액션을 두 번 적용해도 다른 id가 들어가 버려요.", "같은 액션, 다른 결과, 이게 곧 비결정의 정의예요.", "네 번째 결함, 다른 case들은 added 같은 동사 과거형 카멜 케이스인데, 이 case 이름만 addTask로 명사처럼 적혀 있습니다.", "컨벤션 불일치죠.", "이건 동작 자체에 문제가 없어 보일 수 있지만, 가독성과 검색성에 두고두고 손해를 끼칩니다.", "한 case에 네 가지 위반이 동시에 들어 있다는 게, 사실 흔한 패턴입니다.", "한 사람이 시간에 쫓겨 잠깐 손대면, 이 모든 게 같이 따라 들어와요."], "transcriptTimes": [{"start": 0.0, "end": 2.96}, {"start": 2.96, "end": 5.147}, {"start": 5.147, "end": 9.393}, {"start": 9.393, "end": 17.114}, {"start": 17.114, "end": 18.915}, {"start": 18.915, "end": 25.092}, {"start": 25.092, "end": 31.268}, {"start": 31.268, "end": 36.93}, {"start": 36.93, "end": 38.345}, {"start": 38.345, "end": 43.878}, {"start": 43.878, "end": 48.768}, {"start": 48.768, "end": 53.786}, {"start": 53.786, "end": 58.033}, {"start": 58.033, "end": 62.022}, {"start": 62.022, "end": 65.753}, {"start": 65.753, "end": 75.79}, {"start": 75.79, "end": 76.948}, {"start": 76.948, "end": 83.511}, {"start": 83.511, "end": 89.044}, {"start": 89.044, "end": 94.062}]}, {"png": "slides_png/slide.007.png", "mp3": "audio/slide_07.mp3", "transcript": ["수정안을 봅시다.", "case 이름은 다른 case들과 통일해서 added로 바꿉니다.", "반환은, 기존 tasks를 스프레드로 펼치고 새 항목을 뒤에 붙인 새 배열로 합니다.", "mutation 없이 새 배열만 돌려주는 거죠.", "id는 핸들러 쪽에서 nextId 변수로 만들어, 디스패치 액션에 미리 실어 보냅니다.", "즉, 비결정 부분을 리듀서 바깥으로 빼낸 거예요.", "이렇게 하면 리듀서는 인자로 받은 id만 그대로 쓰는, 결정 함수가 됩니다.", "fetch 로깅은 리듀서 밖, 보통은 useEffect로 옮깁니다.", "필요하다면 핸들러에서 직접 부르셔도 됩니다.", "어디로 옮기든, 핵심은 리듀서 본문이 아니라는 점이에요.", "이 한 번의 수정으로 mutation, 부수효과, 비결정, 컨벤션 위반이 한꺼번에 정리됩니다.", "네 마리의 새를 한 돌로 잡은 셈이죠."], "transcriptTimes": [{"start": 0.0, "end": 1.206}, {"start": 1.206, "end": 6.031}, {"start": 6.031, "end": 12.33}, {"start": 12.33, "end": 15.815}, {"start": 15.815, "end": 22.248}, {"start": 22.248, "end": 25.867}, {"start": 25.867, "end": 31.496}, {"start": 31.496, "end": 36.455}, {"start": 36.455, "end": 39.671}, {"start": 39.671, "end": 43.826}, {"start": 43.826, "end": 50.795}, {"start": 50.795, "end": 53.61}]}, {"png": "slides_png/slide.008.png", "mp3": "audio/slide_08.mp3", "transcript": ["이제 셀프 체크리스트입니다.", "잠깐 멈추고 자문해 보세요.", "내 리듀서가 외부 변수를 읽는 줄이 한 줄이라도 있는가?", "현재 시각, 랜덤 ID, localStorage, 이 세 가지가 리듀서 본문 안에 등장한다면 옮겨야 합니다.", "옮길 곳은 핸들러입니다.", "디스패치 직전에 그 값들을 계산해서, 액션 객체에 실어서 보내는 패턴이죠.", "이게 익숙해지면, 리듀서는 정말로 인자만 보고 결정하는 깔끔한 함수가 됩니다.", "또 한 가지.", "action 닷 type 목록을 늘어놓고, 동사 과거형으로 일관되는지 점검하세요.", "명사형이나 SET_ 같은 구현형이 하나라도 보이면 후보 교체 대상입니다.", "이 두 점검만 정기적으로, 예를 들어 PR 리뷰 때마다 돌려도, 리듀서가 망가지는 속도가 눈에 띄게 느려집니다."], "transcriptTimes": [{"start": 0.0, "end": 2.069}, {"start": 2.069, "end": 4.138}, {"start": 4.138, "end": 8.415}, {"start": 8.415, "end": 16.691}, {"start": 16.691, "end": 18.485}, {"start": 18.485, "end": 24.141}, {"start": 24.141, "end": 30.072}, {"start": 30.072, "end": 31.038}, {"start": 31.038, "end": 37.245}, {"start": 37.245, "end": 42.763}, {"start": 42.763, "end": 51.316}]}, {"png": "slides_png/slide.009.png", "mp3": "audio/slide_09.mp3", "transcript": ["정리하겠습니다.", "액션은 동사 과거형으로, 한 상호작용에는 한 액션, 케이싱은 일관되게.", "이 세 가지가 액션 컨벤션의 핵심입니다.", "순수성은 결정성, 무부수효과, 불변.", "이 셋이 다 지켜져야 진짜 리듀서라고 부를 수 있습니다.", "오늘 본 두 축은, 코드 리뷰에서 리듀서를 빠르게 진단하는 체크리스트가 되어 줍니다.", "액션 어휘부터 훑고, 그다음 리듀서 본문에 외부 호출이 있는지 보세요.", "다음 시간에는, 유즈스테이트와 유즈리듀서의 트레이드오프, 그리고 mutation 스타일을 가능하게 하는 Immer 옵션을 살펴봅니다.", "오늘 배운 두 축이 다음 시간에 트레이드오프 분석의 단단한 기준선이 되어 줄 거예요.", "수고하셨습니다."], "transcriptTimes": [{"start": 0.0, "end": 1.046}, {"start": 1.046, "end": 6.148}, {"start": 6.148, "end": 9.025}, {"start": 9.025, "end": 11.641}, {"start": 11.641, "end": 15.696}, {"start": 15.696, "end": 21.844}, {"start": 21.844, "end": 26.945}, {"start": 26.945, "end": 36.624}, {"start": 36.624, "end": 42.772}, {"start": 42.772, "end": 43.818}]}];
+let current = 0;
+const img = document.getElementById('slide');
+const audio = document.getElementById('audio');
+const txBody = document.getElementById('tx-body');
+const pos = document.getElementById('pos');
+const thumbs = document.getElementById('thumbs');
+const btnPrev = document.getElementById('prev');
+const btnPlay = document.getElementById('play');
+const btnNext = document.getElementById('next');
+
+SLIDES.forEach((s, i) => {
+  const t = document.createElement('div');
+  t.className = 'thumb';
+  t.dataset.i = i;
+  t.innerHTML = '<img src="' + s.png + '"/><span>' + (i+1) + '</span>';
+  t.onclick = () => loadSlide(i, true);
+  thumbs.appendChild(t);
+});
+
+function loadSlide(i, autoplay, resumeTime) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, i));
+  const s = SLIDES[current];
+  img.src = s.png;
+  audio.src = s.mp3;
+  if (resumeTime && resumeTime > 1) {
+    audio.addEventListener('loadedmetadata', () => {
+      const dur = audio.duration;
+      if (isFinite(dur)) audio.currentTime = Math.min(resumeTime, Math.max(0, dur - 1));
+    }, { once: true });
+  }
+  pos.textContent = (current + 1) + ' / ' + SLIDES.length;
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === SLIDES.length - 1;
+
+  txBody.innerHTML = '';
+  const times = s.transcriptTimes || [];
+  s.transcript.forEach((line, idx) => {
+    const p = document.createElement('p');
+    p.textContent = line;
+    const t = times[idx];
+    if (t && typeof t.start === 'number' && typeof t.end === 'number') {
+      p.dataset.start = t.start;
+      p.dataset.end = t.end;
+    }
+    txBody.appendChild(p);
+  });
+
+  document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('current', idx === current));
+  const cur = document.querySelector('.thumb.current');
+  if (cur) cur.scrollIntoView({block:'nearest', inline:'center'});
+
+  maybeShowEnd();
+  saveState();
+
+  if (autoplay) audio.play().catch(() => {});
+}
+
+// localStorage resume — key = page path so each class gets its own slot
+const STORAGE_KEY = 'course-builder:' + location.pathname;
+const STATE_MAX_AGE_MS = 30 * 86400 * 1000;
+let lastSaveTs = 0;
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      slide: current,
+      time: audio.currentTime || 0,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadResumeState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > STATE_MAX_AGE_MS) return null;
+    if (typeof s.slide !== 'number' || s.slide < 0 || s.slide >= SLIDES.length) return null;
+    // Don't bother prompting if they barely started
+    if (s.slide === 0 && (s.time || 0) < 3) return null;
+    return s;
+  } catch(e) { return null; }
+}
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+function fmtTime(t) {
+  const sec = Math.max(0, Math.floor(t || 0));
+  return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}
+
+let lastActiveLine = null;
+audio.addEventListener('timeupdate', () => {
+  const now = Date.now();
+  if (now - lastSaveTs > 3000) { saveState(); lastSaveTs = now; }
+  // Highlight the transcript line whose [start, end) range contains currentTime.
+  // Line timings come from char-proportional splitting of the slide's MP3 duration.
+  const t = audio.currentTime;
+  const lines = txBody.children;
+  let newActive = null;
+  for (let i = 0; i < lines.length; i++) {
+    const el = lines[i];
+    const s = parseFloat(el.dataset.start);
+    const e = parseFloat(el.dataset.end);
+    if (!isNaN(s) && !isNaN(e) && t >= s && t < e) { newActive = el; break; }
+  }
+  if (newActive !== lastActiveLine) {
+    if (lastActiveLine) lastActiveLine.classList.remove('active');
+    if (newActive) {
+      newActive.classList.add('active');
+      newActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    lastActiveLine = newActive;
+  }
+});
+
+// Playback speed — single cycle button, global across classes
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const SPEED_KEY = 'course-builder:playback-speed';
+const btnSpeed = document.getElementById('speed');
+
+function loadSpeed() {
+  try {
+    const v = parseFloat(localStorage.getItem(SPEED_KEY));
+    if (SPEEDS.includes(v)) return v;
+  } catch(e) {}
+  return 1;
+}
+function applySpeed(v) {
+  audio.playbackRate = v;
+  if ('preservesPitch' in audio) audio.preservesPitch = true;
+  // Display: 1× (no decimal) / 1.25× / 1.5× etc.
+  btnSpeed.textContent = (Number.isInteger(v) ? v : v.toString()) + '×';
+  btnSpeed.classList.toggle('speed-fast', v > 1);
+  btnSpeed.classList.toggle('speed-slow', v < 1);
+}
+let currentSpeed = loadSpeed();
+applySpeed(currentSpeed);
+btnSpeed.onclick = () => {
+  const idx = SPEEDS.indexOf(currentSpeed);
+  currentSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+  applySpeed(currentSpeed);
+  try { localStorage.setItem(SPEED_KEY, String(currentSpeed)); } catch(e) {}
+};
+audio.addEventListener('loadedmetadata', () => { audio.playbackRate = currentSpeed; });
+
+const endPanel = document.getElementById('end-panel');
+const slideFill = document.getElementById('slide-fill');
+const slideNumEl = document.getElementById('slide-num');
+const toc = document.getElementById('toc');
+const menuToggle = document.getElementById('menu-toggle');
+menuToggle.addEventListener('click', () => toc.classList.toggle('open'));
+
+function maybeShowEnd() {
+  if (current === SLIDES.length - 1) {
+    endPanel.classList.add('active');
+  } else {
+    endPanel.classList.remove('active');
+  }
+  // Update progress bar
+  const pct = ((current + 1) / SLIDES.length) * 100;
+  slideFill.style.width = pct + '%';
+  slideNumEl.textContent = current + 1;
+}
+
+btnPrev.onclick = () => loadSlide(current - 1, true);
+btnNext.onclick = () => loadSlide(current + 1, true);
+btnPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
+
+audio.addEventListener('play', () => btnPlay.textContent = '⏸ 일시정지');
+audio.addEventListener('pause', () => btnPlay.textContent = '▶ 재생');
+audio.addEventListener('ended', () => {
+  if (current < SLIDES.length - 1) {
+    loadSlide(current + 1, true);
+  } else {
+    maybeShowEnd();
+    endPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); btnPlay.click(); }
+  else if (e.key === 'ArrowRight') btnNext.click();
+  else if (e.key === 'ArrowLeft') btnPrev.click();
+});
+
+// Initial load — show resume banner if prior state exists, otherwise start at slide 0
+const resumeState = loadResumeState();
+loadSlide(0, false);
+if (resumeState) {
+  document.getElementById('resume-pos').textContent =
+    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+  const banner = document.getElementById('resume-banner');
+  banner.classList.add('show');
+  document.getElementById('resume-yes').onclick = () => {
+    banner.classList.remove('show');
+    loadSlide(resumeState.slide, true, resumeState.time);
+  };
+  document.getElementById('resume-no').onclick = () => {
+    banner.classList.remove('show');
+    clearState();
+  };
+}
+</script>
+</body>
+</html>

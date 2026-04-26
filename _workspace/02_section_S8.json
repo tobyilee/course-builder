@@ -1,0 +1,23 @@
+{
+  "section_id": "S8",
+  "classes": [
+    {
+      "id": "S8.C1",
+      "slug": "01-antipattern-clinic",
+      "title": "안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기",
+      "lo_ids": ["LO-S8.1"],
+      "duration_min": 7,
+      "depends_on": [],
+      "summary": "지금까지 배운 원칙들을 거꾸로 적용해 본다. 한 화면에 5대 안티패턴(① props를 useState 초기값으로 mirror, ② 파생 가능한 redundant state, ③ 깊이 중첩된 state, ④ 컴포넌트 안에 컴포넌트 정의, ⑤ 모든 값을 context로 밀어넣기)이 동시에 박혀 있는 더미 코드를 보여주고, 각각이 어느 챕터(S2/S2/S2/S4/S6)의 원칙으로 고쳐지는지 매핑한다. 진단 → 처방 → 리팩터링 비교 코드를 빠르게 훑으며, 코드 리뷰에서 즉시 써먹을 수 있는 체크리스트로 정리한다."
+    },
+    {
+      "id": "S8.C2",
+      "slug": "02-mini-kanban-capstone",
+      "title": "통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬",
+      "lo_ids": ["LO-S8.2"],
+      "duration_min": 8,
+      "depends_on": ["S8.C1"],
+      "summary": "Todo보다 살짝 큰 mini Kanban(컬럼 3개 + 카드 이동/추가/삭제)을 화이트보드 위에서 설계한다. (1) state shape — 카드를 트리로 둘지 정규화할지(S2.5), (2) 어디서 들고 있을지 — App? Board? Column?(S3.3), (3) setState 흩어짐 vs reducer 통합(S5.4), (4) prop drilling 임계점에서 context 도입과 state/dispatch 분리(S7.1~S7.2)까지 4단계 의사결정을 한 호흡에 내린다. 각 결정에 강의의 어느 원칙이 근거가 되는지 짧게 정당화하면서, 강의 전체를 한 그림으로 묶어 마무리한다."
+    }
+  ]
+}

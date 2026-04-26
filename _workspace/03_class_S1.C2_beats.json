@@ -1,0 +1,80 @@
+{
+  "class_id": "S1.C2",
+  "title": "useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로",
+  "lo_ids": ["LO-S1.2", "LO-S1.4"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "C1에서 그린 5개 visual state를 그대로 boolean 7개로 옮기면 어떻게 될까? isEmpty, isTyping, isSubmitting, isSuccess, isError, … 직관적으로 보인다",
+        "그런데 isTyping=true이면서 isSuccess=true가 동시에 가능하다면? 코드상 표현은 되지만 UI상으로는 paradox(존재할 수 없는 상태)",
+        "실전 버그 예시: 네트워크 실패 후 isError=true인데 깜빡 isSubmitting=false 처리를 잊으면 spinner와 에러가 동시에 뜬다",
+        "오늘의 질문: 이 7개 boolean을 어떻게 하면 모순이 원천적으로 불가능한 모양으로 줄일 수 있을까?"
+      ],
+      "lo_ids": ["LO-S1.2"],
+      "visual_hint": "7개 boolean 변수 나열 + 그 중 동시에 true가 되는 'paradox' 조합을 빨간색으로 강조한 진리표",
+      "speaker_affect": "도발적이며 호기심 자극"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 240,
+      "key_points": [
+        "선언형 5단계 중 ③·④단계: useState로 모델링하고 비핵심 state를 제거한다",
+        "비핵심 state 제거 3대 질문 ① 모순(paradox)을 만드나? → 상호배타적 boolean들을 하나의 status enum으로 합친다",
+        "② 다른 변수에서 같은 정보를 얻을 수 있나? → 중복 제거 (isEmpty는 answer.length===0으로 매 렌더 계산 가능)",
+        "③ 다른 변수의 역으로 얻을 수 있나? → 역수 제거 (isError는 error!==null로 충분)",
+        "핵심 분류 기준: 'state 변수' = 사용자/시간이 바꾸는 진짜 입력값 / '파생값(computed at render)' = 다른 state로부터 매 렌더 계산되는 값 — 후자는 useState로 두면 동기화 버그의 원천"
+      ],
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "visual_hint": "3대 질문을 큰 카드 3장으로 배치, 각 카드 하단에 '예: isEmpty', '예: isTyping', '예: isError' 매핑; 우측에 'state vs 파생값' 분류 박스",
+      "speaker_affect": "차분하게, 한 단계씩 짚어주는 톤"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 240,
+      "key_points": [
+        "Before 코드: 도시 퀴즈 폼의 7개 boolean useState (answer, error, isEmpty, isTyping, isSubmitting, isSuccess, isError)",
+        "질문 ① 적용 — isTyping/isSubmitting/isSuccess/isError 4개는 항상 정확히 하나만 true여야 한다 → status enum 'typing'|'submitting'|'success'로 합치기 (error 분기는 status='typing' + error!==null로 표현)",
+        "질문 ② 적용 — isEmpty 제거: 렌더 시 answer.length===0으로 직접 계산",
+        "질문 ③ 적용 — isError 제거: 렌더 시 error!==null로 직접 계산",
+        "After 코드: 단 3개 변수 (answer, error, status)로 압축 — 그리고 '존재 불가능한 상태'가 타입상 만들어지지 않는 것이 진짜 이득"
+      ],
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "visual_hint": "Before(7개 useState) ↔ After(3개 useState) diff 화면, 사라진 4개 변수에 취소선 + 옆에 파생값으로 변환된 식 표시",
+      "speaker_affect": "시연하듯, 한 줄씩 지우며 설명"
+    },
+    {
+      "id": "b4",
+      "type": "practice",
+      "duration_sec": 130,
+      "key_points": [
+        "학습자 미니 연습: 다음 6개 boolean을 status enum으로 줄여보세요 — isLoggedIn, isLoading, isLoadingProfile, hasProfileError, profileLoaded, isLoggedOut",
+        "힌트 1: 어느 두 변수가 항상 정반대인가? (질문 ③)",
+        "힌트 2: 어느 변수들이 동시에 true가 되면 paradox인가? (질문 ①)",
+        "잠시 멈추고 직접 작성 — 정답 예시: status: 'logged-out'|'loading'|'ready'|'error', profile: User|null (나머지는 status·profile에서 파생)"
+      ],
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "visual_hint": "6개 boolean 코드 스니펫 카드 + 빈 'After' 박스(학습자가 채울 자리) + reveal 가능한 정답 박스",
+      "speaker_affect": "격려하며, 잠시 멈춤 유도"
+    },
+    {
+      "id": "b5",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "핵심 1: state 변수는 최소로 — 3대 질문(모순/중복/역수)으로 비핵심을 걸러낸다",
+        "핵심 2: 파생값은 state가 아니라 매 렌더 시 계산 — 동기화 버그의 원천을 차단",
+        "핵심 3: status enum은 '존재 불가능한 상태'를 타입 차원에서 막는 강력한 도구",
+        "다음 class 예고: 마지막 5단계 — 핸들러로 트리거 표를 코드로 옮기기"
+      ],
+      "lo_ids": ["LO-S1.2", "LO-S1.4"],
+      "visual_hint": "3대 핵심 bullet 카드 + 'state는 최소, 파생은 계산' 슬로건 강조",
+      "speaker_affect": "정리하듯 단단하게, 강조 톤"
+    }
+  ]
+}

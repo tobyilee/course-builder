@@ -1,0 +1,7 @@
+2026-04-26T21:16:31Z WARN: verdict mismatch — JSON=pass, MD=revise (reviewer dual-write drift; build continues)
+2026-04-26T21:16:31Z BUILD START
+2026-04-26T21:17:38Z Marp HTML: 26/26 · PNG: 26/26
+2026-04-26T21:17:38Z TTS: 02-redundant-state-and-props-mirroring [ko]
+2026-04-26T21:20:06Z TTS: 03-pitfalls-jsx-position-nested-defs [ko]
+2026-04-26T21:23:38Z TTS: 01-state-tied-to-tree-position [ko]
+2026-04-26T21:26:36Z TTS: 02-reset-strategies-key-prop [ko]

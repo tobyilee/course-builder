@@ -1,0 +1,109 @@
+{
+  "class_id": "S8.C1",
+  "title": "안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기",
+  "lo_ids": ["LO-S8.1"],
+  "target_duration_sec": 420,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 40,
+      "key_points": [
+        "한 화면에 5대 안티패턴이 동시에 박힌 더미 코드 등장",
+        "이 코드, 컴파일은 잘 되는데 왜 자꾸 버그가 날까?",
+        "지금까지 배운 7개 챕터를 거꾸로 적용해 진단해보자",
+        "끝나면 코드 리뷰 즉시 사용 가능한 체크리스트 손에 쥔다"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "한 화면에 5개 빨간 동그라미가 표시된 '환자' 코드 스크린샷 — 진단실 컨셉",
+      "speaker_affect": "호기심 유발, 가볍게 도전적인 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 70,
+      "key_points": [
+        "안티패턴 ①: props를 useState 초기값으로 mirror — 부모가 새 값 줘도 자식이 무시",
+        "처방: 직접 props 사용. 정말 초기값만 필요하면 'initial' 접두사 + key로 명시 리셋",
+        "안티패턴 ②: 파생 가능한 redundant state — fullName을 따로 useState로 보관",
+        "처방: 렌더 중 계산(derived value). state는 '입력', 파생값은 '출력'",
+        "두 패턴 모두 S2 '관련 state 묶기·redundant 제거' 원칙으로 회수"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "before/after 2단 코드 비교 — 빨간 줄 그어진 mirror 코드 vs 깔끔한 derived 코드",
+      "speaker_affect": "차분하게 짚어주는 멘토 톤"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 70,
+      "key_points": [
+        "안티패턴 ③: 깊이 중첩된 state — places.children.children.children",
+        "처방: id-맵 + childIds 정규화로 평탄화 (S2.5)",
+        "안티패턴 ④: 컴포넌트 안에 컴포넌트 정의 — 매 렌더마다 새 타입 → state 리셋",
+        "처방: 컴포넌트는 항상 모듈 최상단에서 정의 (S4.4)",
+        "두 패턴은 '구조'가 곧 '동작'을 결정한다는 공통 교훈"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "왼쪽: 트리 다이어그램 깊이 4단계 / 오른쪽: 평탄한 id-맵. 아래에 nested 컴포넌트 정의 빨간 X",
+      "speaker_affect": "강조, 자주 실수하는 지점임을 알려주는 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 60,
+      "key_points": [
+        "안티패턴 ⑤: 모든 값을 context로 밀어넣기 — '전역이면 편하잖아?'의 함정",
+        "증상: 작은 값 하나만 바뀌어도 트리 전체 재렌더, 의존 추적 불가",
+        "처방: theming/auth/routing처럼 '진짜 글로벌'만 context. 나머지는 props 또는 composition (S6.4)",
+        "5대 안티패턴 ↔ 챕터 매핑표로 압축: ①②③→S2, ④→S4, ⑤→S6"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "5×2 매핑 표 — 안티패턴 / 챕터 / 한 줄 처방",
+      "speaker_affect": "정리, 또박또박"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "더미 ProfilePage 컴포넌트 — 5대 패턴이 동시에 박혀있음",
+        "1단계: props mirroring 제거 → 직접 props.user 사용",
+        "2단계: fullName useState 삭제 → 렌더 중 derive",
+        "3단계: 중첩 comments 트리 → byId / rootIds 정규화",
+        "4단계: 내부에 정의된 <Avatar> 컴포넌트 → 파일 최상단으로 이동",
+        "5단계: ThemeContext 외 모든 context 제거 → 필요한 곳만 props로"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "before 코드 50줄 → after 코드 30줄. 각 라인 변경에 ①~⑤ 라벨",
+      "speaker_affect": "친근하게, '같이 고쳐보자'는 워크스루 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 45,
+      "key_points": [
+        "자문자답: 내 최근 PR에 이 5대 패턴 중 몇 개가 숨어있을까?",
+        "특히 useEffect로 props를 state에 sync 하는 코드가 있다면 ① 의심",
+        "정규화를 미루다 nested setState 지옥에 빠진 경험은 없는가?",
+        "다음 코드 리뷰 때 이 5문항 체크리스트를 그대로 쓰자"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "체크리스트 카드 — 5개 질문, 체크박스",
+      "speaker_affect": "권유, 코칭"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 25,
+      "key_points": [
+        "5대 안티패턴 = ①props mirror ②redundant ③deep nesting ④nested 정의 ⑤context 남용",
+        "각 챕터 원칙으로 1:1 매핑 — 진단 가능한 코드 스멜이 됐다",
+        "다음 class에서는 거꾸로, 0에서부터 의사결정 사슬을 직접 따라가본다"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "5대 안티패턴 아이콘 5개 + 화살표로 챕터 연결",
+      "speaker_affect": "마무리, 다음을 기대하게 하는 톤"
+    }
+  ]
+}

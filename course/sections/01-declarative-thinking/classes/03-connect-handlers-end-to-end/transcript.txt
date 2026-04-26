@@ -1,0 +1,154 @@
+[slide 1]
+드디어 5단계의 마지막 시간입니다.
+[pause:500]
+오늘은 핸들러를 연결하고, 1단계부터 5단계까지 한 번에 적용해 새 컴포넌트를 처음부터 설계합니다.
+[pause:600]
+지난 두 시간 쌓아 온 산출물이 마침내 살아 움직이는 코드가 되는 순간이에요.
+
+[slide 2]
+표는 그렸는데 막상 코드로 넘어가면 막힐 때가 있어요.
+[pause:500]
+왜 그럴까요.
+[pause:600]
+표는 정적인 그림이고, 핸들러는 그 화살표를 시간 순서로 발화시키는 일이기 때문이에요.
+[pause:600]
+다행히 사고의 흐름은 어렵지 않습니다.
+[pause:500]
+표의 화살표 하나가 곧 setState 한 줄에 1대 1로 대응하거든요.
+[pause:600]
+오늘 목표 두 가지.
+[pause:400]
+핸들러 연결을 채우고, 1단계부터 5단계를 한 번에 적용해 새 컴포넌트를 설계합니다.
+
+[slide 3]
+5단계 전체를 다시 한 번 떠올려 볼게요.
+[pause:500]
+1단계, 상태 열거.
+[pause:300]
+2단계, 트리거 식별.
+[pause:300]
+3단계, 유즈스테이트 모델링.
+[pause:300]
+4단계, 비핵심 제거.
+[pause:300]
+5단계, 핸들러 연결.
+[pause:600]
+오늘은 마지막 5단계예요.
+[pause:600]
+규칙은 단순합니다.
+[pause:400]
+트리거 표의 각 행을, 이 이벤트에서 이 set 호출을 한다, 라는 식으로 1대 1 매핑합니다.
+[pause:500]
+표의 행 수와 핸들러 안 분기 수가 일치하면, 누락 없이 구현된 거예요.
+
+[slide 4]
+트리거 종류별 패턴이 살짝 달라요.
+[pause:500]
+휴먼 트리거는 DOM 핸들러 안의 setState로 처리합니다.
+[pause:500]
+onChange, onClick, onBlur 같은 이벤트가 여기 들어가요.
+[pause:600]
+컴퓨터 트리거는 비동기 결과의 setState로 처리합니다.
+[pause:500]
+then이나 catch, await 결과, 이펙트 정리 시점이 여기 해당해요.
+[pause:700]
+비동기 패턴 핵심을 한 호흡으로.
+[pause:500]
+먼저 status를 'submitting'으로, await로 호출을 기다리고.
+[pause:500]
+성공이면 status를 'success', 실패면 'typing'으로 되돌리고 error에 에러를 담습니다.
+[pause:600]
+표 행 수와 핸들러 분기 수가 같으면, 누락은 0이에요.
+
+[slide 5]
+도시 퀴즈 폼의 handleSubmit 코드를 한 줄씩 짚어 보겠습니다.
+[pause:500]
+시작은 e.preventDefault, 폼 기본 동작을 막아요.
+[pause:500]
+다음으로 setStatus를 'submitting'으로 호출, typing에서 submitting 트리거예요.
+[pause:600]
+try 블록에서 submitForm을 await로 호출하고.
+[pause:500]
+성공하면 setStatus를 'success', submitting에서 success 트리거입니다.
+[pause:600]
+catch 블록에서는 setStatus를 'typing'으로 되돌리고 setError에 err를 담아요.
+[pause:500]
+status가 'typing'이면서 error가 null이 아닌 조합, 그게 곧 에러 화면입니다.
+[pause:700]
+각 줄 옆 주석이 트리거 표의 한 행이에요.
+[pause:500]
+표가 그대로 코드로 옮겨진 모습이죠.
+
+[slide 6]
+JSX 쪽도 보겠습니다.
+[pause:500]
+파생값은 유즈스테이트 없이 그 자리에서 계산해요.
+[pause:600]
+textarea의 value는 answer, onChange는 setAnswer로 갱신합니다.
+[pause:500]
+disabled는 status가 'submitting'인지 직접 비교.
+[pause:600]
+버튼 disabled는 두 조건의 OR예요.
+[pause:500]
+answer 길이가 0이거나 status가 'submitting'이면 비활성화됩니다.
+[pause:600]
+에러 메시지는 error가 null이 아닐 때, 정답 메시지는 status가 'success'일 때만 렌더해요.
+[pause:700]
+isEmpty 같은 별도 boolean state는 어디에도 없습니다.
+[pause:500]
+모두 그 자리에서 직접 계산하는 모범 사례예요.
+
+[slide 7]
+보너스로, living styleguide 패턴을 소개할게요.
+[pause:500]
+다섯 visual state를 한 페이지에 동시에 렌더하는 기법이에요.
+[pause:600]
+statuses 배열에 상태를 담고, map으로 Form을 각 상태로 한 번씩 렌더하면 됩니다.
+[pause:600]
+이렇게 해두면 디자인 회귀 검증과 코드 리뷰가 굉장히 쉬워져요.
+[pause:500]
+변경 하나에 모든 상태가 어떻게 보이는지 한눈에 들어오거든요.
+[pause:600]
+1단계에서 그린 mockup 그리드가 실제 컴포넌트로 살아남는 그림입니다.
+
+[slide 8]
+이제 미니 캡스톤 시간이에요.
+[pause:500]
+A 인라인 코멘트 위젯, B 파일 업로드 버튼 중 하나를 고르세요.
+[pause:600]
+순서는 이렇습니다.
+[pause:500]
+1·2단계, visual state 네다섯 개를 펼치고 각 전이에 휴먼·컴퓨터 라벨.
+[pause:600]
+3·4단계, 순진한 boolean으로 모델링했다가 status enum과 파생값으로 줄입니다.
+[pause:500]
+3대 질문을 그대로 적용하세요.
+[pause:600]
+5단계, 핸들러 한두 개에서 setStatus만으로 모든 전이가 표현되는지 확인.
+[pause:700]
+점검 기준 한 줄, 내 state 개수가 status 종류 더하기 본질 입력값과 같으면 합격이에요.
+
+[slide 9]
+오늘의 핵심 셋으로 정리할게요.
+[pause:500]
+첫째, 5단계는 절차가 아니라 사고법입니다.
+[pause:500]
+상태, 트리거, 유즈스테이트, 비핵심 제거, 핸들러.
+[pause:600]
+둘째, 핸들러는 트리거 표를 set 호출로 옮기는 기계적 작업이 돼요.
+[pause:500]
+표가 잘 그려져 있으면 코드는 거의 받아쓰기입니다.
+[pause:600]
+셋째, living styleguide로 모든 상태를 동시 렌더해 두면 회귀와 리뷰가 한결 쉬워져요.
+[pause:600]
+S1 섹션은 여기서 마무리됩니다.
+[pause:500]
+다음 섹션에서는 state 구조를 다듬는 다섯 가지 원칙을 만납니다.
+[pause:600]
+관련 묶기, 모순 회피, redundant 제거, duplication 회피, deep nesting 평탄화.
+[pause:600]
+이번 섹션의 사고법이 그 토대가 돼요.
+[pause:500]
+오늘도 끝까지 함께해 주셔서 고맙습니다.
+[pause:500]
+다음 섹션에서 만나요.

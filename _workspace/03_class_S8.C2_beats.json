@@ -1,0 +1,122 @@
+{
+  "class_id": "S8.C2",
+  "title": "통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬",
+  "lo_ids": ["LO-S8.2"],
+  "target_duration_sec": 480,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 40,
+      "key_points": [
+        "Todo보다 한 단계 큰 mini Kanban — 컬럼 3개 + 카드 이동/추가/삭제",
+        "0에서 시작해 4번의 의사결정만 내리면 reducer+context 구조에 도달한다",
+        "각 결정에 강의의 어느 원칙이 근거가 되는지 한 호흡에 정당화하자",
+        "강의 전체를 한 그림으로 묶는 마지막 화이트보드 세션"
+      ],
+      "lo_ids": ["LO-S8.2"],
+      "visual_hint": "Kanban 와이어프레임 — Todo / Doing / Done 3컬럼, 카드 몇 장",
+      "speaker_affect": "기대감, 마무리 챕터다운 활기"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "결정 ① state shape — 카드를 컬럼 안에 트리로 둘까, id 정규화로 평탄화할까?",
+        "트리 안: columns[0].cards[2] 접근은 직관적이지만, 카드 이동에 deep update 지옥",
+        "정규화: cards = {byId, allIds}, columns = {byId: {cardIds: []}}",
+        "근거: S2.5 deep nesting 평탄화 + S2.3 id 보관 트레이드오프",
+        "Kanban처럼 '카드 이동'이 핵심 동작이면 정규화가 압도적으로 유리"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S2.5"],
+      "visual_hint": "왼쪽 트리 / 오른쪽 정규화 — 카드 이동 시 변경 라인 수 비교",
+      "speaker_affect": "분석적, '왜'를 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 80,
+      "key_points": [
+        "결정 ② state 위치 — Card? Column? Board? App?",
+        "single source of truth 원칙: 카드 이동은 두 컬럼이 동시에 바뀜 → 두 컬럼의 공통 부모",
+        "Board 컴포넌트가 cards/columns 모두 들고, 자식엔 props로 내려준다",
+        "근거: S3.3 — 형제가 협조해야 하면 가장 가까운 공통 부모로 lifting",
+        "App까지 올릴 필요는 아직 없음 — 라우팅/auth가 끼면 그때 다시 평가"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S3.3"],
+      "visual_hint": "컴포넌트 트리 다이어그램 — Board에 별표(state owner), Column·Card는 props 화살표",
+      "speaker_affect": "정당화, 결정 근거를 또박또박"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "결정 ③ setState 흩어짐 vs reducer — Board에 setCards, setColumns가 6개 흩어진다",
+        "addCard, removeCard, moveCard, renameCard, addColumn, removeColumn… 곧 한계",
+        "(state, action) => nextState로 통합 — action.type: 'card_moved', 'card_added' 등",
+        "근거: S5.4 — 상호작용이 5개 넘고 여러 state를 동시에 갱신하면 reducer 승",
+        "테스트도 쉬워진다: reducer는 순수 함수, 입력→출력만 보면 된다"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S5.4"],
+      "visual_hint": "before: 흩어진 setState 6개 / after: dispatch 한 줄 + reducer switch문",
+      "speaker_affect": "확신, 리팩터링의 카타르시스를 살짝"
+    },
+    {
+      "id": "b5",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "결정 ④ prop drilling 임계점 — Card의 삭제 버튼이 dispatch를 4단계 통과해 받는다",
+        "여기가 context 도입 시점. 단, state와 dispatch를 분리한다",
+        "KanbanProvider 안에서 useReducer + 두 context(<KanbanStateContext>, <KanbanDispatchContext>)",
+        "useKanban / useKanbanDispatch 커스텀 훅으로 응집",
+        "근거: S7.1 분리 이유(불필요 재렌더 방지) + S7.2 단일 파일 응집 패턴"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S7.2"],
+      "visual_hint": "Provider 한 파일 구조도 — reducer + 두 context + 두 훅을 박스로",
+      "speaker_affect": "수렴, 마무리 향해 가속"
+    },
+    {
+      "id": "b6",
+      "type": "example",
+      "duration_sec": 45,
+      "key_points": [
+        "최종 구조 30초 투어: KanbanProvider 1파일, Board는 useKanban으로 read",
+        "Card의 삭제 버튼은 useKanbanDispatch로 직접 dispatch — drilling 0단계",
+        "새 도메인(Auth, Theme) 추가는? 같은 패턴 복제 — S7.3 다중 도메인 전략",
+        "외부 라이브러리(Redux/Zustand) 도입은? 미들웨어/devtools 필요할 때 (S7.4)"
+      ],
+      "lo_ids": ["LO-S8.2"],
+      "visual_hint": "최종 코드 골격 — 폴더 구조 + 핵심 라인 5줄",
+      "speaker_affect": "친근하게, 실전 감각 전달"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 30,
+      "key_points": [
+        "자문자답: 내가 지금 만들고 있는 앱은 4단계 중 어디에 와 있는가?",
+        "정규화를 미뤘는가? lifting 위치가 애매한가? setState가 흩어져 있는가?",
+        "다음 PR에서 이 4단계 의사결정 사슬을 그대로 따라가보자"
+      ],
+      "lo_ids": ["LO-S8.2"],
+      "visual_hint": "4단계 결정 화살표 — 본인 위치에 핀 꽂는 인터랙션 컨셉",
+      "speaker_affect": "코칭, 적용 권유"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 15,
+      "key_points": [
+        "4단계 의사결정 사슬: state shape(S2.5) → 위치(S3.3) → reducer(S5.4) → reducer+context(S7.1~7.2)",
+        "각 결정의 근거는 강의 7개 챕터 원칙으로 모두 정당화된다",
+        "강의 끝. 이제 코드 리뷰와 신규 설계 양쪽에서 같은 언어로 사고하자"
+      ],
+      "lo_ids": ["LO-S8.2"],
+      "visual_hint": "4단계 한 줄 도식 — 화살표로 챕터 매핑 표시. 강의 전체 로드맵 thumbnail",
+      "speaker_affect": "마무리, 따뜻한 격려"
+    }
+  ]
+}

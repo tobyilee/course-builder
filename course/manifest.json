@@ -1,0 +1,1447 @@
+{
+  "course": {
+    "topic": "React 상태 관리 심화 — Managing State (react.dev/learn/managing-state 기반)",
+    "audience": "TypeScript / JavaScript / React UI 컴포넌트 개발은 능숙한 중급 개발자. 함수형 컴포넌트, useState 기본 사용, 이벤트 핸들링, props 흐름은 이미 안다. 다만 state 설계·구조화·공유·보존·리듀서·컨텍스트 영역에서 깊이가 부족하다.",
+    "depth": "deep",
+    "language": "ko",
+    "tone": "friendly",
+    "total_duration_min": 300,
+    "build_ts": "2026-04-26T21:29:45+00:00",
+    "harness_version": "1.1.0"
+  },
+  "learning_objectives": [
+    {
+      "id": "LO-S0.1",
+      "section_id": "S0",
+      "text": "이 강의가 다루는 7개 react.dev 챕터의 학습 흐름과 각 챕터가 해결하는 state 관련 통증(중복, 동기화 버그, prop drilling, 의도치 않은 리셋)을 자기 언어로 요약할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": []
+    },
+    {
+      "id": "LO-S0.2",
+      "section_id": "S0",
+      "text": "자신의 최근 프로젝트에서 발생했던 state 관련 버그 또는 코드 스멜 1개 이상을 식별하고, 어느 챕터의 패턴으로 해결될지 가설을 세울 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S0.1"
+      ]
+    },
+    {
+      "id": "LO-S0.3",
+      "section_id": "S0",
+      "text": "선언형 UI의 핵심 명제 — '상태 → UI 자동 반영' — 가 명령형 DOM 조작과 어떻게 다른지 한 문장으로 진술할 수 있다.",
+      "bloom": "Remember",
+      "prerequisites": []
+    },
+    {
+      "id": "LO-S1.1",
+      "section_id": "S1",
+      "text": "주어진 폼/위젯 컴포넌트의 가능한 visual states를 모두 열거하고, 각 상태 사이의 전이를 일으키는 human/computer 트리거를 표로 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S0.3"
+      ]
+    },
+    {
+      "id": "LO-S1.2",
+      "section_id": "S1",
+      "text": "비핵심 state 제거 3대 질문(모순/중복/역수)을 적용해 7개 boolean 변수로 구성된 폼 state를 status enum 기반 3개 변수로 리팩터링할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S1.1"
+      ]
+    },
+    {
+      "id": "LO-S1.3",
+      "section_id": "S1",
+      "text": "선언형 5단계 프로세스(상태 열거 → 트리거 식별 → useState 모델링 → 비핵심 제거 → 핸들러 연결)를 따라 실제 컴포넌트를 처음부터 설계할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S1.2"
+      ]
+    },
+    {
+      "id": "LO-S1.4",
+      "section_id": "S1",
+      "text": "state 변수와 파생값(computed at render)을 구분 기준에 따라 분류하고, 어떤 값이 state로 남아야 하는지 판단할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S1.2"
+      ]
+    },
+    {
+      "id": "LO-S2.1",
+      "section_id": "S2",
+      "text": "5가지 state 구조 원칙(관련 state 묶기·모순 회피·redundant 제거·duplication 회피·deep nesting 평탄화)을 각각 한 줄로 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S1.4"
+      ]
+    },
+    {
+      "id": "LO-S2.2",
+      "section_id": "S2",
+      "text": "관련 state를 객체로 묶을지 분리할지 결정하는 기준(항상 함께 갱신되는가)을 적용해 주어진 state 변수 묶음을 재구조화할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S2.1"
+      ]
+    },
+    {
+      "id": "LO-S2.3",
+      "section_id": "S2",
+      "text": "객체를 직접 보관하는 state와 id만 보관하고 derive 하는 state의 트레이드오프를 비교 평가하고, 동기화 버그가 발생할 시나리오를 짚어낼 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S2.2"
+      ]
+    },
+    {
+      "id": "LO-S2.4",
+      "section_id": "S2",
+      "text": "props를 useState 초기값으로 mirror 하는 안티패턴을 식별하고, '직접 사용' 또는 'initial 접두사' 둘 중 어느 해법이 적절한지 결정할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S2.1"
+      ]
+    },
+    {
+      "id": "LO-S2.5",
+      "section_id": "S2",
+      "text": "깊게 중첩된 트리 형태 데이터를 정규화된 평탄 구조(id-맵 + childIds)로 변환할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S2.2"
+      ]
+    },
+    {
+      "id": "LO-S3.1",
+      "section_id": "S3",
+      "text": "lifting state up 3단계(자식에서 제거 → 부모에 하드코딩 → 부모에 state 추가) 절차를 적용해 형제 간 협조가 필요한 컴포넌트를 리팩터링할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S2.2"
+      ]
+    },
+    {
+      "id": "LO-S3.2",
+      "section_id": "S3",
+      "text": "controlled 컴포넌트와 uncontrolled 컴포넌트의 차이를 상태 위치·부모 영향·재사용성 관점에서 비교할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": []
+    },
+    {
+      "id": "LO-S3.3",
+      "section_id": "S3",
+      "text": "주어진 UI 시나리오에서 state를 어느 컴포넌트에 둘지(single source of truth) 결정하고, 그 결정을 정당화할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S3.1",
+        "LO-S3.2"
+      ]
+    },
+    {
+      "id": "LO-S3.4",
+      "section_id": "S3",
+      "text": "Accordion(한 번에 하나만 열림) 또는 Filterable List 같은 표준 패턴을 lifting state up으로 직접 구현할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S3.1"
+      ]
+    },
+    {
+      "id": "LO-S4.1",
+      "section_id": "S4",
+      "text": "React가 state를 컴포넌트 인스턴스가 아닌 '렌더 트리에서의 위치'로 추적한다는 모델을 그림 또는 의사 트리로 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": []
+    },
+    {
+      "id": "LO-S4.2",
+      "section_id": "S4",
+      "text": "주어진 JSX 코드 변경(조건부 렌더, 컴포넌트 타입 교체)이 state를 보존할지 리셋할지 예측하고, 그 근거를 트리 위치 규칙으로 설명할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S4.1"
+      ]
+    },
+    {
+      "id": "LO-S4.3",
+      "section_id": "S4",
+      "text": "key prop을 사용해 같은 위치의 컴포넌트 state를 의도적으로 리셋하는 전략을 채팅 폼·플레이어 카운터 같은 사례에 적용할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S4.2"
+      ]
+    },
+    {
+      "id": "LO-S4.4",
+      "section_id": "S4",
+      "text": "컴포넌트 정의를 다른 컴포넌트 안에 중첩 정의하면 매 렌더마다 state가 리셋되는 이유를 설명하고, 안티패턴을 리팩터링할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S4.1"
+      ]
+    },
+    {
+      "id": "LO-S5.1",
+      "section_id": "S5",
+      "text": "Reducer가 (state, action) => nextState 형태의 순수 함수임을 정의하고, useReducer 훅의 시그니처와 반환값을 기억할 수 있다.",
+      "bloom": "Remember",
+      "prerequisites": []
+    },
+    {
+      "id": "LO-S5.2",
+      "section_id": "S5",
+      "text": "여러 setState 호출이 흩어진 컴포넌트를 dispatch + reducer 패턴으로 마이그레이션하는 3단계(dispatch 변환 → reducer 작성 → useReducer 사용)를 수행할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S5.1"
+      ]
+    },
+    {
+      "id": "LO-S5.3",
+      "section_id": "S5",
+      "text": "action.type 컨벤션(동사 과거형, 한 상호작용 = 한 action)과 reducer 순수성 규칙(부수효과 금지, mutation 금지)을 평가 기준으로 삼아 주어진 reducer 코드의 결함을 진단할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S5.2"
+      ]
+    },
+    {
+      "id": "LO-S5.4",
+      "section_id": "S5",
+      "text": "useState와 useReducer 사이의 트레이드오프(코드량·가독성·디버깅·테스트 용이성)를 비교해, 주어진 시나리오에서 어느 쪽을 선택할지 결정할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S5.2"
+      ]
+    },
+    {
+      "id": "LO-S5.5",
+      "section_id": "S5",
+      "text": "Immer(useImmerReducer) 사용 시 mutation 스타일 코드의 장단점을 설명하고, 일반 reducer와 의미상 동등한 형태로 변환할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S5.2"
+      ]
+    },
+    {
+      "id": "LO-S6.1",
+      "section_id": "S6",
+      "text": "prop drilling 문제 상황을 컴포넌트 트리로 그려 설명하고, context가 어떻게 그것을 해소하는지 데이터 흐름 측면에서 비교할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": []
+    },
+    {
+      "id": "LO-S6.2",
+      "section_id": "S6",
+      "text": "createContext / Provider(<Ctx value=...>) / useContext 3단계 패턴으로 깊이 있는 컴포넌트 트리에 데이터를 전달하는 코드를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S6.1"
+      ]
+    },
+    {
+      "id": "LO-S6.3",
+      "section_id": "S6",
+      "text": "같은 컴포넌트가 context를 consume 하면서 동시에 새로운 값으로 provide 하는 nesting 패턴(예: Heading level 자동 증가)을 구현할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S6.2"
+      ]
+    },
+    {
+      "id": "LO-S6.4",
+      "section_id": "S6",
+      "text": "context를 써야 하는 사례(theming/auth/routing)와 props·composition으로 충분한 사례를 구분 기준으로 평가하고, context 남용을 회피하는 결정을 정당화할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S6.2"
+      ]
+    },
+    {
+      "id": "LO-S7.1",
+      "section_id": "S7",
+      "text": "state context와 dispatch context를 분리하는 이유(불필요한 재렌더 방지, 관심사 분리)를 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S5.4",
+        "LO-S6.4"
+      ]
+    },
+    {
+      "id": "LO-S7.2",
+      "section_id": "S7",
+      "text": "useReducer + 두 context를 결합한 Provider 컴포넌트와 커스텀 훅(useTasks, useTasksDispatch)을 단일 파일로 응집해 작성할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S7.1",
+        "LO-S5.2",
+        "LO-S6.2"
+      ]
+    },
+    {
+      "id": "LO-S7.3",
+      "section_id": "S7",
+      "text": "다중 도메인(Tasks/Auth/Theme)에 reducer+context 쌍을 여러 개 두는 확장 전략을 설계하고, 도메인 경계 결정의 근거를 제시할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S7.2"
+      ]
+    },
+    {
+      "id": "LO-S7.4",
+      "section_id": "S7",
+      "text": "reducer+context 패턴이 적합한 시점과 외부 라이브러리(Redux/Zustand 등)를 도입해야 하는 시점을 비교 기준(스케일·디버깅·미들웨어 필요성)으로 평가할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S7.2"
+      ]
+    },
+    {
+      "id": "LO-S8.1",
+      "section_id": "S8",
+      "text": "주어진 코드 샘플에서 5대 안티패턴(redundant state, props mirroring, key 누락, 컴포넌트 중첩 정의, context 남용)을 진단하고, 어느 챕터의 원칙으로 고칠지 매핑할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S2.4",
+        "LO-S4.4",
+        "LO-S6.4"
+      ]
+    },
+    {
+      "id": "LO-S8.2",
+      "section_id": "S8",
+      "text": "mini Kanban 앱의 state shape → lifting 위치 → reducer 도입 → context 분리 의사결정 사슬을 직접 설계하고, 각 결정의 근거를 강의의 7개 원칙으로 정당화할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S7.2",
+        "LO-S2.5",
+        "LO-S3.3"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "S0",
+      "slug": "00-orientation",
+      "title": "오리엔테이션 — 왜 state 설계가 따로 필요한가",
+      "summary": "강의 전체 지도와 학습 목표를 잡는다. 중급 개발자가 흔히 부딪히는 state 관련 통증(중복, 동기화 버그, prop drilling, 의도치 않은 리셋)을 사례로 보고, 7개 챕터가 어떻게 그 통증을 해결하는지 큰 그림으로 미리 본다.",
+      "lo_ids": [
+        "LO-S0.1",
+        "LO-S0.2",
+        "LO-S0.3"
+      ],
+      "classes": [
+        {
+          "id": "S0.C1",
+          "slug": "01-why-state-design-matters",
+          "title": "왜 state 설계가 따로 필요한가 — 4가지 통증 진단",
+          "lo_ids": [
+            "LO-S0.1",
+            "LO-S0.3"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/00-orientation/classes/01-why-state-design-matters/slide.source.md",
+            "slide_html": "sections/00-orientation/classes/01-why-state-design-matters/slide.html",
+            "note_md": "sections/00-orientation/classes/01-why-state-design-matters/note.md",
+            "transcript_txt": "sections/00-orientation/classes/01-why-state-design-matters/transcript.txt",
+            "audio_full": "sections/00-orientation/classes/01-why-state-design-matters/audio/full.mp3",
+            "audio_slides": [
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_01.mp3",
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_02.mp3",
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_03.mp3",
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_04.mp3",
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_05.mp3",
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_06.mp3",
+              "sections/00-orientation/classes/01-why-state-design-matters/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.001.png",
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.002.png",
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.003.png",
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.004.png",
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.005.png",
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.006.png",
+              "sections/00-orientation/classes/01-why-state-design-matters/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 457.1
+        },
+        {
+          "id": "S0.C2",
+          "slug": "02-course-map-and-self-diagnosis",
+          "title": "코스 맵 — 7개 챕터가 어떤 통증을 푸는가",
+          "lo_ids": [
+            "LO-S0.1",
+            "LO-S0.2"
+          ],
+          "duration_min": 8,
+          "assets": {
+            "slide_source": "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slide.source.md",
+            "slide_html": "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slide.html",
+            "note_md": "sections/00-orientation/classes/02-course-map-and-self-diagnosis/note.md",
+            "transcript_txt": "sections/00-orientation/classes/02-course-map-and-self-diagnosis/transcript.txt",
+            "audio_full": "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/full.mp3",
+            "audio_slides": [
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_01.mp3",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_02.mp3",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_03.mp3",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_04.mp3",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_05.mp3",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_06.mp3",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.001.png",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.002.png",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.003.png",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.004.png",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.005.png",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.006.png",
+              "sections/00-orientation/classes/02-course-map-and-self-diagnosis/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 397.9
+        }
+      ],
+      "quiz_path": "sections/00-orientation/quiz.json"
+    },
+    {
+      "id": "S1",
+      "slug": "01-declarative-thinking",
+      "title": "사고방식 전환 — 선언형 UI와 visual states로 반응하기",
+      "summary": "명령형 vs 선언형 차이를 짚고, 컴포넌트의 가능한 visual states를 모두 열거한 뒤 트리거를 식별·useState로 모델링·비핵심 state를 제거하는 5단계 프로세스를 익힌다. status enum 패턴으로 boolean paradox를 해소한다.",
+      "lo_ids": [
+        "LO-S1.1",
+        "LO-S1.2",
+        "LO-S1.3",
+        "LO-S1.4"
+      ],
+      "classes": [
+        {
+          "id": "S1.C1",
+          "slug": "01-visual-states-and-triggers",
+          "title": "visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기",
+          "lo_ids": [
+            "LO-S1.1"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slide.source.md",
+            "slide_html": "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slide.html",
+            "note_md": "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/note.md",
+            "transcript_txt": "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/transcript.txt",
+            "audio_full": "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/full.mp3",
+            "audio_slides": [
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_01.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_02.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_03.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_04.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_05.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_06.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_07.mp3",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.001.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.002.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.003.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.004.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.005.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.006.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.007.png",
+              "sections/01-declarative-thinking/classes/01-visual-states-and-triggers/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 296.0
+        },
+        {
+          "id": "S1.C2",
+          "slug": "02-modeling-state-and-removing-non-essential",
+          "title": "useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로",
+          "lo_ids": [
+            "LO-S1.2",
+            "LO-S1.4"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slide.source.md",
+            "slide_html": "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slide.html",
+            "note_md": "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/note.md",
+            "transcript_txt": "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/transcript.txt",
+            "audio_full": "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/full.mp3",
+            "audio_slides": [
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_01.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_02.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_03.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_04.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_05.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_06.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_07.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_08.mp3",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.001.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.002.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.003.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.004.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.005.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.006.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.007.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.008.png",
+              "sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 304.4
+        },
+        {
+          "id": "S1.C3",
+          "slug": "03-connect-handlers-end-to-end",
+          "title": "핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기",
+          "lo_ids": [
+            "LO-S1.3"
+          ],
+          "duration_min": 11,
+          "assets": {
+            "slide_source": "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slide.source.md",
+            "slide_html": "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slide.html",
+            "note_md": "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/note.md",
+            "transcript_txt": "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/transcript.txt",
+            "audio_full": "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/full.mp3",
+            "audio_slides": [
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_01.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_02.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_03.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_04.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_05.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_06.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_07.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_08.mp3",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.001.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.002.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.003.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.004.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.005.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.006.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.007.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.008.png",
+              "sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 312.7
+        }
+      ],
+      "quiz_path": "sections/01-declarative-thinking/quiz.json"
+    },
+    {
+      "id": "S2",
+      "slug": "02-state-structure",
+      "title": "state 구조 설계 — 5가지 원칙으로 동기화 버그 차단",
+      "summary": "관련 state 묶기, 모순 회피, redundant 제거, duplication 회피, deep nesting 평탄화 5원칙을 적용한다. props mirroring 안티패턴을 진단하고, 객체 대신 id를 저장하는 정규화 패턴을 실습한다.",
+      "lo_ids": [
+        "LO-S2.1",
+        "LO-S2.2",
+        "LO-S2.3",
+        "LO-S2.4",
+        "LO-S2.5"
+      ],
+      "classes": [
+        {
+          "id": "S2.C1",
+          "slug": "01-five-principles-and-grouping",
+          "title": "5원칙 한눈에 + 관련 state 묶기·모순 회피",
+          "lo_ids": [
+            "LO-S2.1",
+            "LO-S2.2"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/02-state-structure/classes/01-five-principles-and-grouping/slide.source.md",
+            "slide_html": "sections/02-state-structure/classes/01-five-principles-and-grouping/slide.html",
+            "note_md": "sections/02-state-structure/classes/01-five-principles-and-grouping/note.md",
+            "transcript_txt": "sections/02-state-structure/classes/01-five-principles-and-grouping/transcript.txt",
+            "audio_full": "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_01.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_02.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_03.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_04.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_05.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_06.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_07.mp3",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.001.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.002.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.003.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.004.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.005.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.006.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.007.png",
+              "sections/02-state-structure/classes/01-five-principles-and-grouping/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 387.0
+        },
+        {
+          "id": "S2.C2",
+          "slug": "02-redundant-state-and-props-mirroring",
+          "title": "redundant state 제거와 props mirroring 안티패턴",
+          "lo_ids": [
+            "LO-S2.4"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slide.source.md",
+            "slide_html": "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slide.html",
+            "note_md": "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/note.md",
+            "transcript_txt": "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/transcript.txt",
+            "audio_full": "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_01.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_02.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_03.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_04.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_05.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_06.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_07.mp3",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.001.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.002.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.003.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.004.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.005.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.006.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.007.png",
+              "sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 390.6
+        },
+        {
+          "id": "S2.C3",
+          "slug": "03-store-id-not-object",
+          "title": "duplication 회피 — 객체 대신 id를 저장하라",
+          "lo_ids": [
+            "LO-S2.3"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/02-state-structure/classes/03-store-id-not-object/slide.source.md",
+            "slide_html": "sections/02-state-structure/classes/03-store-id-not-object/slide.html",
+            "note_md": "sections/02-state-structure/classes/03-store-id-not-object/note.md",
+            "transcript_txt": "sections/02-state-structure/classes/03-store-id-not-object/transcript.txt",
+            "audio_full": "sections/02-state-structure/classes/03-store-id-not-object/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_01.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_02.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_03.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_04.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_05.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_06.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_07.mp3",
+              "sections/02-state-structure/classes/03-store-id-not-object/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.001.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.002.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.003.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.004.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.005.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.006.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.007.png",
+              "sections/02-state-structure/classes/03-store-id-not-object/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 385.9
+        },
+        {
+          "id": "S2.C4",
+          "slug": "04-flatten-deep-nesting",
+          "title": "deep nesting 평탄화 — 트리 데이터를 정규화하기",
+          "lo_ids": [
+            "LO-S2.5"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/02-state-structure/classes/04-flatten-deep-nesting/slide.source.md",
+            "slide_html": "sections/02-state-structure/classes/04-flatten-deep-nesting/slide.html",
+            "note_md": "sections/02-state-structure/classes/04-flatten-deep-nesting/note.md",
+            "transcript_txt": "sections/02-state-structure/classes/04-flatten-deep-nesting/transcript.txt",
+            "audio_full": "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_01.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_02.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_03.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_04.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_05.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_06.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_07.mp3",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.001.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.002.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.003.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.004.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.005.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.006.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.007.png",
+              "sections/02-state-structure/classes/04-flatten-deep-nesting/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 385.5
+        }
+      ],
+      "quiz_path": "sections/02-state-structure/quiz.json"
+    },
+    {
+      "id": "S3",
+      "slug": "03-sharing-state",
+      "title": "컴포넌트 간 state 공유 — Lifting State Up",
+      "summary": "형제 컴포넌트가 협조해야 할 때 상태를 공통 부모로 끌어올리는 3단계 절차를 익힌다. controlled vs uncontrolled 트레이드오프를 이해하고, single source of truth 원칙으로 컴포넌트 책임을 정리한다.",
+      "lo_ids": [
+        "LO-S3.1",
+        "LO-S3.2",
+        "LO-S3.3",
+        "LO-S3.4"
+      ],
+      "classes": [
+        {
+          "id": "S3.C1",
+          "slug": "01-lifting-state-up-3-steps",
+          "title": "Lifting State Up — 형제 컴포넌트를 협조시키는 3단계",
+          "lo_ids": [
+            "LO-S3.1"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slide.source.md",
+            "slide_html": "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slide.html",
+            "note_md": "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/note.md",
+            "transcript_txt": "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/transcript.txt",
+            "audio_full": "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/full.mp3",
+            "audio_slides": [
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_01.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_02.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_03.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_04.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_05.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_06.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_07.mp3",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.001.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.002.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.003.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.004.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.005.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.006.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.007.png",
+              "sections/03-sharing-state/classes/01-lifting-state-up-3-steps/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 425.5
+        },
+        {
+          "id": "S3.C2",
+          "slug": "02-controlled-vs-uncontrolled-sst",
+          "title": "Controlled vs Uncontrolled와 Single Source of Truth",
+          "lo_ids": [
+            "LO-S3.2",
+            "LO-S3.3"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slide.source.md",
+            "slide_html": "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slide.html",
+            "note_md": "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/note.md",
+            "transcript_txt": "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/transcript.txt",
+            "audio_full": "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/full.mp3",
+            "audio_slides": [
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_01.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_02.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_03.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_04.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_05.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_06.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_07.mp3",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.001.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.002.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.003.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.004.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.005.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.006.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.007.png",
+              "sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 412.5
+        },
+        {
+          "id": "S3.C3",
+          "slug": "03-accordion-and-list-patterns",
+          "title": "케이스 스터디 — Accordion·Synced Inputs·Filterable List",
+          "lo_ids": [
+            "LO-S3.4"
+          ],
+          "duration_min": 11,
+          "assets": {
+            "slide_source": "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slide.source.md",
+            "slide_html": "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slide.html",
+            "note_md": "sections/03-sharing-state/classes/03-accordion-and-list-patterns/note.md",
+            "transcript_txt": "sections/03-sharing-state/classes/03-accordion-and-list-patterns/transcript.txt",
+            "audio_full": "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/full.mp3",
+            "audio_slides": [
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_01.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_02.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_03.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_04.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_05.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_06.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_07.mp3",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.001.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.002.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.003.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.004.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.005.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.006.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.007.png",
+              "sections/03-sharing-state/classes/03-accordion-and-list-patterns/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 390.5
+        }
+      ],
+      "quiz_path": "sections/03-sharing-state/quiz.json"
+    },
+    {
+      "id": "S4",
+      "slug": "04-preserving-resetting-state",
+      "title": "state 보존과 리셋 — 트리 위치와 key prop",
+      "summary": "React가 컴포넌트 인스턴스가 아닌 '트리에서의 위치'로 state를 추적한다는 모델을 내재화한다. 같은 위치/같은 타입 = 보존, 다른 타입/다른 key = 리셋 규칙을 적용해 의도된 리셋 전략을 설계한다. 컴포넌트 정의 중첩 안티패턴을 짚는다.",
+      "lo_ids": [
+        "LO-S4.1",
+        "LO-S4.2",
+        "LO-S4.3",
+        "LO-S4.4"
+      ],
+      "classes": [
+        {
+          "id": "S4.C1",
+          "slug": "01-state-tied-to-tree-position",
+          "title": "state는 트리 위치에 묶인다 — 보존과 리셋의 기본 규칙",
+          "lo_ids": [
+            "LO-S4.1",
+            "LO-S4.2"
+          ],
+          "duration_min": 14,
+          "assets": {
+            "slide_source": "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slide.source.md",
+            "slide_html": "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slide.html",
+            "note_md": "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/note.md",
+            "transcript_txt": "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/transcript.txt",
+            "audio_full": "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_01.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_02.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_03.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_04.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_05.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_06.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_07.mp3",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.001.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.002.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.003.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.004.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.005.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.006.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.007.png",
+              "sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 538.8
+        },
+        {
+          "id": "S4.C2",
+          "slug": "02-reset-strategies-key-prop",
+          "title": "의도된 리셋 — 다른 위치 vs key prop 두 전략",
+          "lo_ids": [
+            "LO-S4.3"
+          ],
+          "duration_min": 14,
+          "assets": {
+            "slide_source": "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slide.source.md",
+            "slide_html": "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slide.html",
+            "note_md": "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/note.md",
+            "transcript_txt": "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/transcript.txt",
+            "audio_full": "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_01.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_02.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_03.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_04.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_05.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_06.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_07.mp3",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.001.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.002.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.003.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.004.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.005.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.006.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.007.png",
+              "sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 193.0
+        },
+        {
+          "id": "S4.C3",
+          "slug": "03-pitfalls-jsx-position-nested-defs",
+          "title": "함정 — JSX 위치 ≠ 트리 위치 & 컴포넌트 정의 중첩 금지",
+          "lo_ids": [
+            "LO-S4.4",
+            "LO-S4.2"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slide.source.md",
+            "slide_html": "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slide.html",
+            "note_md": "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/note.md",
+            "transcript_txt": "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/transcript.txt",
+            "audio_full": "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_01.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_02.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_03.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_04.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_05.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_06.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_07.mp3",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.001.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.002.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.003.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.004.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.005.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.006.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.007.png",
+              "sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 620.7
+        }
+      ],
+      "quiz_path": "sections/04-preserving-resetting-state/quiz.json"
+    },
+    {
+      "id": "S5",
+      "slug": "05-reducer",
+      "title": "Reducer로 state 로직 추출하기",
+      "summary": "복잡한 setState 호출들을 (state, action) => nextState 형태의 순수 함수로 통합한다. action 컨벤션, dispatch 흐름, useState↔useReducer 트레이드오프를 분석한다. reducer 순수성 규칙과 Immer 옵션도 다룬다.",
+      "lo_ids": [
+        "LO-S5.1",
+        "LO-S5.2",
+        "LO-S5.3",
+        "LO-S5.4",
+        "LO-S5.5"
+      ],
+      "classes": [
+        {
+          "id": "S5.C1",
+          "slug": "01-why-reducer-and-signature",
+          "title": "왜 Reducer인가 — useReducer 시그니처와 도입 동기",
+          "lo_ids": [
+            "LO-S5.1"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/05-reducer/classes/01-why-reducer-and-signature/slide.source.md",
+            "slide_html": "sections/05-reducer/classes/01-why-reducer-and-signature/slide.html",
+            "note_md": "sections/05-reducer/classes/01-why-reducer-and-signature/note.md",
+            "transcript_txt": "sections/05-reducer/classes/01-why-reducer-and-signature/transcript.txt",
+            "audio_full": "sections/05-reducer/classes/01-why-reducer-and-signature/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_01.mp3",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_02.mp3",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_03.mp3",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_04.mp3",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_05.mp3",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_06.mp3",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.001.png",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.002.png",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.003.png",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.004.png",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.005.png",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.006.png",
+              "sections/05-reducer/classes/01-why-reducer-and-signature/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 424.4
+        },
+        {
+          "id": "S5.C2",
+          "slug": "02-three-step-migration",
+          "title": "3단계 마이그레이션 — useState에서 useReducer로",
+          "lo_ids": [
+            "LO-S5.2"
+          ],
+          "duration_min": 15,
+          "assets": {
+            "slide_source": "sections/05-reducer/classes/02-three-step-migration/slide.source.md",
+            "slide_html": "sections/05-reducer/classes/02-three-step-migration/slide.html",
+            "note_md": "sections/05-reducer/classes/02-three-step-migration/note.md",
+            "transcript_txt": "sections/05-reducer/classes/02-three-step-migration/transcript.txt",
+            "audio_full": "sections/05-reducer/classes/02-three-step-migration/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_01.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_02.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_03.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_04.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_05.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_06.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_07.mp3",
+              "sections/05-reducer/classes/02-three-step-migration/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.001.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.002.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.003.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.004.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.005.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.006.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.007.png",
+              "sections/05-reducer/classes/02-three-step-migration/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 625.0
+        },
+        {
+          "id": "S5.C3",
+          "slug": "03-action-conventions-and-purity",
+          "title": "Action 컨벤션과 Reducer 순수성 — 결함 진단",
+          "lo_ids": [
+            "LO-S5.3"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/05-reducer/classes/03-action-conventions-and-purity/slide.source.md",
+            "slide_html": "sections/05-reducer/classes/03-action-conventions-and-purity/slide.html",
+            "note_md": "sections/05-reducer/classes/03-action-conventions-and-purity/note.md",
+            "transcript_txt": "sections/05-reducer/classes/03-action-conventions-and-purity/transcript.txt",
+            "audio_full": "sections/05-reducer/classes/03-action-conventions-and-purity/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_01.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_02.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_03.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_04.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_05.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_06.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_07.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_08.mp3",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.001.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.002.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.003.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.004.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.005.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.006.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.007.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.008.png",
+              "sections/05-reducer/classes/03-action-conventions-and-purity/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 552.2
+        },
+        {
+          "id": "S5.C4",
+          "slug": "04-tradeoffs-and-immer",
+          "title": "useState vs useReducer 트레이드오프와 Immer 옵션",
+          "lo_ids": [
+            "LO-S5.4",
+            "LO-S5.5"
+          ],
+          "duration_min": 8,
+          "assets": {
+            "slide_source": "sections/05-reducer/classes/04-tradeoffs-and-immer/slide.source.md",
+            "slide_html": "sections/05-reducer/classes/04-tradeoffs-and-immer/slide.html",
+            "note_md": "sections/05-reducer/classes/04-tradeoffs-and-immer/note.md",
+            "transcript_txt": "sections/05-reducer/classes/04-tradeoffs-and-immer/transcript.txt",
+            "audio_full": "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_01.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_02.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_03.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_04.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_05.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_06.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_07.mp3",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.001.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.002.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.003.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.004.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.005.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.006.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.007.png",
+              "sections/05-reducer/classes/04-tradeoffs-and-immer/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 379.8
+        }
+      ],
+      "quiz_path": "sections/05-reducer/quiz.json"
+    },
+    {
+      "id": "S6",
+      "slug": "06-context",
+      "title": "Context로 깊이 데이터 전달하기",
+      "summary": "prop drilling을 createContext / Provider / useContext 3단계로 해소한다. 같은 컴포넌트가 consume과 provide를 동시에 하는 패턴, context 적합 사례 vs 남용 사례, composition으로 우회 가능한 상황을 판별한다.",
+      "lo_ids": [
+        "LO-S6.1",
+        "LO-S6.2",
+        "LO-S6.3",
+        "LO-S6.4"
+      ],
+      "classes": [
+        {
+          "id": "S6.C1",
+          "slug": "01-prop-drilling-and-3-step-pattern",
+          "title": "prop drilling 문제와 createContext / Provider / useContext 3단계",
+          "lo_ids": [
+            "LO-S6.1",
+            "LO-S6.2"
+          ],
+          "duration_min": 14,
+          "assets": {
+            "slide_source": "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slide.source.md",
+            "slide_html": "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slide.html",
+            "note_md": "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/note.md",
+            "transcript_txt": "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/transcript.txt",
+            "audio_full": "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/full.mp3",
+            "audio_slides": [
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_01.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_02.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_03.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_04.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_05.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_06.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_07.mp3",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.001.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.002.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.003.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.004.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.005.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.006.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.007.png",
+              "sections/06-context/classes/01-prop-drilling-and-3-step-pattern/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 593.3
+        },
+        {
+          "id": "S6.C2",
+          "slug": "02-consume-and-provide-pattern",
+          "title": "같은 컴포넌트가 consume + provide — 자동 level 증가 패턴",
+          "lo_ids": [
+            "LO-S6.3"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/06-context/classes/02-consume-and-provide-pattern/slide.source.md",
+            "slide_html": "sections/06-context/classes/02-consume-and-provide-pattern/slide.html",
+            "note_md": "sections/06-context/classes/02-consume-and-provide-pattern/note.md",
+            "transcript_txt": "sections/06-context/classes/02-consume-and-provide-pattern/transcript.txt",
+            "audio_full": "sections/06-context/classes/02-consume-and-provide-pattern/audio/full.mp3",
+            "audio_slides": [
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_01.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_02.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_03.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_04.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_05.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_06.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_07.mp3",
+              "sections/06-context/classes/02-consume-and-provide-pattern/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.001.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.002.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.003.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.004.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.005.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.006.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.007.png",
+              "sections/06-context/classes/02-consume-and-provide-pattern/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 539.9
+        },
+        {
+          "id": "S6.C3",
+          "slug": "03-context-vs-alternatives",
+          "title": "context를 쓸 때와 쓰지 말 때 — props·composition과 비교",
+          "lo_ids": [
+            "LO-S6.4"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/06-context/classes/03-context-vs-alternatives/slide.source.md",
+            "slide_html": "sections/06-context/classes/03-context-vs-alternatives/slide.html",
+            "note_md": "sections/06-context/classes/03-context-vs-alternatives/note.md",
+            "transcript_txt": "sections/06-context/classes/03-context-vs-alternatives/transcript.txt",
+            "audio_full": "sections/06-context/classes/03-context-vs-alternatives/audio/full.mp3",
+            "audio_slides": [
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_01.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_02.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_03.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_04.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_05.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_06.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_07.mp3",
+              "sections/06-context/classes/03-context-vs-alternatives/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.001.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.002.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.003.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.004.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.005.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.006.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.007.png",
+              "sections/06-context/classes/03-context-vs-alternatives/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 535.7
+        }
+      ],
+      "quiz_path": "sections/06-context/quiz.json"
+    },
+    {
+      "id": "S7",
+      "slug": "07-reducer-context",
+      "title": "Reducer + Context로 확장하기",
+      "summary": "state context와 dispatch context를 분리해 분산된 컴포넌트가 직접 read/dispatch 하도록 만든다. TasksProvider + useTasks/useTasksDispatch 커스텀 훅 패턴으로 단일 파일에 응집하고, 다중 도메인(Tasks/Auth/Theme) 확장 전략을 본다.",
+      "lo_ids": [
+        "LO-S7.1",
+        "LO-S7.2",
+        "LO-S7.3",
+        "LO-S7.4"
+      ],
+      "classes": [
+        {
+          "id": "S7.C1",
+          "slug": "01-reducer-context-combine",
+          "title": "Reducer와 Context를 결합하기 — 두 context 분리 전략",
+          "lo_ids": [
+            "LO-S7.1"
+          ],
+          "duration_min": 15,
+          "assets": {
+            "slide_source": "sections/07-reducer-context/classes/01-reducer-context-combine/slide.source.md",
+            "slide_html": "sections/07-reducer-context/classes/01-reducer-context-combine/slide.html",
+            "note_md": "sections/07-reducer-context/classes/01-reducer-context-combine/note.md",
+            "transcript_txt": "sections/07-reducer-context/classes/01-reducer-context-combine/transcript.txt",
+            "audio_full": "sections/07-reducer-context/classes/01-reducer-context-combine/audio/full.mp3",
+            "audio_slides": [
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_01.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_02.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_03.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_04.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_05.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_06.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_07.mp3",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.001.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.002.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.003.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.004.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.005.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.006.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.007.png",
+              "sections/07-reducer-context/classes/01-reducer-context-combine/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 468.1
+        },
+        {
+          "id": "S7.C2",
+          "slug": "02-provider-custom-hooks-scaling",
+          "title": "TasksProvider + 커스텀 훅으로 응집하고 다중 도메인으로 확장하기",
+          "lo_ids": [
+            "LO-S7.2",
+            "LO-S7.3",
+            "LO-S7.4"
+          ],
+          "duration_min": 15,
+          "assets": {
+            "slide_source": "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slide.source.md",
+            "slide_html": "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slide.html",
+            "note_md": "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/note.md",
+            "transcript_txt": "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/transcript.txt",
+            "audio_full": "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/full.mp3",
+            "audio_slides": [
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_01.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_02.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_03.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_04.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_05.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_06.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_07.mp3",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.001.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.002.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.003.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.004.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.005.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.006.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.007.png",
+              "sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 483.8
+        }
+      ],
+      "quiz_path": "sections/07-reducer-context/quiz.json"
+    },
+    {
+      "id": "S8",
+      "slug": "08-capstone-antipatterns",
+      "title": "종합 — 안티패턴 진단과 통합 케이스 스터디",
+      "summary": "지금까지 배운 7개 패턴을 한 번에 적용한다. 실제 코드 스멜(redundant state, props mirroring, key 누락, 컴포넌트 중첩 정의, context 남용)을 진단·리팩터링한다. 마지막으로 mini Kanban 앱 설계를 통해 state shape → lifting → reducer + context 의사결정 사슬을 직접 정당화한다.",
+      "lo_ids": [
+        "LO-S8.1",
+        "LO-S8.2"
+      ],
+      "classes": [
+        {
+          "id": "S8.C1",
+          "slug": "01-antipattern-clinic",
+          "title": "안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기",
+          "lo_ids": [
+            "LO-S8.1"
+          ],
+          "duration_min": 7,
+          "assets": {
+            "slide_source": "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slide.source.md",
+            "slide_html": "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slide.html",
+            "note_md": "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/note.md",
+            "transcript_txt": "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/transcript.txt",
+            "audio_full": "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/full.mp3",
+            "audio_slides": [
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_01.mp3",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_02.mp3",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_03.mp3",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_04.mp3",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_05.mp3",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_06.mp3",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.001.png",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.002.png",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.003.png",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.004.png",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.005.png",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.006.png",
+              "sections/08-capstone-antipatterns/classes/01-antipattern-clinic/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 563.6
+        },
+        {
+          "id": "S8.C2",
+          "slug": "02-mini-kanban-capstone",
+          "title": "통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬",
+          "lo_ids": [
+            "LO-S8.2"
+          ],
+          "duration_min": 8,
+          "assets": {
+            "slide_source": "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slide.source.md",
+            "slide_html": "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slide.html",
+            "note_md": "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/note.md",
+            "transcript_txt": "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/transcript.txt",
+            "audio_full": "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/full.mp3",
+            "audio_slides": [
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_01.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_02.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_03.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_04.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_05.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_06.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_07.mp3",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.001.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.002.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.003.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.004.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.005.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.006.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.007.png",
+              "sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 694.1
+        }
+      ],
+      "quiz_path": "sections/08-capstone-antipatterns/quiz.json"
+    }
+  ],
+  "stats": {
+    "sections": 9,
+    "classes": 26,
+    "total_slides": 207,
+    "lo_count": 35,
+    "bloom_distribution": {
+      "Understand": 7,
+      "Analyze": 7,
+      "Remember": 2,
+      "Apply": 10,
+      "Create": 4,
+      "Evaluate": 5
+    },
+    "actual_audio_duration_sec": 11757.9
+  }
+}

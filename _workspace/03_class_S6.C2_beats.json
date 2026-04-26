@@ -1,0 +1,101 @@
+{
+  "class_id": "S6.C2",
+  "title": "같은 컴포넌트가 consume + provide — 자동 level 증가 패턴",
+  "lo_ids": ["LO-S6.3"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 60,
+      "key_points": [
+        "이전 class의 Section은 <Section level={1}>처럼 level을 매번 손으로 적어야 했다",
+        "<Section level={1}><Section level={2}><Section level={3}>... 인간이 카운트하는 실수 유발",
+        "Section 중첩만으로 h1→h2→h3가 '자동으로' 잡히면 어떨까?",
+        "level prop을 완전히 제거하는 게 목표"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "수동 level 명시 트리 vs 자동 증가 트리 좌우 대비",
+      "speaker_affect": "호기심 유발, 약간의 도전 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "핵심 아이디어 — Section이 LevelContext를 useContext로 읽고, +1 한 값을 다시 Provider로 자식에게 공급",
+        "consume(읽기) + provide(공급)가 같은 컴포넌트 안에서 동시에 일어남",
+        "useContext가 보는 값은 '나를 감싼 가장 가까운 Provider'의 값 — 내가 만든 Provider는 자식이 봄",
+        "level prop은 사라지고, Section의 깊이가 곧 level이 됨",
+        "Heading은 그대로 — useContext(LevelContext)만 호출"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "Section 박스 안에 read 화살표 위로, write 화살표 아래로 동시에 그려진 다이어그램",
+      "speaker_affect": "차분하게, 핵심에서 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 240,
+      "key_points": [
+        "Section.js 리팩터: level prop 제거, useContext로 현재 level 읽기, value={level + 1}로 재공급",
+        "최상위 Section은 createContext(0)의 default 0을 읽고 1을 공급 → 첫 Heading은 h1",
+        "<Section><Section><Section><Heading>... 트리에서 가장 안쪽 Heading은 h3로 자동 결정",
+        "Heading 코드는 한 줄도 안 바뀜 — context의 캡슐화 효과",
+        "코드 라이브 추적 — 각 Section 단계에서 level 값을 주석으로 추적"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "examples": [
+        {
+          "lang": "js",
+          "snippet": "// Section.js\nimport { useContext } from 'react';\nimport { LevelContext } from './LevelContext.js';\n\nexport function Section({ children }) {\n  const level = useContext(LevelContext); // consume\n  return (\n    <section>\n      <LevelContext value={level + 1}>   {/* provide */}\n        {children}\n      </LevelContext>\n    </section>\n  );\n}\n\n// Page.js\n<Section>\n  <Heading>Title</Heading>      {/* h1 */}\n  <Section>\n    <Heading>Sub</Heading>       {/* h2 */}\n    <Section>\n      <Heading>SubSub</Heading>  {/* h3 */}\n    </Section>\n  </Section>\n</Section>",
+          "why": "consume+provide 한 컴포넌트에서 일어남을 가장 짧은 코드로 보여줌. level prop이 완전히 사라지는 변화를 직관적으로 체험."
+        }
+      ],
+      "visual_hint": "Section 중첩 트리에 level 값(0→1→2→3)이 노드 옆에 라벨링된 다이어그램, '가장 가까운 Provider' 화살표 강조",
+      "speaker_affect": "흥분 섞인 설명, 자동화의 쾌감 강조"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "'가장 가까운 Provider' 규칙 — 자손이 useContext를 부르면 위로 올라가며 첫 Provider를 만나 멈춤",
+        "여러 context는 서로 독립 — ThemeContext와 LevelContext가 같은 트리에 공존해도 간섭 없음",
+        "각 context마다 자기만의 Provider chain을 가짐",
+        "context 값이 바뀌면 그 값을 useContext로 읽는 컴포넌트만 재렌더 (중간 통과 컴포넌트는 무관)",
+        "객체를 value로 넘길 때 매 렌더 새 객체면 모든 consumer가 리렌더 — 작은 주의 사항"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "동일 트리에 Theme/Level 두 context 체인이 색깔로 구분되어 그려진 다이어그램",
+      "speaker_affect": "명료하게, 규칙은 단호하게"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "<Section><Heading>A</Heading><Section><Heading>B</Heading></Section></Section> — A와 B는 각각 h 몇?",
+        "createContext(0) 대신 createContext(1)로 바꾸면 A와 B는?",
+        "Section 중간에 <div>를 끼우면 level 카운트가 끊길까, 유지될까?",
+        "스스로 머릿속 트리에 level 값을 라벨링해 보기"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "JSX 트리 3개 케이스를 카드로 병치, 각 노드 옆에 빈 level 라벨",
+      "speaker_affect": "질문하는 톤, 답을 기다림"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "consume + provide — 한 컴포넌트가 useContext로 읽고 그 값을 변형해 다시 Provider로 공급",
+        "가장 가까운 Provider 규칙 덕에 Section 깊이가 곧 level이 된다",
+        "다음 class 예고 — context는 강력하지만 남용 금지, props·composition을 먼저 검토하자"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "Section 박스 안 read↑/write↓ 다이어그램 + 자동 h1→h2→h3 결과 한 줄 요약",
+      "speaker_affect": "힘 실린 확신"
+    }
+  ]
+}

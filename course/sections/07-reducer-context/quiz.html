@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reducer + Context로 확장하기 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Reducer + Context로 확장하기 · 퀴즈</h1>
+  <p class="meta">7 문항 · Bloom: Understand:1, Apply:1, Analyze:1, Evaluate:3, Create:1</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>useReducer + context 패턴에서 state context와 dispatch context를 굳이 두 개로 분리하는 가장 핵심적인 이유는 무엇인가?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> 두 context를 합치면 React가 런타임 에러를 던지기 때문에</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> tasks가 바뀔 때마다 dispatch만 쓰는 컴포넌트까지 모두 재렌더되는 것을 막고, 읽기/쓰기 관심사를 코드에서 명시적으로 분리하기 위해</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> createContext가 한 모듈에서 한 번만 호출될 수 있다는 React 제약 때문</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> TypeScript가 객체 타입의 context value를 추론하지 못하기 때문</span></label>
+  <div class="explain"><strong>정답: B</strong><br>단일 context에 { tasks, dispatch }를 묶어 넣으면 tasks 변경 시 그 context를 구독한 모든 자식이 재렌더된다. 두 개로 쪼개면 dispatch만 구독하는 AddTask 같은 컴포넌트는 tasks 변경에 영향받지 않으며(dispatch 참조는 안정적), 동시에 &#x27;이 컴포넌트가 읽기/쓰기/둘 다인지&#x27;가 호출부에서 드러난다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 런타임 에러는 발생하지 않는다 — 합쳐도 동작은 한다. 다만 성능과 가독성이 나빠질 뿐.</li><li><strong>C.</strong> createContext는 모듈당 호출 횟수에 제약이 없다.</li><li><strong>D.</strong> TypeScript 추론과는 무관한 결정이다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 중 reducer + context 패턴의 3단계 빌드 순서를 가장 정확하게 기술한 것은?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> useReducer로 state를 만든 뒤 → createContext로 감싸고 → 자식에서 props로 내려받는다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> createContext × 2 → Provider 컴포넌트 안에서 useReducer 호출 → 두 context value 흘려보냄 → 자식에서 useContext × 2로 필요한 쪽만 구독</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> useState × 2 → useContext × 2 → 마지막에 reducer로 합친다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> createContext × 1 → useReducer로 { state, dispatch } 객체를 만들어 한 번에 흘려보냄 → useContext × 1로 둘 다 꺼내 쓴다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>정석 빌드는 ① createContext 두 개(state용, dispatch용) ② Provider 안에서 useReducer 호출해 두 value를 각 Provider에 흘리고 ③ 자식이 useContext로 자신이 필요한 것만 구독하는 순서다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> context 결합의 동기 자체가 prop drilling 제거였는데 다시 props로 내려보내면 모순이다.</li><li><strong>C.</strong> useState 두 개로는 reducer의 단일 진입점(action) 이점을 잃는다.</li><li><strong>D.</strong> 단일 context로 합치는 패턴은 재렌더 분리 이점이 사라진다 — 강의가 명시적으로 회피하는 안티패턴.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>TasksContext.js 한 파일에 context 두 개·reducer·initialTasks·TasksProvider·useTasks·useTasksDispatch를 모두 모으는 &#x27;Provider 단일 파일 응집&#x27; 패턴의 이점으로 옳은 것을 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q2" value="A"><span><strong>A.</strong> App 트리에서 createContext/useReducer 등 wiring이 사라져 UI 조립에만 집중할 수 있다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="B"><span><strong>B.</strong> context 객체를 module-private으로 두고 useTasks/useTasksDispatch만 export 하면 추상화 경계를 강제할 수 있다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="C"><span><strong>C.</strong> 추후 셀렉터·로깅·메모이제이션을 커스텀 훅 안에서 추가해도 소비자 호출부는 그대로다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="D"><span><strong>D.</strong> React가 단일 파일 모듈을 자동으로 메모이즈하여 재렌더가 줄어든다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="E"><span><strong>E.</strong> useReducer가 자동으로 비동기 thunk를 지원하게 된다</span></label>
+  <div class="explain"><strong>정답: A, B, C</strong><br>단일 파일 응집의 이점은 (1) App.js의 어수선함 제거 (2) context를 비공개로 묶어 추상화 경계 강제 (3) 미래의 변경(셀렉터/로깅/메모) 흡수 — 소비자 코드 불변. 성능·비동기 처리는 이 패턴 자체가 부여하는 이점이 아니다.<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> React에 &#x27;단일 파일 자동 메모이즈&#x27; 같은 기능은 없다 — 흔한 오개념.</li><li><strong>E.</strong> thunk 같은 미들웨어는 reducer+context의 기본 능력이 아니며, 이런 필요가 생길 때 Redux/Zustand 도입을 검토한다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>context를 module-private으로 둔 채 useTasks/useTasksDispatch 커스텀 훅으로 한 겹 감싸 export 하는 가장 본질적인 이유는?</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> 커스텀 훅이 없으면 React가 useContext 호출을 거부하기 때문</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> use 접두사가 있어야 React DevTools에 컴포넌트가 표시되기 때문</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> context 객체 자체를 외부에 노출하지 않아야 내부 구현(셀렉터·메모·로깅 추가, context 분할/병합)을 바꿔도 호출부를 손대지 않기 때문</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> 커스텀 훅으로 감싸야 dispatch 참조가 안정화되기 때문</span></label>
+  <div class="explain"><strong>정답: C</strong><br>핵심은 캡슐화다. context를 외부로 export 하면 소비자가 useContext(TasksContext)를 직접 부를 수 있고, 그 순간 추상화 경계가 깨져 내부 구현 변경 비용이 폭증한다. use… 훅 한 겹이 미래의 변경 비용(셀렉터·로깅·메모·분리/통합)을 흡수한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> useContext 직접 호출은 완전히 합법이다.</li><li><strong>B.</strong> DevTools 표시 여부와는 무관하다.</li><li><strong>D.</strong> dispatch 안정성은 useReducer가 보장하는 것이지 커스텀 훅 래핑 효과가 아니다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Create</span>
+  <span class="tag">mcq_single</span>
+  <h3>현재 앱이 Tasks 도메인 하나만 reducer+context로 관리 중이다. 사용자 인증과 다크모드 테마를 추가하려고 한다. 다중 도메인 확장 전략으로 가장 적절한 것은?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> 기존 TasksProvider 안에 auth와 theme state를 추가해 단일 reducer로 모든 도메인을 처리한다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> AuthProvider, ThemeProvider를 같은 (reducer + 두 context + 커스텀 훅) 패턴으로 각각 독립시키고, 의존성 방향에 따라 바깥부터 중첩(Theme → Auth → Tasks)한다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> Tasks/Auth/Theme을 모두 props로 내려보내 단일 진실의 원천을 root에 둔다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> 도메인이 셋이 되었으니 즉시 Redux로 마이그레이션한다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>도메인 경계 기준은 &#x27;함께 변하는가? 같은 사용자 액션에 반응하는가? 분리되어도 의미 있는가?&#x27;다. Tasks/Auth/Theme은 서로 독립적으로 변하므로 같은 패턴을 복제해 분리하고, 의존성 방향(Theme이 가장 외곽, Tasks가 가장 안쪽)에 맞춰 중첩한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 독립 변화 도메인을 한 reducer에 묶으면 action 종류가 폭증하고 도메인 간 결합이 생긴다.</li><li><strong>C.</strong> prop drilling 지옥으로 회귀 — 이번 섹션이 풀려고 한 문제 그 자체.</li><li><strong>D.</strong> 도메인 수만으로는 라이브러리 도입 근거가 부족하다 — 통증(미들웨어·devtools·스케일)이 명확할 때 도입한다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_multi</span>
+  <h3>reducer+context 패턴에서 졸업해 Zustand 또는 Redux Toolkit 같은 외부 라이브러리 도입을 진지하게 검토할 만한 신호를 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q5" value="A"><span><strong>A.</strong> thunk/saga 같은 비동기 미들웨어가 여러 도메인에서 반복적으로 필요해진다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="B"><span><strong>B.</strong> time-travel 디버깅, 액션 로깅 같은 전역 devtools가 팀 디버깅에 필수가 된다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="C"><span><strong>C.</strong> 도메인이 늘고 셀렉터 메모이제이션·렌더 최적화 요구가 누적된다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="D"><span><strong>D.</strong> TasksProvider를 App.js에서 import 한 줄이 길어졌다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="E"><span><strong>E.</strong> TypeScript에서 useContext 반환 타입을 좁히기 귀찮다</span></label>
+  <div class="explain"><strong>정답: A, B, C</strong><br>도입 판단의 진짜 기준은 스케일·디버깅·미들웨어 통증의 누적이다. 비동기 미들웨어 필요(A), devtools 필요(B), 셀렉터·렌더 최적화 누적(C)이 겹치기 시작하면 라이브러리가 정직한 선택이 된다. import 길이나 타입 정리 귀찮음은 패턴 자체로 충분히 해결할 수 있는 수준의 통증이 아니다.<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> import 한 줄은 도입 신호가 아니다 — &#x27;통증 없이 라이브러리부터&#x27;는 강의가 경고하는 과잉 설계.</li><li><strong>E.</strong> 타입 좁히기는 커스텀 훅 한 곳에서 해결할 수 있다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">short_answer</span>
+  <h3>한 시니어 동료가 &#x27;아직 도메인이 둘뿐인데 그냥 처음부터 Redux 깔자&#x27;고 제안한다. 당신은 reducer+context 패턴으로 충분하다고 판단했다. 자신의 결정을 정당화하는 근거 3가지와, 향후 어떤 신호가 보이면 마음을 바꿀지 1가지를 2~4문장으로 작성하시오.</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain">모범 답안: 현재 도메인이 적고(2개), 비동기 미들웨어 요구가 없으며, devtools/time-travel이 팀 디버깅에 필수가 아니다. reducer+context는 의존성 0, 학습 곡선 0이라 작은 앱에서 정직한 선택이다. 향후 (a) 여러 도메인이 동일한 비동기 흐름(thunk/saga)을 반복 요구하거나 (b) 액션 로깅·time-travel이 팀 디버깅에 필수가 되거나 (c) 셀렉터 메모이제이션 요구가 쌓이면 Zustand/RTK 검토를 시작한다.<strong>채점 기준:</strong><ul><li>(1점) 현재 통증이 부족하다는 점을 구체 기준(도메인 수, 미들웨어 부재, devtools 미요구) 중 최소 2개로 짚었다</li><li>(1점) reducer+context의 비용 측면(추가 의존성/학습 곡선 0)을 언급했다</li><li>(1점) 마음을 바꿀 신호로 비동기 미들웨어·devtools·셀렉터/스케일 중 최소 1개를 구체적으로 제시했다</li><li>(감점) &#x27;그냥 작아서&#x27;처럼 일반론만 진술하고 도입 신호를 제시하지 못하면 -1</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S7.Q1", "type": "mcq_single", "stem": "useReducer + context 패턴에서 state context와 dispatch context를 굳이 두 개로 분리하는 가장 핵심적인 이유는 무엇인가?", "choices": ["두 context를 합치면 React가 런타임 에러를 던지기 때문에", "tasks가 바뀔 때마다 dispatch만 쓰는 컴포넌트까지 모두 재렌더되는 것을 막고, 읽기/쓰기 관심사를 코드에서 명시적으로 분리하기 위해", "createContext가 한 모듈에서 한 번만 호출될 수 있다는 React 제약 때문", "TypeScript가 객체 타입의 context value를 추론하지 못하기 때문"], "correct": ["B"], "explanation": "단일 context에 { tasks, dispatch }를 묶어 넣으면 tasks 변경 시 그 context를 구독한 모든 자식이 재렌더된다. 두 개로 쪼개면 dispatch만 구독하는 AddTask 같은 컴포넌트는 tasks 변경에 영향받지 않으며(dispatch 참조는 안정적), 동시에 '이 컴포넌트가 읽기/쓰기/둘 다인지'가 호출부에서 드러난다.", "distractor_rationales": {"A": "런타임 에러는 발생하지 않는다 — 합쳐도 동작은 한다. 다만 성능과 가독성이 나빠질 뿐.", "C": "createContext는 모듈당 호출 횟수에 제약이 없다.", "D": "TypeScript 추론과는 무관한 결정이다."}, "lo_ids": ["LO-S7.1"], "bloom": "Understand", "difficulty": 2}, {"id": "S7.Q2", "type": "mcq_single", "stem": "다음 중 reducer + context 패턴의 3단계 빌드 순서를 가장 정확하게 기술한 것은?", "choices": ["useReducer로 state를 만든 뒤 → createContext로 감싸고 → 자식에서 props로 내려받는다", "createContext × 2 → Provider 컴포넌트 안에서 useReducer 호출 → 두 context value 흘려보냄 → 자식에서 useContext × 2로 필요한 쪽만 구독", "useState × 2 → useContext × 2 → 마지막에 reducer로 합친다", "createContext × 1 → useReducer로 { state, dispatch } 객체를 만들어 한 번에 흘려보냄 → useContext × 1로 둘 다 꺼내 쓴다"], "correct": ["B"], "explanation": "정석 빌드는 ① createContext 두 개(state용, dispatch용) ② Provider 안에서 useReducer 호출해 두 value를 각 Provider에 흘리고 ③ 자식이 useContext로 자신이 필요한 것만 구독하는 순서다.", "distractor_rationales": {"A": "context 결합의 동기 자체가 prop drilling 제거였는데 다시 props로 내려보내면 모순이다.", "C": "useState 두 개로는 reducer의 단일 진입점(action) 이점을 잃는다.", "D": "단일 context로 합치는 패턴은 재렌더 분리 이점이 사라진다 — 강의가 명시적으로 회피하는 안티패턴."}, "lo_ids": ["LO-S7.1", "LO-S7.2"], "bloom": "Apply", "difficulty": 2}, {"id": "S7.Q3", "type": "mcq_multi", "stem": "TasksContext.js 한 파일에 context 두 개·reducer·initialTasks·TasksProvider·useTasks·useTasksDispatch를 모두 모으는 'Provider 단일 파일 응집' 패턴의 이점으로 옳은 것을 모두 고르시오. (정답 3개)", "choices": ["App 트리에서 createContext/useReducer 등 wiring이 사라져 UI 조립에만 집중할 수 있다", "context 객체를 module-private으로 두고 useTasks/useTasksDispatch만 export 하면 추상화 경계를 강제할 수 있다", "추후 셀렉터·로깅·메모이제이션을 커스텀 훅 안에서 추가해도 소비자 호출부는 그대로다", "React가 단일 파일 모듈을 자동으로 메모이즈하여 재렌더가 줄어든다", "useReducer가 자동으로 비동기 thunk를 지원하게 된다"], "correct": ["A", "B", "C"], "explanation": "단일 파일 응집의 이점은 (1) App.js의 어수선함 제거 (2) context를 비공개로 묶어 추상화 경계 강제 (3) 미래의 변경(셀렉터/로깅/메모) 흡수 — 소비자 코드 불변. 성능·비동기 처리는 이 패턴 자체가 부여하는 이점이 아니다.", "distractor_rationales": {"D": "React에 '단일 파일 자동 메모이즈' 같은 기능은 없다 — 흔한 오개념.", "E": "thunk 같은 미들웨어는 reducer+context의 기본 능력이 아니며, 이런 필요가 생길 때 Redux/Zustand 도입을 검토한다."}, "lo_ids": ["LO-S7.2"], "bloom": "Analyze", "difficulty": 3}, {"id": "S7.Q4", "type": "mcq_single", "stem": "context를 module-private으로 둔 채 useTasks/useTasksDispatch 커스텀 훅으로 한 겹 감싸 export 하는 가장 본질적인 이유는?", "choices": ["커스텀 훅이 없으면 React가 useContext 호출을 거부하기 때문", "use 접두사가 있어야 React DevTools에 컴포넌트가 표시되기 때문", "context 객체 자체를 외부에 노출하지 않아야 내부 구현(셀렉터·메모·로깅 추가, context 분할/병합)을 바꿔도 호출부를 손대지 않기 때문", "커스텀 훅으로 감싸야 dispatch 참조가 안정화되기 때문"], "correct": ["C"], "explanation": "핵심은 캡슐화다. context를 외부로 export 하면 소비자가 useContext(TasksContext)를 직접 부를 수 있고, 그 순간 추상화 경계가 깨져 내부 구현 변경 비용이 폭증한다. use… 훅 한 겹이 미래의 변경 비용(셀렉터·로깅·메모·분리/통합)을 흡수한다.", "distractor_rationales": {"A": "useContext 직접 호출은 완전히 합법이다.", "B": "DevTools 표시 여부와는 무관하다.", "D": "dispatch 안정성은 useReducer가 보장하는 것이지 커스텀 훅 래핑 효과가 아니다."}, "lo_ids": ["LO-S7.2"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S7.Q5", "type": "mcq_single", "stem": "현재 앱이 Tasks 도메인 하나만 reducer+context로 관리 중이다. 사용자 인증과 다크모드 테마를 추가하려고 한다. 다중 도메인 확장 전략으로 가장 적절한 것은?", "choices": ["기존 TasksProvider 안에 auth와 theme state를 추가해 단일 reducer로 모든 도메인을 처리한다", "AuthProvider, ThemeProvider를 같은 (reducer + 두 context + 커스텀 훅) 패턴으로 각각 독립시키고, 의존성 방향에 따라 바깥부터 중첩(Theme → Auth → Tasks)한다", "Tasks/Auth/Theme을 모두 props로 내려보내 단일 진실의 원천을 root에 둔다", "도메인이 셋이 되었으니 즉시 Redux로 마이그레이션한다"], "correct": ["B"], "explanation": "도메인 경계 기준은 '함께 변하는가? 같은 사용자 액션에 반응하는가? 분리되어도 의미 있는가?'다. Tasks/Auth/Theme은 서로 독립적으로 변하므로 같은 패턴을 복제해 분리하고, 의존성 방향(Theme이 가장 외곽, Tasks가 가장 안쪽)에 맞춰 중첩한다.", "distractor_rationales": {"A": "독립 변화 도메인을 한 reducer에 묶으면 action 종류가 폭증하고 도메인 간 결합이 생긴다.", "C": "prop drilling 지옥으로 회귀 — 이번 섹션이 풀려고 한 문제 그 자체.", "D": "도메인 수만으로는 라이브러리 도입 근거가 부족하다 — 통증(미들웨어·devtools·스케일)이 명확할 때 도입한다."}, "lo_ids": ["LO-S7.3"], "bloom": "Create", "difficulty": 3}, {"id": "S7.Q6", "type": "mcq_multi", "stem": "reducer+context 패턴에서 졸업해 Zustand 또는 Redux Toolkit 같은 외부 라이브러리 도입을 진지하게 검토할 만한 신호를 모두 고르시오. (정답 3개)", "choices": ["thunk/saga 같은 비동기 미들웨어가 여러 도메인에서 반복적으로 필요해진다", "time-travel 디버깅, 액션 로깅 같은 전역 devtools가 팀 디버깅에 필수가 된다", "도메인이 늘고 셀렉터 메모이제이션·렌더 최적화 요구가 누적된다", "TasksProvider를 App.js에서 import 한 줄이 길어졌다", "TypeScript에서 useContext 반환 타입을 좁히기 귀찮다"], "correct": ["A", "B", "C"], "explanation": "도입 판단의 진짜 기준은 스케일·디버깅·미들웨어 통증의 누적이다. 비동기 미들웨어 필요(A), devtools 필요(B), 셀렉터·렌더 최적화 누적(C)이 겹치기 시작하면 라이브러리가 정직한 선택이 된다. import 길이나 타입 정리 귀찮음은 패턴 자체로 충분히 해결할 수 있는 수준의 통증이 아니다.", "distractor_rationales": {"D": "import 한 줄은 도입 신호가 아니다 — '통증 없이 라이브러리부터'는 강의가 경고하는 과잉 설계.", "E": "타입 좁히기는 커스텀 훅 한 곳에서 해결할 수 있다."}, "lo_ids": ["LO-S7.4"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S7.Q7", "type": "short_answer", "stem": "한 시니어 동료가 '아직 도메인이 둘뿐인데 그냥 처음부터 Redux 깔자'고 제안한다. 당신은 reducer+context 패턴으로 충분하다고 판단했다. 자신의 결정을 정당화하는 근거 3가지와, 향후 어떤 신호가 보이면 마음을 바꿀지 1가지를 2~4문장으로 작성하시오.", "correct": [], "explanation": "모범 답안: 현재 도메인이 적고(2개), 비동기 미들웨어 요구가 없으며, devtools/time-travel이 팀 디버깅에 필수가 아니다. reducer+context는 의존성 0, 학습 곡선 0이라 작은 앱에서 정직한 선택이다. 향후 (a) 여러 도메인이 동일한 비동기 흐름(thunk/saga)을 반복 요구하거나 (b) 액션 로깅·time-travel이 팀 디버깅에 필수가 되거나 (c) 셀렉터 메모이제이션 요구가 쌓이면 Zustand/RTK 검토를 시작한다.", "distractor_rationales": {}, "lo_ids": ["LO-S7.4"], "bloom": "Evaluate", "difficulty": 3, "rubric": ["(1점) 현재 통증이 부족하다는 점을 구체 기준(도메인 수, 미들웨어 부재, devtools 미요구) 중 최소 2개로 짚었다", "(1점) reducer+context의 비용 측면(추가 의존성/학습 곡선 0)을 언급했다", "(1점) 마음을 바꿀 신호로 비동기 미들웨어·devtools·셀렉터/스케일 중 최소 1개를 구체적으로 제시했다", "(감점) '그냥 작아서'처럼 일반론만 진술하고 도입 신호를 제시하지 못하면 -1"]}];
+const NEXT_HREF = "../08-capstone-antipatterns/classes/01-antipattern-clinic/player.html";
+const NEXT_TITLE = "안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

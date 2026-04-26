@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>React 상태 관리 심화 — Managing State (react.dev/learn/managing-state 기반)</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+max-width:760px;margin:0 auto;padding:24px 20px;background:#0f1115;color:#e8eaed;line-height:1.6}
+a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:28px;margin:0 0 8px 0}h2{font-size:18px;margin:32px 0 8px 0;
+padding-bottom:6px;border-bottom:1px solid #2a3345}
+ul{list-style:none;padding:0;margin:0}li{padding:10px 0;border-bottom:1px solid #1a1f29}
+.los{color:#8b95a7;font-size:13px;margin-left:8px}
+.quiz-link{color:#3a8a4f;font-weight:500}
+.meta{color:#8b95a7;margin-bottom:24px}</style>
+</head><body>
+<h1>React 상태 관리 심화 — Managing State (react.dev/learn/managing-state 기반)</h1>
+<p class="meta">TypeScript / JavaScript / React UI 컴포넌트 개발은 능숙한 중급 개발자. 함수형 컴포넌트, useState 기본 사용, 이벤트 핸들링, props 흐름은 이미 안다. 다만 state 설계·구조화·공유·보존·리듀서·컨텍스트 영역에서 깊이가 부족하다. · ko · 총 26개 class · 35개 학습 목표 · 196.0분</p>
+<h2>오리엔테이션 — 왜 state 설계가 따로 필요한가</h2><ul>
+<li><a href="sections/00-orientation/classes/01-why-state-design-matters/player.html">🎬 왜 state 설계가 따로 필요한가 — 4가지 통증 진단</a><span class="los">7장 · 7.6분 · LO LO-S0.1, LO-S0.3</span></li>
+<li><a href="sections/00-orientation/classes/02-course-map-and-self-diagnosis/player.html">🎬 코스 맵 — 7개 챕터가 어떤 통증을 푸는가</a><span class="los">7장 · 6.6분 · LO LO-S0.1, LO-S0.2</span></li>
+<li><a href="sections/00-orientation/quiz.html" class="quiz-link">📝 섹션 퀴즈 (6문항)</a></li>
+</ul>
+<h2>사고방식 전환 — 선언형 UI와 visual states로 반응하기</h2><ul>
+<li><a href="sections/01-declarative-thinking/classes/01-visual-states-and-triggers/player.html">🎬 visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기</a><span class="los">8장 · 4.9분 · LO LO-S1.1</span></li>
+<li><a href="sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/player.html">🎬 useState로 모델링하고 비핵심 state 제거하기 — boolean paradox에서 status enum으로</a><span class="los">9장 · 5.1분 · LO LO-S1.2, LO-S1.4</span></li>
+<li><a href="sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/player.html">🎬 핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기</a><span class="los">9장 · 5.2분 · LO LO-S1.3</span></li>
+<li><a href="sections/01-declarative-thinking/quiz.html" class="quiz-link">📝 섹션 퀴즈 (9문항)</a></li>
+</ul>
+<h2>state 구조 설계 — 5가지 원칙으로 동기화 버그 차단</h2><ul>
+<li><a href="sections/02-state-structure/classes/01-five-principles-and-grouping/player.html">🎬 5원칙 한눈에 + 관련 state 묶기·모순 회피</a><span class="los">8장 · 6.4분 · LO LO-S2.1, LO-S2.2</span></li>
+<li><a href="sections/02-state-structure/classes/02-redundant-state-and-props-mirroring/player.html">🎬 redundant state 제거와 props mirroring 안티패턴</a><span class="los">8장 · 6.5분 · LO LO-S2.4</span></li>
+<li><a href="sections/02-state-structure/classes/03-store-id-not-object/player.html">🎬 duplication 회피 — 객체 대신 id를 저장하라</a><span class="los">8장 · 6.4분 · LO LO-S2.3</span></li>
+<li><a href="sections/02-state-structure/classes/04-flatten-deep-nesting/player.html">🎬 deep nesting 평탄화 — 트리 데이터를 정규화하기</a><span class="los">8장 · 6.4분 · LO LO-S2.5</span></li>
+<li><a href="sections/02-state-structure/quiz.html" class="quiz-link">📝 섹션 퀴즈 (8문항)</a></li>
+</ul>
+<h2>컴포넌트 간 state 공유 — Lifting State Up</h2><ul>
+<li><a href="sections/03-sharing-state/classes/01-lifting-state-up-3-steps/player.html">🎬 Lifting State Up — 형제 컴포넌트를 협조시키는 3단계</a><span class="los">8장 · 7.1분 · LO LO-S3.1</span></li>
+<li><a href="sections/03-sharing-state/classes/02-controlled-vs-uncontrolled-sst/player.html">🎬 Controlled vs Uncontrolled와 Single Source of Truth</a><span class="los">8장 · 6.9분 · LO LO-S3.2, LO-S3.3</span></li>
+<li><a href="sections/03-sharing-state/classes/03-accordion-and-list-patterns/player.html">🎬 케이스 스터디 — Accordion·Synced Inputs·Filterable List</a><span class="los">8장 · 6.5분 · LO LO-S3.4</span></li>
+<li><a href="sections/03-sharing-state/quiz.html" class="quiz-link">📝 섹션 퀴즈 (7문항)</a></li>
+</ul>
+<h2>state 보존과 리셋 — 트리 위치와 key prop</h2><ul>
+<li><a href="sections/04-preserving-resetting-state/classes/01-state-tied-to-tree-position/player.html">🎬 state는 트리 위치에 묶인다 — 보존과 리셋의 기본 규칙</a><span class="los">8장 · 9.0분 · LO LO-S4.1, LO-S4.2</span></li>
+<li><a href="sections/04-preserving-resetting-state/classes/02-reset-strategies-key-prop/player.html">🎬 의도된 리셋 — 다른 위치 vs key prop 두 전략</a><span class="los">8장 · 9.9분 · LO LO-S4.3</span></li>
+<li><a href="sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/player.html">🎬 함정 — JSX 위치 ≠ 트리 위치 &amp; 컴포넌트 정의 중첩 금지</a><span class="los">8장 · 10.3분 · LO LO-S4.4, LO-S4.2</span></li>
+<li><a href="sections/04-preserving-resetting-state/quiz.html" class="quiz-link">📝 섹션 퀴즈 (7문항)</a></li>
+</ul>
+<h2>Reducer로 state 로직 추출하기</h2><ul>
+<li><a href="sections/05-reducer/classes/01-why-reducer-and-signature/player.html">🎬 왜 Reducer인가 — useReducer 시그니처와 도입 동기</a><span class="los">7장 · 7.1분 · LO LO-S5.1</span></li>
+<li><a href="sections/05-reducer/classes/02-three-step-migration/player.html">🎬 3단계 마이그레이션 — useState에서 useReducer로</a><span class="los">8장 · 10.4분 · LO LO-S5.2</span></li>
+<li><a href="sections/05-reducer/classes/03-action-conventions-and-purity/player.html">🎬 Action 컨벤션과 Reducer 순수성 — 결함 진단</a><span class="los">9장 · 9.2분 · LO LO-S5.3</span></li>
+<li><a href="sections/05-reducer/classes/04-tradeoffs-and-immer/player.html">🎬 useState vs useReducer 트레이드오프와 Immer 옵션</a><span class="los">8장 · 6.3분 · LO LO-S5.4, LO-S5.5</span></li>
+<li><a href="sections/05-reducer/quiz.html" class="quiz-link">📝 섹션 퀴즈 (8문항)</a></li>
+</ul>
+<h2>Context로 깊이 데이터 전달하기</h2><ul>
+<li><a href="sections/06-context/classes/01-prop-drilling-and-3-step-pattern/player.html">🎬 prop drilling 문제와 createContext / Provider / useContext 3단계</a><span class="los">8장 · 9.9분 · LO LO-S6.1, LO-S6.2</span></li>
+<li><a href="sections/06-context/classes/02-consume-and-provide-pattern/player.html">🎬 같은 컴포넌트가 consume + provide — 자동 level 증가 패턴</a><span class="los">8장 · 9.0분 · LO LO-S6.3</span></li>
+<li><a href="sections/06-context/classes/03-context-vs-alternatives/player.html">🎬 context를 쓸 때와 쓰지 말 때 — props·composition과 비교</a><span class="los">8장 · 8.9분 · LO LO-S6.4</span></li>
+<li><a href="sections/06-context/quiz.html" class="quiz-link">📝 섹션 퀴즈 (8문항)</a></li>
+</ul>
+<h2>Reducer + Context로 확장하기</h2><ul>
+<li><a href="sections/07-reducer-context/classes/01-reducer-context-combine/player.html">🎬 Reducer와 Context를 결합하기 — 두 context 분리 전략</a><span class="los">8장 · 7.8분 · LO LO-S7.1</span></li>
+<li><a href="sections/07-reducer-context/classes/02-provider-custom-hooks-scaling/player.html">🎬 TasksProvider + 커스텀 훅으로 응집하고 다중 도메인으로 확장하기</a><span class="los">8장 · 8.1분 · LO LO-S7.2, LO-S7.3, LO-S7.4</span></li>
+<li><a href="sections/07-reducer-context/quiz.html" class="quiz-link">📝 섹션 퀴즈 (7문항)</a></li>
+</ul>
+<h2>종합 — 안티패턴 진단과 통합 케이스 스터디</h2><ul>
+<li><a href="sections/08-capstone-antipatterns/classes/01-antipattern-clinic/player.html">🎬 안티패턴 진단 클리닉 — 5대 코드 스멜 한 번에 잡기</a><span class="los">7장 · 9.4분 · LO LO-S8.1</span></li>
+<li><a href="sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/player.html">🎬 통합 케이스 스터디 — mini Kanban 앱 의사결정 사슬</a><span class="los">8장 · 11.6분 · LO LO-S8.2</span></li>
+<li><a href="sections/08-capstone-antipatterns/quiz.html" class="quiz-link">📝 섹션 퀴즈 (7문항)</a></li>
+</ul>
+</body></html>

@@ -1,0 +1,119 @@
+{
+  "class_id": "S3.C3",
+  "title": "케이스 스터디 — Accordion·Synced Inputs·Filterable List",
+  "lo_ids": ["LO-S3.4"],
+  "target_duration_sec": 660,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "지금까지 배운 3단계 절차 + Single Source of Truth 원칙을 실전 패턴 3개에 적용해본다",
+        "이 세 패턴은 면접·실무에서 반복적으로 등장하는 표준 템플릿",
+        "공통 구조 — 부모가 state 보유, 자식들에 값 + 핸들러 props 전달",
+        "오늘 끝나면 'lifting state up이 어떤 모양으로 코드에 나타나는가'가 손에 익는다"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "visual_hint": "3개 패턴 카드 미리보기 — Accordion / Synced Inputs / Filterable List 아이콘 + 짧은 설명",
+      "speaker_affect": "기대감, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "케이스 1 — Almaty Accordion: '한 번에 하나만 열림' 제약을 강제",
+        "Before: 각 Panel이 isActive useState 보유 → 두 패널이 동시에 열릴 수 있음",
+        "After: 부모 Accordion이 useState(0)으로 activeIndex 단일 보유, isActive={activeIndex === i}로 derive",
+        "핵심 인사이트 — '한 번에 하나' 제약은 'state 변수를 하나만 갖는다'로 표현된다 (모순/redundant 회피)",
+        "onShow={() => setActiveIndex(i)} — 자식이 어떤 패널인지 부모에 알림"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "examples": [
+        "function Accordion() { const [activeIndex, setActiveIndex] = useState(0); return (<><Panel isActive={activeIndex===0} onShow={() => setActiveIndex(0)}>...</Panel><Panel isActive={activeIndex===1} onShow={() => setActiveIndex(1)}>...</Panel></>); }",
+        "function Panel({ title, children, isActive, onShow }) { return <section><h3>{title}</h3>{isActive ? <p>{children}</p> : <button onClick={onShow}>Show</button>}</section>; }"
+      ],
+      "visual_hint": "Almaty 패널 UI 모형 + 코드 — activeIndex가 0/1로 바뀔 때 어느 Panel이 펼쳐지는지 화살표로",
+      "speaker_affect": "구체적, 자신감"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "케이스 2 — Synced Inputs: 두 Input이 항상 같은 값을 표시",
+        "부모에 text state 하나만 — const [text, setText] = useState('')",
+        "두 Input 모두 value={text}, onChange={e => setText(e.target.value)} 동일하게 props 받음",
+        "이건 SST의 가장 단순한 시각화 — '같은 값을 두 번 저장하지 마라'",
+        "만약 각 Input이 자체 state를 가졌다면 첫 입력에는 한쪽만 바뀌고 동기화 깨짐 (S2의 duplication 안티패턴 회수)"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "examples": [
+        "const [text, setText] = useState(''); <Input value={text} onChange={e => setText(e.target.value)} /> <Input value={text} onChange={e => setText(e.target.value)} />"
+      ],
+      "visual_hint": "두 Input UI 박스 + 둘을 가리키는 단일 text state 노드(별표)",
+      "speaker_affect": "간결하게, 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "케이스 3 — Filterable List: SearchBar 입력에 따라 List 필터링",
+        "공통 부모(FilterableList)가 query state 보유 — SearchBar(쓰기)·List(읽기) 둘 다 접근 필요",
+        "results는 state가 아니라 query에서 derive — const results = filterItems(foods, query)",
+        "List에는 results를 props로, SearchBar에는 query + onChange를 props로",
+        "이중 lifting의 의미 — 'state를 lift 했더니 derived value도 자연스럽게 부모에서 계산된다'"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "examples": [
+        "function FilterableList() { const [query, setQuery] = useState(''); const results = filterItems(foods, query); return (<><SearchBar query={query} onChange={e => setQuery(e.target.value)} /><List items={results} /></>); }"
+      ],
+      "visual_hint": "트리 — FilterableList 노드에 query 별표, 화살표로 SearchBar(query, onChange)·List(items=results) 전달. derived results를 점선 박스로",
+      "speaker_affect": "구조적, 차분하게"
+    },
+    {
+      "id": "b5",
+      "type": "teach",
+      "duration_sec": 50,
+      "key_points": [
+        "세 패턴의 공통 모양 회수 — 부모 state 1개 + 자식들에 (값, 핸들러) 쌍 props",
+        "이 모양을 머릿속에 새기면 새로운 컴포넌트 설계도 같은 틀로 빠르게 시작 가능",
+        "C1의 3단계 + C2의 SST 원칙이 그대로 적용됨",
+        "다음 섹션(S4)에서는 'state가 의도치 않게 리셋되거나 보존되는' 문제를 다룬다"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "visual_hint": "3 패턴을 한 장에 압축 — 모두 '부모 state + props (value, onChange)' 동일 구조 강조",
+      "speaker_affect": "정리하는, 통찰"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 50,
+      "key_points": [
+        "미니 시나리오 — 탭 UI 3개를 만들어야 한다. 한 번에 하나만 활성. Accordion과 같은 패턴인가?",
+        "자문자답 1: state 모양은? (activeTab: 'home' | 'about' | 'contact')",
+        "자문자답 2: 부모 Tabs는 무엇을 props로 내려보내는가? (각 Tab에 isActive, onSelect)",
+        "자문자답 3: '두 개 동시 활성' 버그는 왜 원천적으로 불가능한가? (state 변수가 하나뿐)"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "visual_hint": "탭 UI 3개 와이어프레임 + 빈칸 3개",
+      "speaker_affect": "응용 유도, 격려"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 35,
+      "key_points": [
+        "Accordion = 단일 activeIndex로 '한 번에 하나' 강제",
+        "Synced Inputs = 단일 text state로 동기화 보장",
+        "Filterable List = 단일 query + derived results",
+        "공통 모양: 부모 state 1개 → 자식들에 (값, 핸들러) props"
+      ],
+      "lo_ids": ["LO-S3.4"],
+      "visual_hint": "섹션 마무리 카드 — 3 패턴 + 공통 모양 한 줄",
+      "speaker_affect": "마무리, 자신감"
+    }
+  ]
+}

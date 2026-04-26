@@ -1,0 +1,23 @@
+{
+  "section_id": "S7",
+  "classes": [
+    {
+      "id": "S7.C1",
+      "slug": "01-reducer-context-combine",
+      "title": "Reducer와 Context를 결합하기 — 두 context 분리 전략",
+      "lo_ids": ["LO-S7.1"],
+      "duration_min": 15,
+      "depends_on": [],
+      "summary": "useReducer 단독 사용 시 생기는 prop drilling 문제를 짚고, state context와 dispatch context를 둘로 나누는 이유(불필요한 재렌더 방지·관심사 분리)를 설명한다. 그 뒤 createContext 두 개 → Provider 안에서 useReducer → 자식에서 useContext로 read/dispatch 하는 3단계 빌드 패턴을 Tasks 예시로 따라간다."
+    },
+    {
+      "id": "S7.C2",
+      "slug": "02-provider-custom-hooks-scaling",
+      "title": "TasksProvider + 커스텀 훅으로 응집하고 다중 도메인으로 확장하기",
+      "lo_ids": ["LO-S7.2", "LO-S7.3", "LO-S7.4"],
+      "duration_min": 15,
+      "depends_on": ["S7.C1"],
+      "summary": "context·reducer·초기값을 한 파일로 모은 TasksProvider 패턴과 useTasks/useTasksDispatch 커스텀 훅으로 소비자 API를 깔끔하게 만든다. 이어 Tasks/Auth/Theme 같은 다중 도메인 확장 전략과, reducer+context로 충분한 시점 vs Redux/Zustand 같은 외부 라이브러리를 도입할 시점(스케일·디버깅·미들웨어)을 비교 평가한다."
+    }
+  ]
+}

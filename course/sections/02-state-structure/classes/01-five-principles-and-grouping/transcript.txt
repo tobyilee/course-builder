@@ -1,0 +1,186 @@
+[slide 1]
+안녕하세요.
+[pause:400]
+이번 Section의 첫 class를 시작합니다.
+[pause:400]
+오늘 우리는 state 구조 설계 5원칙을 한눈에 정리하고, 그중 첫 두 원칙을 깊이 들여다볼 거예요.
+[pause:500]
+주제는 두 가지.
+[pause:300]
+관련 state 묶기, 그리고 모순 회피입니다.
+[pause:500]
+이 두 원칙만 제대로 익혀도, 흔한 동기화 버그의 절반 이상을 미리 차단할 수 있어요.
+[pause:600]
+
+[slide 2]
+혹시 이런 경험 있으세요.
+[pause:300]
+useState를 따로따로 두 개 선언했는데, 한쪽만 갱신돼서 화면이 어긋나는 순간이요.
+[pause:500]
+또는 isSending이 true인 동시에 isSent도 true가 되는, 말이 안 되는 상태가 실제로 만들어지는 경우 말이죠.
+[pause:500]
+이런 버그는 console.log를 백 번 찍어도 원인을 못 찾는 경우가 많아요.
+[pause:500]
+왜냐하면 코드 한 줄에 문제가 있는 게 아니거든요.
+[pause:600]
+사실 React 버그의 80%는 로직이 아니라 state 구조에서 비롯됩니다.
+[pause:500]
+state를 어떻게 쪼개고, 어떻게 묶을지에 대한 의사결정이 잘못되면, 그 위에 아무리 깔끔한 로직을 쌓아도 결국 무너져요.
+[pause:500]
+오늘은 그 구조 자체를 다듬는 5원칙을 펼쳐 보겠습니다.
+[pause:700]
+
+[slide 3]
+5원칙을 한 줄씩 요약할게요.
+[pause:400]
+첫째, 관련 state는 묶기.
+[pause:300]
+항상 함께 갱신되는 변수들은 객체로 묶으라는 얘기예요.
+[pause:500]
+둘째, 모순 회피.
+[pause:300]
+impossible state, 즉 만들어져선 안 되는 상태가 표현될 수 없게 설계합니다.
+[pause:500]
+셋째, redundant state 제거.
+[pause:300]
+계산 가능한 값은 state로 두지 말고 derive 하라는 거고요.
+[pause:500]
+넷째, duplication 회피.
+[pause:300]
+같은 데이터를 두 곳에 보관하지 마세요.
+[pause:500]
+다섯째, deep nesting 평탄화.
+[pause:300]
+트리 같은 데이터는 정규화해서 평평하게 만듭니다.
+[pause:600]
+다섯 가지 다 다른 얘기 같지만, 사실 한 질문의 다른 얼굴이에요.
+[pause:400]
+"동기화 버그를 어떻게 차단할까?"
+[pause:600]
+오늘 슬로건 하나 기억하세요.
+[pause:400]
+"Make your state as simple as it can be — but no simpler."
+[pause:500]
+가능한 한 단순하게, 그러나 그 이상으로 단순하지는 말 것.
+[pause:500]
+오늘 class에서는 1번과 2번만 깊이 다루고, 나머지 3·4·5번은 이어지는 class들에서 차례로 풀어갑니다.
+[pause:700]
+
+[slide 4]
+첫 번째 원칙, 관련 state는 묶으세요.
+[pause:500]
+MovingDot이라는 예제를 떠올려 보면, 점의 좌표 x와 y가 항상 같이 갱신되죠.
+[pause:500]
+마우스가 움직일 때 x만 따로, y만 따로 바뀌는 경우는 없잖아요.
+[pause:500]
+이런 경우엔 두 개의 useState 대신, position이라는 객체 하나로 묶는 게 자연스럽습니다.
+[pause:600]
+판단 기준은 딱 한 문장으로 정리됩니다.
+[pause:400]
+"한 변수만 바뀌는 경우가 실제로 존재하는가?"
+[pause:500]
+없으면 묶으세요.
+[pause:400]
+이 질문 하나만 머릿속에 두셔도, useState 분리 여부 결정의 80%는 끝납니다.
+[pause:500]
+물론 비용도 있어요.
+[pause:300]
+객체로 묶으면 갱신할 때마다 setPosition에 기존 객체를 스프레드로 펼친 뒤, 바꿀 필드만 덮어써야 합니다.
+[pause:500]
+그리고 폼 필드 N개처럼 키가 동적으로 늘어나거나 줄어드는 컬렉션이라면, 객체보다 Map이나 배열이 더 적합할 수 있어요.
+[pause:400]
+이때는 묶음 자체보다, 자료구조 선택이 더 중요합니다.
+[pause:700]
+
+[slide 5]
+두 번째 원칙은 모순 회피입니다.
+[pause:500]
+두 boolean이 동시에 true가 될 수 있다면, 그건 모순, 영어로 contradiction이에요.
+[pause:600]
+대표 사례가 FeedbackForm입니다.
+[pause:400]
+isSending과 isSent라는 두 boolean을 두면, 조합이 네 가지 생기죠.
+[pause:400]
+둘 다 false, 첫째만 true, 둘째만 true, 그리고 둘 다 true.
+[pause:500]
+이 마지막 조합이 절대 일어나선 안 되는 impossible state입니다.
+[pause:600]
+해법은 단일 enum으로 합치는 겁니다.
+[pause:400]
+status라는 변수 하나에 'typing', 'sending', 'sent' 세 값을 두면 끝.
+[pause:500]
+필요한 boolean은 enum에서 derive 합니다.
+[pause:400]
+isSending은 status가 'sending'과 같은지로 계산하면 되고요.
+[pause:400]
+isSent도 마찬가지로 비교 한 번이면 충분합니다.
+[pause:600]
+첫 번째 원칙과도 연결되죠.
+[pause:300]
+두 변수가 항상 함께 변한다는 건, 사실은 한 변수의 다른 표현이었다는 뜻입니다.
+[pause:500]
+두 boolean을 enum 하나로 합치는 것도 결국 '묶기'의 다른 형태예요.
+[pause:700]
+
+[slide 6]
+이제 FeedbackForm을 직접 리팩터해 봅시다.
+[pause:500]
+before 코드는 isSending과 isSent라는 두 useState를 가집니다.
+[pause:500]
+submit 핸들러에서는 setIsSending을 true로 켜고, 메시지를 비동기로 보낸 뒤, setIsSent를 true로, 그리고 setIsSending을 false로 돌리는 호출 순서에 의존하죠.
+[pause:600]
+이 순서 한 줄만 어긋나면 바로 모순 상태가 만들어집니다.
+[pause:400]
+예를 들어 setIsSending을 false로 내리는 호출이 빠지면, 둘 다 true인 impossible state가 화면에 그대로 노출돼요.
+[pause:500]
+after는 단순합니다.
+[pause:300]
+status 하나만 두고, 'typing'에서 'sending'으로, 'sending'에서 'sent'로 단순 전이만 시키면 끝.
+[pause:500]
+상태 머신처럼 흐름이 한눈에 보이죠.
+[pause:500]
+JSX에서는 isSending과 isSent를 derive 변수로 그대로 사용하니까, 마크업 변경은 거의 없어요.
+[pause:500]
+button의 disabled 속성도, 'Thanks' 메시지 분기도, 그대로 가져다 쓰면 됩니다.
+[pause:600]
+결과적으로, 'sending이면서 동시에 sent'라는 조합은 타입 시스템상 만들어질 수가 없습니다.
+[pause:400]
+런타임 검사가 아니라, 컴파일 타임에 차단되는 거죠.
+[pause:700]
+
+[slide 7]
+잠깐 자가 진단해 보겠습니다.
+[pause:500]
+첫 질문.
+[pause:300]
+position을 객체로 묶는 대신, x와 y를 두 개의 useState로 둬도 무방한 시나리오는 뭘까요?
+[pause:800]
+정답은, x만 바뀌는 경우가 따로 존재할 때입니다.
+[pause:400]
+예를 들어 가로 스크롤처럼 y는 고정이고 x만 움직이는 경우라면, 분리해 두는 게 오히려 더 정확합니다.
+[pause:600]
+두 번째 질문.
+[pause:300]
+폼에 isLoading, isError, isSuccess 세 boolean이 있다면, status enum의 후보 값은 몇 개일까요?
+[pause:800]
+정답은 네 개.
+[pause:300]
+'idle', 'loading', 'error', 'success'입니다.
+[pause:400]
+boolean 세 개의 조합은 8가지지만, 합법적인 조합은 4개뿐이거든요.
+[pause:700]
+
+[slide 8]
+오늘의 핵심을 정리할게요.
+[pause:500]
+5원칙은 결국 "동기화 버그를 어떻게 차단할까"라는 한 가지 질문이에요.
+[pause:500]
+다섯 갈래 길이 같은 산을 오르는 다섯 등산로라고 보시면 됩니다.
+[pause:500]
+함께 변하는 변수는 묶고, 모순 가능한 boolean 쌍은 enum으로 단일화하세요.
+[pause:500]
+이 두 가지만 머릿속에 박아두셔도, 코드 리뷰에서 어떤 PR을 멈춰야 할지 감이 옵니다.
+[pause:600]
+다음 class에서는 redundant state 제거와, props mirroring이라는 흔한 안티패턴을 다룹니다.
+[pause:400]
+거기서 만나요.

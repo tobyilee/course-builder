@@ -1,0 +1,194 @@
+[slide 1]
+이번 시간엔 네 번째 원칙, duplication 회피를 다룹니다.
+[pause:500]
+한 문장으로 미리 말씀드리면 이거예요.
+[pause:400]
+"객체 자체 대신 id를 저장하라."
+[pause:600]
+듣기엔 단순한 규칙 같지만, 이 작은 결정 하나가 전체 컴포넌트의 동기화 안정성을 좌우합니다.
+[pause:500]
+왜 그래야 하는지, 어떤 트레이드오프가 있는지 차근차근 보겠습니다.
+[pause:700]
+
+[slide 2]
+미스터리 하나 보여드릴게요.
+[pause:400]
+travel-snack이라는 장바구니 UI에서 'Pretzels'의 가격을 2달러에서 5달러로 수정합니다.
+[pause:600]
+리스트의 가격은 잘 갱신됐는데, 하단의 'Selected' 패널만 옛 값인 2달러 그대로 멈춰 있어요.
+[pause:500]
+화면의 두 영역이 같은 데이터를 다르게 보여주는, 가장 짜증나는 종류의 버그죠.
+[pause:600]
+범인은 누굴까요?
+[pause:400]
+state에 객체 자체, 즉 selectedItem 객체를 박아두고, list 갱신과 분리시킨 구조 때문입니다.
+[pause:500]
+items가 갱신될 때 selectedItem까지 같이 갱신해주는 코드를 깜빡 누락한 거예요.
+[pause:500]
+하지만 이건 개발자의 부주의가 아니라, 구조 자체가 그런 누락을 유도한 결과입니다.
+[pause:600]
+오늘의 질문은 이거예요.
+[pause:400]
+같은 데이터를 두 군데 보관하는 순간, 무엇이 깨지는가?
+[pause:700]
+
+[slide 3]
+네 번째 원칙입니다.
+[pause:400]
+같은 정보를 두 state에 넣지 마세요.
+[pause:500]
+duplication, 즉 중복은 동기화 버그의 정의 그 자체입니다.
+[pause:500]
+"같은 데이터가 두 곳에 있다"는 말은 곧 "둘이 어긋날 가능성이 있다"는 말과 같아요.
+[pause:600]
+흔한 실수가 이런 거예요.
+[pause:400]
+items 배열을 useState로 두고, 그 첫 번째 요소를 selectedItem이라는 또 다른 useState의 초기값으로 넣는 패턴.
+[pause:500]
+items도 state, selectedItem도 state.
+[pause:400]
+진실의 원천이 두 개가 됩니다.
+[pause:500]
+어느 쪽이 진짜 최신인지, 코드를 한참 읽어야 알 수 있어요.
+[pause:600]
+처방은 단순합니다.
+[pause:400]
+selectedItem 객체 대신 selectedId 같은 id 값만 보관하세요.
+[pause:500]
+실제 객체는 매 렌더에서 list로부터 derive 합니다.
+[pause:400]
+items.find로 id가 일치하는 항목을 꺼내면 되죠.
+[pause:500]
+한 줄짜리 const, 그게 끝입니다.
+[pause:600]
+이게 바로 SSOT, single source of truth 원칙의 핵심 실천법입니다.
+[pause:700]
+
+[slide 4]
+트레이드오프를 정직하게 짚을게요.
+[pause:500]
+객체 자체를 보관하는 방식.
+[pause:300]
+장점은 즉시 접근이 가능하고, find 비용이 0이라는 거예요.
+[pause:400]
+selectedItem.price처럼 한 번에 필드를 꺼낼 수 있죠.
+[pause:500]
+단점은 list가 변하면 stale 되고, JSON으로 직렬화할 때 같은 데이터가 중복으로 나간다는 점입니다.
+[pause:400]
+서버에 보낼 때나, localStorage에 저장할 때 용량 낭비가 생길 수 있어요.
+[pause:600]
+id만 보관하는 방식.
+[pause:300]
+장점은 항상 최신이라는 점, 그리고 메모리도 절약된다는 점입니다.
+[pause:400]
+list 한 곳만 진실의 원천이니, 동기화를 신경 쓸 필요 자체가 없어요.
+[pause:500]
+단점은 매 렌더마다 find 비용이 들고, 항목이 삭제됐을 때 selectedId를 따로 정리해줘야 한다는 거예요.
+[pause:400]
+이 정리 작업을 깜빡하면, find 결과가 undefined가 되어 또 다른 버그를 만들 수 있죠.
+[pause:600]
+결정 기준은 명확합니다.
+[pause:400]
+list가 절대 변하지 않으면 객체도 OK.
+[pause:400]
+변할 가능성이 1%라도 있으면 id가 안전합니다.
+[pause:500]
+실무에서는, 정적인 룩업 테이블이 아닌 한 거의 모든 list가 언젠가는 변합니다.
+[pause:400]
+그러니 기본값은 id 보관으로 가져가시는 걸 추천드려요.
+[pause:700]
+
+[slide 5]
+travel-snack의 before 코드를 함께 봅시다.
+[pause:500]
+items와 selectedItem, 두 개의 useState를 두는 구조였죠.
+[pause:600]
+체크박스를 토글하는 핸들러를 보면, items는 map으로 새 배열을 만들어 setItems로 갱신합니다.
+[pause:500]
+그런데 selectedItem은 갱신하지 않아요.
+[pause:400]
+물론 setSelectedItem도 함께 호출하도록 코드를 추가하면 일단 동작합니다.
+[pause:500]
+하지만 가격을 수정하는 또 다른 핸들러, 이름을 수정하는 핸들러, 항목을 추가하는 핸들러까지, 모든 갱신 경로마다 selectedItem 동기화 코드를 추가해야 해요.
+[pause:500]
+하나라도 빠뜨리면 그 순간 stale.
+[pause:500]
+결과는 뻔하죠.
+[pause:300]
+'Selected' 패널이 stale 됩니다.
+[pause:600]
+이게 duplication이 만들어내는 전형적인 동기화 버그입니다.
+[pause:700]
+
+[slide 6]
+이제 after 코드입니다.
+[pause:500]
+selectedItem 대신 selectedId라는 숫자만 useState로 보관합니다.
+[pause:500]
+그리고 렌더 안에서, items.find로 id가 selectedId와 같은 항목을 찾아 selectedItem으로 derive 하죠.
+[pause:600]
+이렇게 바꾸면 items의 어떤 필드를 갱신하든, 패널은 즉시 따라옵니다.
+[pause:500]
+한 가지 엣지 케이스만 챙기면 돼요.
+[pause:400]
+선택된 아이템이 삭제되면, find가 undefined를 반환합니다.
+[pause:500]
+이때는 selectedId를 초기화하거나, 빈 상태 UI를 보여주는 처리를 추가해야 합니다.
+[pause:700]
+
+[slide 7]
+자가 진단 한 번 가보죠.
+[pause:500]
+다음 코드를 보세요.
+[pause:400]
+useState의 초기값으로 users 배열의 첫 요소를 user 객체로 넣었습니다.
+[pause:500]
+그리고 어딘가에서 users 배열의 각 요소 이름을 비동기로 다시 fetch 해서 갱신하죠.
+[pause:600]
+동기화 버그가 터질 트리거는 뭘까요?
+[pause:800]
+정답.
+[pause:300]
+users는 갱신됐지만 user는 옛 객체에 묶여 있다는 점입니다.
+[pause:400]
+이건 사실 두 개의 안티패턴이 겹친 케이스예요.
+[pause:400]
+첫째, props나 state로부터 mirror 한 useState.
+[pause:300]
+둘째, 객체 자체를 저장한 duplication.
+[pause:500]
+처방은 익숙하죠.
+[pause:300]
+id를 저장하고 derive 하세요.
+[pause:600]
+추가 질문.
+[pause:300]
+list가 1만 개라 매 렌더 find가 부담스럽다면 어떻게 할까요?
+[pause:600]
+Map으로 인덱싱하거나 useMemo를 쓸 수 있습니다.
+[pause:400]
+Map은 키 조회가 평균 O(1)이니, list가 정말 클 때 효과적이에요.
+[pause:500]
+다만 무조건 적용하지는 마시고, 측정 후에 최적화하세요.
+[pause:400]
+1만 건 정도는 사실 find로도 충분히 빠른 경우가 많거든요.
+[pause:700]
+
+[slide 8]
+정리합니다.
+[pause:500]
+duplication은 동기화 버그입니다.
+[pause:400]
+같은 데이터는 한 곳에만 두세요.
+[pause:500]
+객체 자체보다 id 저장 더하기 derive가 SSOT의 실천법입니다.
+[pause:500]
+엣지 케이스로, 삭제 시에는 selectedId를 정리하고, 큰 list라면 Map이나 메모이제이션으로 보강하면 됩니다.
+[pause:500]
+조기 최적화는 피하고, 측정한 다음에 손대세요.
+[pause:600]
+다음 class는 마지막 다섯 번째 원칙.
+[pause:400]
+깊게 중첩된 트리를 정규화로 평탄화하는 방법입니다.
+[pause:400]
+거기서 5원칙 전부에 체크가 들어갑니다.

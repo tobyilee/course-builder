@@ -1,0 +1,179 @@
+[slide 1]
+안녕하세요. 오늘은 Lifting State Up, 형제 컴포넌트를 협조시키는 3단계를 다룹니다.
+[pause:400]
+S3의 첫 클래스이고, 우리가 자주 부딪히는 형제 간 협조 문제를 정면으로 풀어볼 거예요.
+[pause:500]
+12분 동안 절차 하나만 손에 익히면, 비슷한 문제는 거의 기계적으로 풀 수 있게 됩니다.
+
+[slide 2]
+먼저 통증부터 짚어볼게요.
+[pause:400]
+오늘 우리의 단골 예시인 Almaty Accordion을 떠올려 봅시다.
+[pause:300]
+About과 Etymology, 이렇게 두 개의 Panel이 나란히 놓여 있는 흔한 UI예요.
+[pause:500]
+두 Panel이 각각 자기 안에 isActive라는 state를 useState로 갖고 있다고 해보죠.
+[pause:500]
+처음에는 별 문제 없어 보입니다.
+[pause:300]
+About을 누르면 About이 열리고, Etymology를 누르면 Etymology가 열리니까요.
+[pause:500]
+그런데 사용자 입장에서 시나리오를 그려보면 금방 이상해져요.
+[pause:300]
+About을 펼친 상태에서 Etymology를 누르면 어떻게 될까요?
+[pause:400]
+두 개가 동시에 열려버립니다.
+[pause:500]
+우리가 원한 건 한 번에 하나만 열리는 라디오 같은 동작이었는데 말이죠.
+[pause:500]
+원인은 분명해요.
+[pause:300]
+두 Panel이 서로의 상태를 모르니까, 자기 클릭에만 반응할 수밖에 없는 겁니다.
+[pause:600]
+React는 단방향 데이터 흐름이라, 형제끼리 직접 대화할 수 있는 통로가 아예 없거든요.
+[pause:500]
+하지만 너무 걱정 마세요.
+[pause:300]
+오늘의 약속은 이거예요. 3단계 절차만 따르면 형제 협조 문제는 기계적으로 풀립니다.
+
+[slide 3]
+그럼 lifting state up이 정확히 뭔지 흐름의 모양부터 그려볼게요.
+[pause:500]
+핵심은 자식이 갖던 state를 공통 부모로 옮기는 겁니다.
+[pause:500]
+그 다음부터는 데이터는 props 형태로 부모에서 자식 쪽으로 내려가고, 이벤트는 핸들러 형태로 자식에서 부모 쪽으로 올라갑니다.
+[pause:500]
+데이터는 아래로, 이벤트는 위로.
+[pause:400]
+이게 양방향처럼 보이는 React만의 흐름 모양이에요.
+[pause:500]
+그럼 공통 부모는 누구냐, 두 형제를 모두 렌더하는 가장 가까운 컴포넌트입니다.
+[pause:400]
+Almaty Accordion 예시에서는 Accordion이 두 Panel의 공통 부모이고, 거기에 activeIndex라는 단일 state를 두는 거죠.
+[pause:600]
+이 절차는 형제 협조가 필요한 모든 상황에 똑같이 적용되는 표준 레시피입니다.
+
+[slide 4]
+표준 3단계 레시피를 정리해 보겠습니다.
+[pause:500]
+Step 1, 자식에서 state를 제거합니다.
+[pause:300]
+Panel 안에 있던 useState 호출, 즉 isActive 관련 state를 그냥 지우는 거예요.
+[pause:500]
+Step 2, 부모에서 하드코딩된 props로 자식들을 렌더해 봅니다.
+[pause:300]
+예를 들면 Panel에 isActive 값을 일단 true나 false로 박아 넣고 화면이 잘 그려지는지 확인하는 거죠.
+[pause:500]
+Step 3, 부모에 진짜 state를 추가하고, 핸들러를 props로 자식에게 내려보냅니다.
+[pause:300]
+이때 useState로 activeIndex를 만들고 onShow 같은 핸들러를 자식에게 주입합니다.
+[pause:600]
+여기서 진짜 중요한 포인트.
+[pause:400]
+각 단계가 독립적으로 컴파일도 되고 렌더도 되는 체크포인트라는 거예요.
+[pause:400]
+한 번에 한 단계씩만 바꿔야 디버깅이 가능합니다.
+
+[slide 5]
+이제 Almaty Accordion을 실제로 3단계로 변형해 볼게요.
+[pause:500]
+Before 상태부터 보겠습니다.
+[pause:300]
+왼쪽 코드를 보면 Panel 함수 안에 const isActive와 setIsActive를 useState false로 선언해 두었어요.
+[pause:400]
+즉 각 Panel이 자기 isActive를 직접 들고 있는 상태죠.
+[pause:300]
+title prop을 받아서 헤더를 그리고, isActive에 따라 본문이나 Show 버튼을 보여주는 평범한 구조예요.
+[pause:600]
+Step 1을 적용하면, Panel 안의 useState 줄을 지웁니다.
+[pause:300]
+이제 Panel은 isActive 값을 props로만 받게 돼요.
+[pause:400]
+이 순간부터 Panel은 자기 상태가 없는 controlled 컴포넌트로 바뀝니다.
+[pause:500]
+Step 2에서는 부모가 하드코딩으로 자식에 값을 넣어줘요.
+[pause:300]
+예를 들어 첫 번째 Panel에는 isActive를 true로, 두 번째 Panel에는 false로 박아 두고 화면을 띄워 봅니다.
+[pause:400]
+이 시점에 렌더가 깨지지 않으면 1단계와 2단계가 잘 진행된 거예요.
+[pause:300]
+이 체크포인트가 진짜 중요해요.
+[pause:300]
+여기까지가 깨지면 무조건 props 흐름 문제이지 state 문제가 아니거든요.
+[pause:600]
+Step 3에서는 오른쪽 코드처럼, Accordion 부모 안에 useState 0으로 activeIndex를 선언합니다.
+[pause:400]
+첫 번째 Panel에는 isActive로 activeIndex가 0과 같은지 비교한 결과를 넘기고, onShow에는 setActiveIndex 0을 호출하는 화살표 함수를 넘깁니다.
+[pause:400]
+두 번째 Panel은 같은 모양으로 인덱스만 1로 바꿔 넘기면 끝이에요.
+[pause:600]
+이제 어떤 Panel을 누르든 부모의 activeIndex가 그 인덱스로 갱신되고, 다른 Panel은 자동으로 닫힙니다.
+[pause:400]
+한 번에 하나만 펼쳐지는 동작이 자연스럽게 보장돼요.
+
+[slide 6]
+실전에서 자주 보이는 흔한 실수 두 가지를 짚어볼게요.
+[pause:500]
+첫 번째 실수, Step 1을 건너뛰고 부모에만 state를 추가하는 경우입니다.
+[pause:400]
+부모에 activeIndex를 추가하고 자식에 props도 잘 내려보냈다고 칩시다.
+[pause:300]
+그런데 자식 안에는 아직 옛 useState가 살아 있어요.
+[pause:300]
+이 자식의 내부 state가 부모가 내려준 props를 덮어써서 동기화가 무너집니다.
+[pause:300]
+보기엔 props도 흐르고 핸들러도 호출되는데, 화면은 엉뚱하게 동작하니 디버깅이 굉장히 헷갈리죠.
+[pause:300]
+그래서 Step 1, 자식의 useState 제거가 항상 가장 먼저예요.
+[pause:600]
+두 번째 실수, 핸들러를 자식 안에서만 처리하고 부모에 통보하지 않는 경우예요.
+[pause:400]
+즉 자식이 onClick을 받아서 자기 안에서만 뭔가 바꾸고 끝내는 거죠.
+[pause:300]
+부모는 사용자가 클릭했다는 사실 자체를 모릅니다.
+[pause:300]
+그러면 데이터가 위로 못 올라가서, 다른 형제 컴포넌트가 변화에 반응할 수가 없어요.
+[pause:600]
+한 가지 컨벤션도 기억해 두세요.
+[pause:300]
+핸들러 이름은 onShow, onChange, onSelect처럼 이벤트가 발생했음을 부모에게 알린다는 의미를 담아 짓습니다.
+[pause:300]
+이름만 봐도 이게 자식 → 부모 방향의 통보라는 게 드러나야 코드가 읽힙니다.
+
+[slide 7]
+이번에는 직접 적용해 보는 시간입니다.
+[pause:500]
+미니 시나리오는 이거예요.
+[pause:300]
+두 개의 Toggle 버튼이 있는데, 라디오 버튼처럼 동시에 하나만 on이 되게 만들고 싶다고 합시다.
+[pause:600]
+머릿속으로 자문자답 체크리스트를 따라가 볼게요.
+[pause:400]
+첫째, 어떤 컴포넌트가 두 Toggle의 공통 부모인가요?
+[pause:500]
+둘째, 부모에 둘 state의 이름과 타입은 어떻게 잡을까요?
+[pause:300]
+예를 들면 activeId를 'a' 또는 'b' 또는 null로 둘 수 있겠죠.
+[pause:500]
+셋째, 자식에 내려보낼 props 두 개는 무엇인가요?
+[pause:300]
+값으로 isOn, 이벤트로 onTurnOn 정도가 자연스럽습니다.
+[pause:500]
+넷째, 자식에서 useState를 정말 지웠는지 다시 한 번 확인했나요?
+[pause:600]
+이 네 가지를 머릿속으로 답할 수 있다면, 오늘 절차가 손에 들어온 거예요.
+
+[slide 8]
+한 장으로 오늘 내용을 정리해 보겠습니다.
+[pause:500]
+Lifting state up은 세 단계입니다.
+[pause:300]
+자식 state 제거, 부모에서 하드코딩, 부모에 state 추가하고 핸들러를 내려보내기.
+[pause:600]
+흐름의 모양은 데이터는 props로 아래로, 이벤트는 핸들러로 위로.
+[pause:500]
+그리고 각 단계마다 렌더가 깨지지 않는 체크포인트로 작업하세요.
+[pause:600]
+다음 클래스에서는 그래서 state를 어디에 둘지 결정하는 사고법, 즉 controlled와 uncontrolled, 그리고 single source of truth 원칙을 다룹니다.
+[pause:400]
+오늘도 수고하셨어요.

@@ -1,0 +1,180 @@
+[slide 1]
+드디어 Section 2의 마지막 원칙입니다.
+[pause:400]
+이번 시간엔 deep nesting 평탄화, 즉 트리 데이터를 정규화하는 패턴을 다룹니다.
+[pause:600]
+오늘 슬로건 한 번 더 되새겨 볼까요.
+[pause:400]
+"Make your state as simple as it can be — but no simpler."
+[pause:500]
+가능한 한 단순하게, 그러나 그 이상으로 단순하지는 말 것.
+[pause:500]
+이 class를 마치고 나면, 5원칙 전부에 체크가 들어갑니다.
+[pause:700]
+
+[slide 2]
+이런 상황 상상해 보세요.
+[pause:400]
+childPlaces라는 자식 배열이 다섯 단계 깊이로 중첩된 트리 데이터가 있습니다.
+[pause:500]
+가장 깊은 곳의 leaf 하나를 삭제하려면, 부모 체인 다섯 개를 모두 새 객체로 복사해야 해요.
+[pause:500]
+React의 불변 갱신 규칙 때문이죠.
+[pause:400]
+state는 그대로 두고, 변경된 새 객체를 setState에 넘겨야 하니까요.
+[pause:600]
+불변 갱신 코드가 화면을 가득 채웁니다.
+[pause:400]
+spread 연산자가 다섯 줄, 새 배열 생성이 다섯 줄, 인덱싱이 또 다섯 줄.
+[pause:400]
+읽기도, 디버깅도 거의 지옥이죠.
+[pause:600]
+그래서 오늘의 질문.
+[pause:400]
+트리 모양을 그대로 두는 게, 정말 최선일까요?
+[pause:700]
+
+[slide 3]
+다섯 번째 원칙입니다.
+[pause:400]
+깊게 중첩된 state는 갱신이 어려우므로, 평탄화하세요.
+[pause:600]
+평탄화는 데이터베이스 정규화 스타일과 비슷합니다.
+[pause:500]
+id를 키로 한 객체, 즉 map을 만들고, 자식은 객체 배열 대신 id 배열인 childIds로 참조하는 구조죠.
+[pause:600]
+before는 Earth 안에 Africa, Africa 안에 또 자식들 같은 식으로 객체가 객체 안에 박혀 있어요.
+[pause:500]
+after는 다릅니다.
+[pause:400]
+키 0에는 Earth 노드, 키 1에는 Africa 노드, 이렇게 모든 노드가 평평한 map에 들어가고, 각 노드는 자기 자식의 id 배열만 갖습니다.
+[pause:600]
+장점이 분명합니다.
+[pause:400]
+어떤 노드든 O(1)로 즉시 접근.
+[pause:400]
+갱신할 때는 해당 노드와 부모의 childIds만 수정하면 끝.
+[pause:700]
+
+[slide 4]
+변환 절차는 세 단계예요.
+[pause:500]
+첫째, 모든 노드를 id별로 수집합니다.
+[pause:400]
+둘째, 각 노드의 자식 객체 배열을 childIds 배열로 교체합니다.
+[pause:400]
+셋째, 루트에는 root id만 보관합니다.
+[pause:600]
+이제 시나리오 두 개를 보죠.
+[pause:500]
+삭제 시나리오.
+[pause:300]
+노드 N을 지운다면, 부모의 childIds 배열에서 N을 제거하고, map에서 N 키를 삭제합니다.
+[pause:500]
+부모 체인을 따라 위로 복사할 필요가 전혀 없어요.
+[pause:600]
+이동 시나리오.
+[pause:300]
+부모 A의 childIds에서 N을 빼고, 부모 B의 childIds에 N을 추가합니다.
+[pause:400]
+딱 두 곳만 수정하면 됩니다.
+[pause:600]
+비용도 솔직히 말씀드리면, 계층 구조를 보고 싶을 땐 매번 map과 childIds를 따라가며 트리를 재구성해야 해요.
+[pause:400]
+그건 보통 재귀 컴포넌트가 담당합니다.
+[pause:700]
+
+[slide 5]
+TravelPlan 예제의 before를 봅시다.
+[pause:500]
+plan이라는 useState 하나에 다섯 단계 중첩된 객체 트리를 통째로 보관합니다.
+[pause:400]
+Earth가 루트, 그 아래 Americas, 그 아래 North America, 그 아래 USA, 그 아래 Pasadena 같은 식이죠.
+[pause:600]
+'Pasadena'를 삭제하려면 어떻게 될까요.
+[pause:400]
+USA, North America, Americas, Earth, 네 단계 부모를 모두 새 객체로 복사하고, 각 단계마다 childPlaces 배열도 새로 만들어야 합니다.
+[pause:500]
+spread, filter, 또 spread, 또 filter.
+[pause:400]
+중간에 인덱스 한 번 잘못 쓰면 아예 다른 노드가 사라지는 위험까지 안고 가야 해요.
+[pause:500]
+setState 한 번에 spread만 수십 줄이 들어가요.
+[pause:500]
+깊이가 깊어질수록 코드는 기하급수로 부풀어 오릅니다.
+[pause:400]
+유지보수도, 코드 리뷰도, 테스트도 모두 부담이 커져요.
+[pause:700]
+
+[slide 6]
+이제 after 코드입니다.
+[pause:500]
+plan의 모양은 id를 키로 한 map.
+[pause:400]
+각 항목은 id, title, childIds를 갖는 노드입니다.
+[pause:600]
+삭제 핸들러는 단순합니다.
+[pause:400]
+부모를 plan에서 꺼내, childIds에서 target id만 filter로 제거한 새 부모를 만들고, 그 다음 plan에서 삭제할 자식 키를 구조 분해 할당으로 빼낸 나머지 객체를 만들어, 새 부모를 합쳐 setPlan에 넘기는 거죠.
+[pause:700]
+한 번의 setPlan 호출, 변경되는 곳은 두 군데뿐입니다.
+[pause:600]
+참고로 Immer를 쓰면 useImmerReducer로 plan에서 키를 delete 하는 mutation 스타일도 가능합니다.
+[pause:400]
+다만 본 강의의 필수 학습 항목은 아니에요.
+[pause:700]
+
+[slide 7]
+자가 진단 시간입니다.
+[pause:500]
+댓글 트리, 즉 id와 replies 배열, 그리고 그 replies 안에 또 replies가 들어 있는 구조를 평탄화하면 어떤 모양이 될까요?
+[pause:800]
+정답.
+[pause:300]
+byId라는 map에 id별 노드, 각 노드는 id, text, replyIds를 갖고요.
+[pause:400]
+rootIds 배열로 최상위 댓글만 따로 보관합니다.
+[pause:500]
+관계형 데이터베이스에서 'comments' 테이블과 'parent_id' 컬럼을 본떠 만든 모양이라고 보시면 됩니다.
+[pause:600]
+새 답글을 추가할 때 변경되는 셀은 어디일까요?
+[pause:600]
+byId에 새 id 항목을 추가하고, byId에서 부모 id의 replyIds에 새 id를 push 하면 끝.
+[pause:400]
+딱 두 곳입니다.
+[pause:400]
+중첩 구조였다면 부모 체인을 모두 복사해야 했을 일이, 두 줄로 끝나는 거예요.
+[pause:600]
+마지막으로 트레이드오프 자가 점검 하나.
+[pause:400]
+깊이가 두 단계뿐이고 갱신이 거의 없는 데이터라면, 평탄화는 오히려 과잉일 수 있습니다.
+[pause:500]
+도구는 문제에 맞게 고르세요.
+[pause:400]
+모든 트리에 byId map을 강제로 적용할 필요는 없어요.
+[pause:400]
+"갱신 시나리오가 복잡한가, 깊이가 깊은가"라는 두 질문에 yes일 때만 평탄화의 가치가 분명해집니다.
+[pause:700]
+
+[slide 8]
+Section 2 마무리입니다.
+[pause:500]
+오늘로 5원칙 전부에 체크가 들어갔습니다.
+[pause:400]
+묶기, 모순 회피, redundant 제거, duplication 회피, 그리고 평탄화.
+[pause:600]
+깊은 중첩은 byId map과 childIds 배열로 펴면, 변경 범위가 깊이에 비례하던 것에서, 한두 곳으로 줄어듭니다.
+[pause:500]
+삭제도, 이동도, 추가도 모두 핸들러 한두 줄이면 끝나죠.
+[pause:500]
+다시 한번, 5원칙은 모두 동기화 버그 차단의 다른 얼굴입니다.
+[pause:500]
+"Make your state as simple as it can be — but no simpler."
+[pause:500]
+이 슬로건이 5원칙을 한 줄로 압축한 표어예요.
+[pause:600]
+다음 Section에서는 컴포넌트 간 state 공유, Lifting State Up을 다룹니다.
+[pause:400]
+형제 컴포넌트가 서로 협조해야 할 때 어떻게 state를 끌어올리는지가 주제예요.
+[pause:400]
+거기서 만나요.

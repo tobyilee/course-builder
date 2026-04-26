@@ -1,0 +1,32 @@
+{
+  "section_id": "S6",
+  "classes": [
+    {
+      "id": "S6.C1",
+      "slug": "01-prop-drilling-and-3-step-pattern",
+      "title": "prop drilling 문제와 createContext / Provider / useContext 3단계",
+      "lo_ids": ["LO-S6.1", "LO-S6.2"],
+      "duration_min": 14,
+      "depends_on": [],
+      "summary": "깊은 컴포넌트 트리에서 같은 prop을 중간 컴포넌트들 사이로 단지 전달만 하는 prop drilling 통증을 트리 그림으로 시각화한다. 그 다음 createContext(기본값) → Provider(<Ctx value=...>) → useContext(Ctx) 3단계로 같은 데이터를 깊이 있는 자손에게 직접 꽂아 넣는 코드를 작성한다. Heading + Section 예제를 props 버전과 context 버전으로 나란히 비교해 데이터 흐름이 어떻게 달라지는지 체감한다."
+    },
+    {
+      "id": "S6.C2",
+      "slug": "02-consume-and-provide-pattern",
+      "title": "같은 컴포넌트가 consume + provide — 자동 level 증가 패턴",
+      "lo_ids": ["LO-S6.3"],
+      "duration_min": 13,
+      "depends_on": ["S6.C1"],
+      "summary": "Section이 LevelContext를 useContext로 읽고 동시에 <LevelContext value={level + 1}>로 자식에게 다시 제공하는 nesting 패턴을 단계별로 구현한다. <Section><Section><Section><Heading>...의 트리에서 level prop 없이도 h1→h2→h3가 자동으로 잡히는 흐름을 가장 가까운 Provider 규칙으로 설명하고, 여러 context가 서로 독립적으로 동작한다는 특성도 함께 짚는다."
+    },
+    {
+      "id": "S6.C3",
+      "slug": "03-context-vs-alternatives",
+      "title": "context를 쓸 때와 쓰지 말 때 — props·composition과 비교",
+      "lo_ids": ["LO-S6.4"],
+      "duration_min": 13,
+      "depends_on": ["S6.C2"],
+      "summary": "context를 꺼내기 전에 검토할 두 대안 — 명시적 props 전달과 children/JSX composition — 을 코드로 비교한다. theming, authentication, routing, 글로벌 설정처럼 분산된 다수 컴포넌트가 같은 값을 공유해야 하는 정당한 사용처와, 1~2 레벨만 내려가거나 composition으로 해결 가능한 남용 사례를 구분 기준으로 정리한다. 'props로 흐를 거리를 짧게 만들었는데도 여전히 멀다'를 결정 트리거로 삼아 context 채택을 정당화하는 연습으로 마무리."
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "class_id": "S1.C3",
+  "title": "핸들러 연결과 5단계 프로세스 마무리 — 처음부터 컴포넌트 설계하기",
+  "lo_ids": ["LO-S1.3"],
+  "target_duration_sec": 660,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "지금까지 visual states 표도 그렸고, status enum으로 state도 줄였다 — 그런데 막상 '코드 작성'으로 넘어가면 막힌다",
+        "왜일까? 트리거 표는 정적인 그림이고, 핸들러는 그 화살표를 시간 순서로 발화시키는 일이기 때문",
+        "다행히도 사고의 흐름이 어렵지 않다 — 표의 화살표 하나하나가 곧 setState 한 줄에 대응한다",
+        "오늘 목표: 5단계의 마지막 ⑤단계(핸들러 연결)를 채우고, 1~5단계를 한 번에 적용해 새 컴포넌트를 처음부터 설계해 본다"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "C1에서 그린 트리거 표 → 화살표 하나에 'setStatus(...)' 코드 풍선이 붙는 애니메이션식 다이어그램",
+      "speaker_affect": "공감하며 부드럽게, 이어주는 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "5단계 프로세스 전체 회상: ① 상태 열거 → ② 트리거 식별 → ③ useState 모델링 → ④ 비핵심 제거 → ⑤ 핸들러 연결",
+        "⑤단계 규칙: 트리거 표의 각 행을 '이 이벤트에서 이 set 호출'로 1:1 매핑한다",
+        "human 트리거 → onChange/onClick 같은 DOM 핸들러 안의 setState; computer 트리거 → 비동기 작업 결과(then/catch)에서의 setState",
+        "비동기 패턴 핵심: setStatus('submitting') → await 호출 → 성공이면 setStatus('success'), 실패면 setStatus('typing') + setError(err)",
+        "사고 순서가 곧 설계 순서 — 표의 행 수 = 핸들러 안의 분기 수가 일치하면 누락 없이 구현된 것"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "5단계 가로 플로우(이번엔 ⑤단계 강조) + 우측에 '트리거 행 → set 호출' 매핑 표",
+      "speaker_affect": "차분하게, 마무리짓는 톤"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 210,
+      "key_points": [
+        "도시 퀴즈 폼 완성 코드 워크스루 — handleSubmit이 어떻게 트리거 표를 코드로 옮겼는지 한 줄씩 짚는다",
+        "handleSubmit 시작: e.preventDefault() 후 setStatus('submitting') — typing→submitting 트리거",
+        "try { await submitForm(answer); setStatus('success'); } — submitting→success 트리거",
+        "catch (err) { setStatus('typing'); setError(err); } — submitting→error 표현 (status='typing' + error!==null이 곧 error UI)",
+        "JSX 측: textarea의 disabled={status==='submitting'}, 버튼의 disabled={answer.length===0 || status==='submitting'} — 파생값을 렌더에서 직접 계산하는 모범 사례",
+        "보너스 — Living styleguide: statuses.map(s => <Form status={s} />)로 5개 상태를 한 페이지에 동시 렌더 → 디자인 회귀 검증과 리뷰가 쉬워진다"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "완성된 Form 컴포넌트 코드 + 옆에 트리거 표; 코드 라인과 표 행을 색깔 화살표로 매칭. 마지막 슬라이드는 5개 Form 동시 렌더 styleguide 화면",
+      "speaker_affect": "시연하듯 또박또박, 매핑 강조"
+    },
+    {
+      "id": "b4",
+      "type": "practice",
+      "duration_sec": 165,
+      "key_points": [
+        "미니 캡스톤: 다음 둘 중 하나를 골라 5단계를 처음부터 적용해 본다 — (A) 인라인 코멘트 위젯, (B) 파일 업로드 버튼",
+        "1·2단계: visual state를 4~5개 펼치고 각 전이 트리거를 human/computer로 라벨링한다",
+        "3·4단계: 순진한 boolean들로 먼저 모델링했다가 status enum + 파생값으로 줄인다 (3대 질문 적용)",
+        "5단계: handleSubmit/handleSelect 등 핸들러 1~2개에서 setStatus 호출만으로 모든 전이가 표현되는지 확인",
+        "스스로 점검: '내 상태 변수 개수 = 표의 status 종류 + 본질 입력값(answer, error 같은)'이면 합격"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "두 개 위젯 옵션 카드(A: 코멘트, B: 업로드) + 5단계 체크리스트 + 비어있는 트리거 표 템플릿",
+      "speaker_affect": "격려하며, 충분한 멈춤 유도, 자율성 강조"
+    },
+    {
+      "id": "b5",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "핵심 1: 5단계는 사고법이다 — 상태 → 트리거 → useState → 비핵심 제거 → 핸들러",
+        "핵심 2: 핸들러는 트리거 표의 각 행을 set 호출로 옮기는 기계적 작업이 된다",
+        "핵심 3: Living styleguide로 모든 visual state를 동시에 렌더해 두면 회귀와 리뷰가 쉽다",
+        "다음 섹션 예고: state '구조'를 다듬는 5가지 원칙 — 묶기/모순회피/redundant 제거/duplication 회피/평탄화"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "5단계 한 줄 슬로건 + 다음 섹션 S2 미리보기 화살표",
+      "speaker_affect": "정리하듯 단단하게, 다음 섹션 기대감 유도"
+    }
+  ]
+}

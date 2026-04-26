@@ -1,0 +1,152 @@
+{
+  "section_id": "S3",
+  "items": [
+    {
+      "id": "S3.Q1",
+      "type": "mcq_single",
+      "stem": "두 형제 컴포넌트가 협조하지 못하는 상황을 lifting state up 절차로 해결하려고 합니다. 다음 단계들을 올바른 순서로 나열한 것은 무엇인가요?\n\n  ㄱ. 부모에 useState를 추가하고 값과 핸들러를 props로 자식에게 내려보낸다\n  ㄴ. 자식 컴포넌트에서 해당 useState를 제거하고 props로 받도록 시그니처를 바꾼다\n  ㄷ. 부모에서 자식들에게 하드코딩된 값을 props로 넘겨 화면이 의도대로 그려지는지 확인한다",
+      "choices": [
+        "ㄱ → ㄴ → ㄷ",
+        "ㄴ → ㄷ → ㄱ",
+        "ㄴ → ㄱ → ㄷ",
+        "ㄷ → ㄴ → ㄱ"
+      ],
+      "correct": ["B"],
+      "explanation": "표준 절차는 (1) 자식에서 state 제거 → (2) 부모에서 하드코딩 props로 자식 렌더 확인 → (3) 부모에 state 추가 + 핸들러를 props로 내려보냄 입니다. 각 단계가 독립적으로 컴파일/렌더 가능한 체크포인트라는 점이 중요합니다.",
+      "distractor_rationales": {
+        "A": "흔한 오해: 부모에 state부터 만들고 시작하면 자식이 여전히 옛 useState를 들고 있어 props 변화에 반응하지 않습니다. 자식 정리가 먼저입니다.",
+        "C": "하드코딩 단계를 생략하면 'state 추가 + 자식 props 연결'을 한 번에 시도하는 셈이라, 어디서 깨졌는지 진단할 체크포인트를 잃습니다.",
+        "D": "props로 자식에 값을 넘기려면 자식이 props를 받을 수 있도록 먼저 useState를 제거해야 합니다. ㄷ을 ㄴ보다 먼저 두면 자식이 props를 무시합니다."
+      },
+      "lo_ids": ["LO-S3.1"],
+      "bloom": "Apply",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q2",
+      "type": "mcq_single",
+      "stem": "다음 Panel 컴포넌트를 보고 controlled / uncontrolled 여부를 판단하세요.\n\n```jsx\nfunction Panel({ title, isActive, onShow, children }) {\n  return (\n    <section>\n      <h3>{title}</h3>\n      {isActive ? <p>{children}</p> : <button onClick={onShow}>Show</button>}\n    </section>\n  );\n}\n```",
+      "choices": [
+        "Uncontrolled — Panel이 isActive를 자체적으로 관리하기 때문",
+        "Controlled — isActive와 onShow를 부모 props로 받아 부모가 통제하기 때문",
+        "부분 controlled — title만 props고 나머지는 내부 state이기 때문",
+        "구분 불가 — useState 호출이 없어 판단할 수 없음"
+      ],
+      "correct": ["B"],
+      "explanation": "이 Panel은 자기 useState가 없고, isActive(값)와 onShow(변경 콜백)를 모두 부모 props로 받습니다. 부모가 완전히 통제하므로 controlled 컴포넌트입니다. 식별법은 단순합니다 — 같은 정보를 props로 받는가(controlled), useState로 보유하는가(uncontrolled).",
+      "distractor_rationales": {
+        "A": "Panel 안에 useState가 보이지 않습니다. isActive는 props로 들어오므로 자체 관리가 아닙니다.",
+        "C": "title도 props, isActive·onShow도 props입니다. 내부 state가 0개이므로 부분 controlled가 아니라 완전 controlled입니다.",
+        "D": "useState가 없다는 사실이 controlled의 강력한 신호입니다 — 정보를 props로만 받고 있기 때문입니다."
+      },
+      "lo_ids": ["LO-S3.2"],
+      "bloom": "Analyze",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q3",
+      "type": "mcq_multi",
+      "stem": "다음 코드는 single source of truth 원칙을 위반하고 있습니다. 위반 사항으로 적절한 것을 모두 고르세요. (정답 2개)\n\n```jsx\nfunction Parent() {\n  const [text, setText] = useState('');\n  return <Child value={text} onChange={e => setText(e.target.value)} />;\n}\n\nfunction Child({ value, onChange }) {\n  const [draft, setDraft] = useState(value); // ← 잔재\n  return <input value={draft} onChange={e => { setDraft(e.target.value); onChange(e); }} />;\n}\n```",
+      "choices": [
+        "같은 정보(text)를 부모 text와 자식 draft 두 곳이 동시에 useState로 보유하고 있다",
+        "부모가 onChange 핸들러를 props로 내려보낸 것이 SST 위반이다",
+        "props로 받은 value를 useState 초기값으로 mirror 하고 있어 부모 변경이 자식에 즉시 반영되지 않는다",
+        "Child가 value props를 사용하지 않은 것은 SST 원칙에 부합한다",
+        "Parent에 useState를 둔 것 자체가 SST 위반이다"
+      ],
+      "correct": ["A", "C"],
+      "explanation": "SST는 '한 정보는 한 컴포넌트만 소유한다'입니다. (A) text와 draft가 같은 값을 두 곳에서 보유하므로 위반이며, (C) props를 useState 초기값으로 mirror 하는 것은 [S2]의 props mirroring 안티패턴으로 첫 렌더 이후 부모 변경이 자식에 반영되지 않습니다.",
+      "distractor_rationales": {
+        "B": "콜백 props로 변경을 위로 올리는 것은 lifting state up의 정상 동작이며 SST를 강화합니다.",
+        "D": "Child가 value를 무시하면 부모와의 동기화가 끊어집니다. 이는 SST를 만족시키는 것이 아니라 controlled로의 통제를 무력화하는 안티패턴입니다.",
+        "E": "Parent에 state를 둔 것이 바로 SST를 만족시키는 부분입니다 — 가장 가까운 공통 부모에 단 하나만 두는 것이 핵심입니다."
+      },
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "S3.Q4",
+      "type": "mcq_single",
+      "stem": "Almaty Accordion에서 '한 번에 하나의 패널만 열린다'는 제약을 만족시키려면 activeIndex state를 어디에 두어야 하나요?",
+      "choices": [
+        "각 Panel 컴포넌트 내부 — 패널마다 자기 상태를 갖는 것이 가장 캡슐화된 형태이기 때문",
+        "두 Panel을 모두 렌더하는 가장 가까운 공통 부모(Accordion) — 두 패널이 서로의 상태에 반응해야 하기 때문",
+        "App 루트 — 가능한 한 위에 두면 어디서든 접근하기 쉽기 때문",
+        "전역 변수 — useState 바깥에 두면 리렌더 비용을 아낄 수 있기 때문"
+      ],
+      "correct": ["B"],
+      "explanation": "SST 결정 알고리즘은 (1) state를 읽는 컴포넌트 나열 (2) 가장 가까운 공통 조상 찾기 (3) 거기에 배치 입니다. activeIndex는 두 Panel 모두에서 읽혀야 하므로 그들의 가장 가까운 공통 부모인 Accordion에 두어야 합니다. 'state 변수 하나'로 표현하기에 '둘 다 열림'이 원천 봉쇄됩니다.",
+      "distractor_rationales": {
+        "A": "각 Panel이 자체 isActive를 가지면 형제끼리 협조할 수 없어 두 패널이 동시에 열립니다 — Before 상태의 문제입니다.",
+        "C": "필요 이상으로 위에 두면 prop drilling이 발생합니다. SST는 '가장 가까운' 공통 조상을 강조합니다.",
+        "D": "전역 변수는 React의 렌더 사이클 바깥이라 변경 시 리렌더가 트리거되지 않습니다. UI가 갱신되지 않습니다."
+      },
+      "lo_ids": ["LO-S3.3", "LO-S3.4"],
+      "bloom": "Evaluate",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q5",
+      "type": "mcq_single",
+      "stem": "Filterable List를 구현할 때, query를 부모에 lift 했다면 results는 어떻게 다루는 것이 가장 적절한가요?",
+      "choices": [
+        "results도 별도의 useState로 보관하고 query가 바뀔 때마다 setResults로 동기화한다",
+        "results를 query에서 매 렌더마다 derive 한다 (예: const results = filterItems(foods, query))",
+        "results는 List 자식 안에서 자체 useState로 캐싱한다",
+        "results를 props가 아니라 ref에 담아 List에 전달한다"
+      ],
+      "correct": ["B"],
+      "explanation": "results는 query로부터 계산 가능한 파생값이므로 state로 두면 [S2]의 redundant 안티패턴이 됩니다. 매 렌더마다 derive 하면 query와 results가 어긋날 가능성이 0이 됩니다 — 동기화 버그의 원천 봉쇄.",
+      "distractor_rationales": {
+        "A": "전형적인 redundant state — query와 results가 어긋날 위험을 도입합니다. setResults를 잊거나 비동기 사이에 stale 값이 끼어들면 표시가 어긋납니다.",
+        "C": "자식이 자체 캐시를 갖는 순간 SST가 깨집니다. 부모의 query 변경이 자식 캐시에 반영되지 않을 수 있습니다.",
+        "D": "ref는 렌더와 무관한 값을 담는 도구입니다. UI에 보이는 results는 렌더에 참여해야 하므로 props/derived가 맞습니다."
+      },
+      "lo_ids": ["LO-S3.4", "LO-S3.3"],
+      "bloom": "Apply",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q6",
+      "type": "true_false",
+      "stem": "다음 명제의 참/거짓을 판단하세요.\n\n'두 컴포넌트가 같은 정보를 공유해야 할 때, 양쪽 모두에 같은 값을 useState로 보유하고 useEffect로 동기화하는 것이 single source of truth를 만족시키는 표준 방법이다.'",
+      "choices": ["참 (True)", "거짓 (False)"],
+      "correct": ["B"],
+      "explanation": "거짓입니다. SST는 '한 정보는 단 하나의 컴포넌트만 소유한다'는 원칙입니다. 양쪽에 사본을 두고 useEffect로 동기화하는 것은 정확히 SST 위반이며, 동기화 버그의 온상입니다. 표준 해법은 가장 가까운 공통 부모로 lift 하고 자식들은 props로 값과 핸들러를 받는 것입니다.",
+      "distractor_rationales": {
+        "A": "흔한 오개념 — '같은 값을 어떻게든 맞추기만 하면 SST'라고 생각하기 쉽지만, SST의 핵심은 '맞춤'이 아니라 '소유권의 단일성'입니다."
+      },
+      "lo_ids": ["LO-S3.3"],
+      "bloom": "Understand",
+      "difficulty": 1
+    },
+    {
+      "id": "S3.Q7",
+      "type": "mcq_single",
+      "stem": "Synced Inputs 패턴(두 Input이 항상 같은 값을 보여줘야 함)을 구현하려고 합니다. 다음 중 패턴의 골격으로 가장 적절한 것은?",
+      "choices": [
+        "각 Input이 자체 useState를 갖고, onChange에서 다른 Input의 setter를 호출해 동기화한다",
+        "부모에 단일 text state를 두고 두 Input을 controlled로 만들어 value={text}, onChange={e => setText(e.target.value)}를 동일하게 props로 내려보낸다",
+        "Input 컴포넌트 사이에 ref를 공유해 DOM 값을 직접 복사한다",
+        "전역 store(예: window.sharedText)를 만들고 두 Input이 그곳을 읽고 쓴다"
+      ],
+      "correct": ["B"],
+      "explanation": "세 표준 패턴(Accordion·Synced Inputs·Filterable List)은 모두 '부모 state 1개 + 자식들에 (값, 핸들러) 쌍 props'라는 동일한 골격을 공유합니다. 단일 text를 부모에 두면 두 Input이 자동으로 같은 값을 보여주며 추가 동기화 로직이 필요 없습니다.",
+      "distractor_rationales": {
+        "A": "각 Input이 자체 state를 가지면 SST가 깨지고, setter를 cross-call 하는 동기화 코드는 race·stale 클로저 등 버그의 온상이 됩니다.",
+        "C": "ref로 DOM을 직접 만지는 것은 명령형 스타일로, 선언형 React의 '상태 → UI 자동 반영' 모델에 어긋납니다.",
+        "D": "전역 변수는 렌더 트리거 밖이라 변경해도 리렌더가 발생하지 않으며, 컴포넌트 격리도 깨뜨립니다."
+      },
+      "lo_ids": ["LO-S3.4", "LO-S3.1"],
+      "bloom": "Apply",
+      "difficulty": 2
+    }
+  ],
+  "bloom_distribution": {
+    "Understand": 1,
+    "Apply": 3,
+    "Analyze": 2,
+    "Evaluate": 1
+  }
+}

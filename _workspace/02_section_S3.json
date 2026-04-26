@@ -1,0 +1,32 @@
+{
+  "section_id": "S3",
+  "classes": [
+    {
+      "id": "S3.C1",
+      "slug": "01-lifting-state-up-3-steps",
+      "title": "Lifting State Up — 형제 컴포넌트를 협조시키는 3단계",
+      "lo_ids": ["LO-S3.1"],
+      "duration_min": 12,
+      "depends_on": [],
+      "summary": "두 형제 컴포넌트가 서로의 상태에 반응해야 하는 통증을 사례로 시작한다. 자식에서 state 제거 → 공통 부모에서 하드코딩 데이터로 자식들 전달 → 부모에 state를 추가하고 값+이벤트 핸들러를 props로 내려보내는 3단계 절차를 한 단계씩 실제 코드 변형 위에서 따라간다. 데이터는 props로 '아래로', 이벤트는 핸들러로 '위로' 흐르는 양방향 데이터 흐름의 모양을 머릿속에 새기는 것이 목표다."
+    },
+    {
+      "id": "S3.C2",
+      "slug": "02-controlled-vs-uncontrolled-sst",
+      "title": "Controlled vs Uncontrolled와 Single Source of Truth",
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "duration_min": 12,
+      "depends_on": ["S3.C1"],
+      "summary": "같은 컴포넌트라도 state를 자식 내부에 두느냐(uncontrolled) 부모 props로 통제하느냐(controlled)에 따라 협조 능력과 재사용성이 달라진다. 두 스타일을 상태 위치·부모 영향·사용 편의 축으로 비교하고, 대부분의 실제 컴포넌트가 부분 controlled로 섞여 있다는 점을 짚는다. 이어서 single source of truth 원칙으로 'state는 어느 컴포넌트에 두어야 하는가'를 결정하는 사고 과정 — 가장 가까운 공통 부모 찾기 — 을 작은 시나리오에 적용해 정당화 연습을 한다."
+    },
+    {
+      "id": "S3.C3",
+      "slug": "03-accordion-and-list-patterns",
+      "title": "케이스 스터디 — Accordion·Synced Inputs·Filterable List",
+      "lo_ids": ["LO-S3.4"],
+      "duration_min": 11,
+      "depends_on": ["S3.C1", "S3.C2"],
+      "summary": "C1·C2에서 익힌 절차와 원칙을 세 가지 표준 패턴에 직접 적용한다. (1) Accordion: 각 Panel이 isActive 여부를 자체 보유하던 구조를 부모의 activeIndex 단일 state로 lifting 하여 '한 번에 하나만 열림' 제약을 강제한다. (2) Synced Inputs: 같은 값을 보여줘야 하는 두 Input을 부모의 text state로 통합한다. (3) Filterable List: query state를 SearchBar와 List의 공통 부모에 두고 results를 derive 한다. 세 케이스에서 공통적으로 등장하는 'props로 값+핸들러를 내려보낸다' 패턴을 회수하며 섹션을 마무리한다."
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "section_id": "S6",
+  "items": [
+    {
+      "id": "S6.Q1",
+      "type": "mcq_single",
+      "stem": "prop drilling 문제와 context의 차이를 데이터 흐름 측면에서 가장 정확하게 설명한 것은?",
+      "choices": [
+        "A. prop drilling은 부모→자식 한 방향이지만, context는 자식→부모로 데이터를 거꾸로 끌어올린다.",
+        "B. prop drilling은 중간 컴포넌트가 사용하지도 않는 prop을 단지 전달만 하지만, context는 Provider 하위 어느 자손이든 중간 단계를 건너뛰고 직접 값을 읽는다.",
+        "C. prop drilling은 동기적이고 context는 비동기적으로 값을 전파한다.",
+        "D. context는 트리 구조를 무시하고 앱 어디서나 값을 읽을 수 있는 전역 변수다."
+      ],
+      "correct": ["B"],
+      "explanation": "context의 핵심은 '중간 컴포넌트를 통과하지 않고' Provider의 value를 자손이 직접 읽는다는 것이다. 여전히 Provider 하위 트리로 범위가 제한되며 전역 변수가 아니다.",
+      "distractor_rationales": {
+        "A": "context도 위(Provider)에서 아래(consumer)로 흐른다. 방향이 반대가 아니다.",
+        "C": "동기/비동기 차이가 아니라 '중간 prop 전달 생략' 차이다.",
+        "D": "context는 가장 가까운 Provider 하위에만 닿는 트리-범위 메커니즘이지 전역 변수가 아니다."
+      },
+      "lo_ids": ["LO-S6.1"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S6.Q2",
+      "type": "mcq_single",
+      "stem": "context를 사용하는 3단계 패턴의 올바른 순서는?",
+      "choices": [
+        "A. useContext(Ctx) 호출 → createContext(default) → <Ctx.Provider value=...>로 감싸기",
+        "B. <Ctx.Provider value=...>로 감싸기 → createContext(default) → useContext(Ctx)",
+        "C. createContext(default)로 Ctx 객체 생성 → <Ctx value=...> Provider로 자손 트리를 감싸기 → 자손에서 useContext(Ctx)로 값 읽기",
+        "D. createContext()로 Ctx 객체 생성 → 자손에서 useContext(Ctx) → 그 결과를 <Ctx.Provider>에 전달"
+      ],
+      "correct": ["C"],
+      "explanation": "올바른 순서는 (1) createContext로 Context 객체를 만들고, (2) 그것을 Provider로 트리를 감싸 value를 주입한 뒤, (3) 자손에서 useContext로 읽는 흐름이다.",
+      "distractor_rationales": {
+        "A": "Context 객체가 만들어지기 전에 useContext를 부를 수 없다.",
+        "B": "Provider로 감싸려면 먼저 Context 객체가 존재해야 한다.",
+        "D": "useContext의 반환값을 Provider value로 다시 넣는 것은 의미상 순환이며 표준 패턴이 아니다."
+      },
+      "lo_ids": ["LO-S6.2"],
+      "bloom": "Apply",
+      "difficulty": 2
+    },
+    {
+      "id": "S6.Q3",
+      "type": "mcq_single",
+      "stem": "createContext(defaultValue)의 default value가 실제로 사용되는 경우는?",
+      "choices": [
+        "A. Provider가 value prop을 생략했을 때, 그 Provider 하위 자손이 받는 값",
+        "B. useContext를 호출한 컴포넌트의 조상에 매칭되는 Provider가 하나도 없을 때",
+        "C. Provider가 value={undefined}로 명시적으로 넘겼을 때만",
+        "D. 앱이 처음 마운트될 때 한 번, 이후에는 무시된다"
+      ],
+      "correct": ["B"],
+      "explanation": "default value는 useContext가 호출된 컴포넌트의 위쪽 트리에 매칭되는 Provider가 전혀 없을 때만 사용된다. 테스트나 Provider 없이도 컴포넌트가 동작하도록 안전망 역할을 한다.",
+      "distractor_rationales": {
+        "A": "Provider가 존재하면 value를 생략해도 그 Provider의 value(=undefined)가 우선이며, default가 채워주지는 않는다.",
+        "C": "Provider가 value={undefined}로 넘기면 그 undefined가 그대로 자손에게 전달된다 — default로 대체되지 않는다.",
+        "D": "default는 마운트 시점이 아니라 'Provider 미존재' 조건에서 사용된다."
+      },
+      "lo_ids": ["LO-S6.2"],
+      "bloom": "Understand",
+      "difficulty": 3
+    },
+    {
+      "id": "S6.Q4",
+      "type": "mcq_single",
+      "stem": "Section 컴포넌트가 LevelContext를 useContext로 읽으면서 동시에 <LevelContext value={level + 1}>로 자식을 감싼다. <Section><Section><Heading/></Section></Section> 구조에서 가장 안쪽 Heading이 받는 level 값은? (최외곽 Provider value=1로 가정)",
+      "choices": [
+        "A. 1 — 최외곽 Provider 값이 그대로 전달된다",
+        "B. 2 — 한 단계만 증가한다",
+        "C. 3 — 안쪽 Section이 바깥 Section의 값(2)을 읽고 +1 해서 다시 제공한다",
+        "D. 4 — Section 개수만큼 누적되며 Heading 자신도 +1 한다"
+      ],
+      "correct": ["C"],
+      "explanation": "consume + provide 패턴: 각 Section은 가장 가까운 위쪽 Provider에서 level을 읽고 level+1을 새 Provider로 자식에게 내려보낸다. 1 → 첫 Section에서 2로 → 둘째 Section에서 3으로 → Heading은 3을 읽는다. Heading은 읽기만 하므로 추가 증가는 없다.",
+      "distractor_rationales": {
+        "A": "각 Section이 새 Provider로 값을 덮어쓰므로 최외곽 값이 그대로 도달하지 않는다.",
+        "B": "Section이 두 개이므로 한 단계가 아니라 두 단계 증가한다.",
+        "D": "Heading은 consume만 하지 provide하지 않으므로 추가 +1이 발생하지 않는다."
+      },
+      "lo_ids": ["LO-S6.3"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "S6.Q5",
+      "type": "mcq_multi",
+      "stem": "다음 중 context 사용이 적절한 사례를 모두 고르시오. (정답 2개)",
+      "choices": [
+        "A. 앱 전반의 theme(라이트/다크)을 수많은 컴포넌트가 읽어야 한다",
+        "B. 부모가 자식에게 콜백 1개를 1단계 아래로 내려보낸다",
+        "C. 로그인한 currentUser 정보를 헤더, 사이드바, 본문, 푸터 등 분산된 다수 컴포넌트가 참조한다",
+        "D. List가 ListItem에게 item 데이터를 전달하는 — composition 슬롯으로 충분히 해결되는 — 상황",
+        "E. 부모가 직속 자식에게 className 1개를 prop으로 넘긴다"
+      ],
+      "correct": ["A", "C"],
+      "explanation": "context는 '여러 분산된 컴포넌트가 같은 값을 공유'하는 theming/auth/routing 같은 사례에 적합하다. 1~2단계 prop drilling이거나 children/composition으로 풀리는 경우는 context 남용이다.",
+      "distractor_rationales": {
+        "B": "1단계 prop drilling은 그냥 props가 더 명시적이고 읽기 쉽다.",
+        "D": "composition(자식 노드를 prop으로 받기)으로 충분히 해결되므로 context는 과한 도구다.",
+        "E": "직속 자식 props는 context의 동기가 전혀 아니다."
+      },
+      "lo_ids": ["LO-S6.4"],
+      "bloom": "Evaluate",
+      "difficulty": 3
+    },
+    {
+      "id": "S6.Q6",
+      "type": "true_false",
+      "stem": "useContext는 다른 Hook과 동일하게 컴포넌트 함수의 최상위(top-level)에서만 호출해야 하며, if문/for문/조건부 분기 안에서 호출하면 Hook 규칙 위반이다.",
+      "choices": ["참", "거짓"],
+      "correct": ["참"],
+      "explanation": "useContext는 Hook이므로 Rules of Hooks를 따른다 — 매 렌더에서 같은 순서로, 컴포넌트(또는 커스텀 훅) 최상위에서 호출되어야 한다. 조건/루프 안에서 호출하면 React가 Hook을 추적하지 못해 런타임 에러 또는 잘못된 값이 발생한다.",
+      "distractor_rationales": {},
+      "lo_ids": ["LO-S6.2"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S6.Q7",
+      "type": "short_answer",
+      "stem": "어떤 팀원이 'Form 컴포넌트가 직속 자식 Input에게 onChange 콜백을 한 단계 내려보내는데, 글로벌하니까 FormContext를 만들자'고 제안했다. 이 결정에 대해 (1) 동의 여부, (2) 그 근거를 강의에서 배운 기준 2개 이상으로 제시하시오. (3~5문장)",
+      "correct": [],
+      "explanation": "기대 답안: 동의하지 않는다. 근거 — (1) prop drilling이라 부를 만한 거리(3단계 이상)가 아니라 1단계뿐이므로 props가 더 명시적이고 읽기 쉽다. (2) 'props로 흐를 거리를 짧게 만들었는데도 여전히 멀다'는 결정 트리거가 충족되지 않는다. (3) composition(예: <Form><Input /></Form>) 또는 그냥 props로 충분히 해결되며, context는 분산된 다수 컴포넌트가 같은 값을 공유할 때만 정당화된다. (4) 무분별한 context 도입은 컴포넌트 재사용성을 떨어뜨리고 데이터 흐름을 암묵적으로 만든다.",
+      "distractor_rationales": {},
+      "lo_ids": ["LO-S6.4", "LO-S6.1"],
+      "bloom": "Evaluate",
+      "difficulty": 4,
+      "rubric": [
+        "[1pt] 결론: context 사용에 동의하지 않음을 명시",
+        "[1pt] 근거 1: 거리가 1단계뿐이라 prop drilling이 아니다 / 직접 props가 더 명시적이다",
+        "[1pt] 근거 2: composition 또는 children 패턴으로 대체 가능 / 분산된 다수 소비자가 없다",
+        "[1pt] context 남용의 비용(재사용성 저하, 암묵적 데이터 흐름) 언급"
+      ]
+    },
+    {
+      "id": "S6.Q8",
+      "type": "mcq_single",
+      "stem": "'같은 컴포넌트가 context를 consume 하면서 동시에 새로운 값으로 provide 한다'는 패턴이 가장 자연스럽게 사용되는 사례는?",
+      "choices": [
+        "A. 앱 루트에서 한 번 theme을 주입하고 모든 자손이 읽기만 하는 경우",
+        "B. Section의 깊이에 따라 Heading level(h1→h2→h3)이 자동으로 한 단계씩 증가해야 하는 경우",
+        "C. Form 전체에서 동일한 validation 규칙을 한 번 정의하고 모든 Input이 동일하게 읽는 경우",
+        "D. 라우팅 테이블을 최상단 한 곳에서만 정의해 모든 페이지가 참조하는 경우"
+      ],
+      "correct": ["B"],
+      "explanation": "consume+provide 패턴은 '현재 위쪽 값을 읽어 변형해서 자식에게 다시 내려준다'는 점이 핵심이다. Heading level의 깊이별 자동 증가가 정확히 이 형태다. 나머지는 한 번 주입하고 모두가 동일하게 읽는 단순 broadcast 패턴이다.",
+      "distractor_rationales": {
+        "A": "한 번 주입 후 읽기만 하므로 consume+provide가 아니다.",
+        "C": "동일 값을 모두가 공유하는 단순 패턴이다.",
+        "D": "라우팅 테이블도 단일 정의를 모두가 읽는 broadcast이지 단계별 변형이 아니다."
+      },
+      "lo_ids": ["LO-S6.3"],
+      "bloom": "Apply",
+      "difficulty": 3
+    }
+  ],
+  "bloom_distribution": {
+    "Understand": 3,
+    "Apply": 3,
+    "Evaluate": 2
+  }
+}

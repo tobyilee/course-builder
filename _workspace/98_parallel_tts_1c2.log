@@ -1,0 +1,11 @@
+Engine: openai / Language: ko / Voice: nova / Model: gpt-4o-mini-tts / Speed: 1.3x
+  → slide 1: 4 chunks
+  → slide 2: 9 chunks
+  → slide 3: 8 chunks
+  → slide 4: 7 chunks
+  → slide 5: 8 chunks
+  → slide 6: 9 chunks
+  → slide 7: 9 chunks
+  → slide 8: 9 chunks
+  → slide 9: 12 chunks
+✓ 9 slide mp3s + full.mp3 (3572.6 KB total)

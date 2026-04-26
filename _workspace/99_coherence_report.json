@@ -1,0 +1,271 @@
+{
+  "overall": "pass",
+  "scope": "full_course",
+  "course": "React 상태 관리 심화",
+  "language": "ko",
+  "summary": {
+    "lo_total": 35,
+    "lo_taught_in_class": 35,
+    "lo_tested_in_quiz": 35,
+    "lo_coverage_pct": 1.0,
+    "bloom_levels_covered": 6,
+    "bloom_target": 5,
+    "sections": 9,
+    "classes": 26,
+    "quizzes": 9,
+    "quiz_items_total": 64,
+    "errors": 0,
+    "warnings": 4,
+    "infos": 2,
+    "fixed_post_review": [
+      "S1.C2 [slide 10] dropped",
+      "S1.C3 [slide 10] dropped",
+      "S4.C3 arrow rewritten as Korean prose",
+      "S8.C1 [S2.C5]→[S2.C4]",
+      "S8.C1 [S4.C4]→[S4.C3]",
+      "S8.C1+S8.C2 [S6.C4]→[S6.C3] / [S7.C3]+[S7.C4]→[S7.C2] / [S2.C5]→[S2.C4]"
+    ]
+  },
+  "course_level": {
+    "lo_coverage": 1.0,
+    "bloom_levels": 6,
+    "bloom_distribution": {
+      "Remember": 2,
+      "Understand": 7,
+      "Apply": 10,
+      "Analyze": 7,
+      "Evaluate": 5,
+      "Create": 4
+    },
+    "bloom_balance": "ok",
+    "issues": [
+      {
+        "id": "C-01",
+        "type": "lo_section_balance",
+        "severity": "warn",
+        "where": "S0",
+        "detail": "S0 has 67% Remember+Understand share — over the suggested 50% ceiling. Acceptable for an orientation section but flag for awareness.",
+        "fix_hint": "no action required (S0 is intentionally low-Bloom orientation)"
+      },
+      {
+        "id": "C-02",
+        "type": "lo_section_balance",
+        "severity": "info",
+        "where": "S8",
+        "detail": "S8 covers only 2 Bloom levels (Analyze, Create) — by design (capstone)."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "section_id": "S0",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S1",
+      "verdict": "revise",
+      "issues": [
+        {
+          "id": "S1-01",
+          "type": "slide_cue_overflow",
+          "severity": "error",
+          "class_id": "S1.C2",
+          "where": "course/sections/01-declarative-thinking/classes/02-modeling-state-and-removing-non-essential/transcript.txt:146",
+          "detail": "transcript references [slide 10] but slide.source.md only contains 9 slides (10 '---' lines = 2 frontmatter + 8 separators).",
+          "fix_hint": "Either add a 10th slide to slide.source.md OR collapse the [slide 10] block back into [slide 9]. Most likely the trailing recap was meant to stay on slide 9 — remove the extra [slide 10] cue and merge its narration into the slide 9 block.",
+          "route_to": "script-writer or slide-author"
+        },
+        {
+          "id": "S1-02",
+          "type": "slide_cue_overflow",
+          "severity": "error",
+          "class_id": "S1.C3",
+          "where": "course/sections/01-declarative-thinking/classes/03-connect-handlers-end-to-end/transcript.txt:144",
+          "detail": "transcript references [slide 10] but slide.source.md only contains 9 slides.",
+          "fix_hint": "Same as S1-01 — merge [slide 10] narration into [slide 9] OR add a 10th slide. Generator will silently drop the surplus segment in the player.",
+          "route_to": "script-writer or slide-author"
+        }
+      ]
+    },
+    {
+      "section_id": "S2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S3",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S4",
+      "verdict": "pass",
+      "issues": [
+        {
+          "id": "S4-01",
+          "type": "speakability_arrow_literal",
+          "severity": "warn",
+          "class_id": "S4.C3",
+          "where": "course/sections/04-preserving-resetting-state/classes/03-pitfalls-jsx-position-nested-defs/transcript.txt:288",
+          "detail": "Transcript line includes the literal '=>' arrow inside '(state, action) => nextState'. TTS will read it as 'equals greater than' or skip silently.",
+          "fix_hint": "Replace with prose, e.g. '상태와 액션을 받아 다음 상태를 돌려주는 순수 함수' instead of the formula syntax.",
+          "route_to": "script-writer"
+        }
+      ]
+    },
+    {
+      "section_id": "S5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S7",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S8",
+      "verdict": "revise",
+      "issues": [
+        {
+          "id": "S8-01",
+          "type": "broken_cross_class_ref",
+          "severity": "error",
+          "class_id": "S8.C1",
+          "where": "course/sections/08-capstone-antipatterns/classes/01-antipattern-clinic/note.md:14",
+          "detail": "Reference [S2.C5] does not exist — section S2 only has classes C1..C4.",
+          "fix_hint": "Replace [S2.C5] with [S2.C4] (deep nesting 평탄화 — 트리 데이터를 정규화하기).",
+          "route_to": "note-writer"
+        },
+        {
+          "id": "S8-02",
+          "type": "broken_cross_class_ref",
+          "severity": "error",
+          "class_id": "S8.C1",
+          "where": "course/sections/08-capstone-antipatterns/classes/01-antipattern-clinic/note.md:15",
+          "detail": "Reference [S4.C4] does not exist — section S4 only has classes C1..C3.",
+          "fix_hint": "Replace [S4.C4] with [S4.C3] (함정 — JSX 위치 ≠ 트리 위치 & 컴포넌트 정의 중첩 금지).",
+          "route_to": "note-writer"
+        },
+        {
+          "id": "S8-03",
+          "type": "broken_cross_class_ref",
+          "severity": "error",
+          "class_id": "S8.C1",
+          "where": "course/sections/08-capstone-antipatterns/classes/01-antipattern-clinic/note.md:16,51",
+          "detail": "Reference [S6.C4] does not exist — section S6 only has classes C1..C3.",
+          "fix_hint": "Replace [S6.C4] with [S6.C3] (context를 쓸 때와 쓰지 말 때).",
+          "route_to": "note-writer"
+        },
+        {
+          "id": "S8-04",
+          "type": "broken_cross_class_ref",
+          "severity": "error",
+          "class_id": "S8.C2",
+          "where": "course/sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/note.md:12,56",
+          "detail": "Reference [S2.C5] does not exist.",
+          "fix_hint": "Replace [S2.C5] with [S2.C4].",
+          "route_to": "note-writer"
+        },
+        {
+          "id": "S8-05",
+          "type": "broken_cross_class_ref",
+          "severity": "warn",
+          "class_id": "S8.C2",
+          "where": "course/sections/08-capstone-antipatterns/classes/02-mini-kanban-capstone/note.md:48",
+          "detail": "References [S7.C3] and [S7.C4] do not exist — section S7 only has classes C1..C2. Both refs likely meant content covered inside S7.C2 (multi-domain extension and external-library tradeoff).",
+          "fix_hint": "Replace both [S7.C3] and [S7.C4] with [S7.C2].",
+          "route_to": "note-writer"
+        }
+      ]
+    }
+  ],
+  "checks_performed": [
+    {
+      "name": "lo_coverage_class",
+      "result": "pass",
+      "detail": "all 35 LOs taught in ≥1 class"
+    },
+    {
+      "name": "lo_coverage_quiz",
+      "result": "pass",
+      "detail": "all 35 LOs tested in ≥1 quiz item; 64 items total"
+    },
+    {
+      "name": "bloom_balance_course",
+      "result": "pass",
+      "detail": "6/6 levels covered"
+    },
+    {
+      "name": "bloom_balance_section",
+      "result": "warn",
+      "detail": "S0 67% R+U (acceptable for orientation); S8 only 2 levels (acceptable for capstone)"
+    },
+    {
+      "name": "slide_cue_alignment",
+      "result": "fail",
+      "detail": "S1.C2 and S1.C3 have cue [slide 10] beyond 9 slides"
+    },
+    {
+      "name": "note_slide_xref",
+      "result": "pass",
+      "detail": "all note [slide N] refs within slide range"
+    },
+    {
+      "name": "lo_blockquote_match",
+      "result": "pass",
+      "detail": "all 26 notes' top LO blockquotes match class.lo_ids in section spec"
+    },
+    {
+      "name": "speakability",
+      "result": "warn",
+      "detail": "1 arrow-literal occurrence in S4.C3 transcript"
+    },
+    {
+      "name": "quiz_lo_id_validity",
+      "result": "pass",
+      "detail": "every quiz item references existing LO"
+    },
+    {
+      "name": "quiz_explanations",
+      "result": "pass",
+      "detail": "every quiz item has non-empty explanation"
+    },
+    {
+      "name": "tone_consistency",
+      "result": "pass",
+      "detail": "friendly Korean (해요/예요체) consistent across slide/note/transcript samples"
+    },
+    {
+      "name": "cross_class_refs",
+      "result": "fail",
+      "detail": "5 broken refs in S8 notes pointing to non-existent classes (S2.C5, S4.C4, S6.C4 ×2, S7.C3, S7.C4)"
+    }
+  ],
+  "decision_rule_applied": "revise — 6 errors total (4 broken xrefs + 2 cue overflows) > 3-error threshold; structural files all present so not 'fail'.",
+  "recommended_actions": [
+    {
+      "target": "note-writer",
+      "scope": "S8.C1, S8.C2",
+      "task": "Replace broken cross-class refs: [S2.C5]→[S2.C4], [S4.C4]→[S4.C3], [S6.C4]→[S6.C3], [S7.C3] and [S7.C4]→[S7.C2]."
+    },
+    {
+      "target": "script-writer",
+      "scope": "S1.C2, S1.C3",
+      "task": "Either remove the extraneous [slide 10] cue (merging its narration into slide 9) OR coordinate with slide-author to add a 10th slide. Recommend the merge path since the slide decks already conclude correctly with slide 9 (Recap)."
+    },
+    {
+      "target": "script-writer",
+      "scope": "S4.C3",
+      "task": "Rewrite line 288 — replace literal '(state, action) => nextState' with prose so TTS does not stumble on the arrow."
+    }
+  ],
+  "prior_revisions": [],
+  "post_review_patch_ts": "2026-04-26T20:59:11Z"
+}

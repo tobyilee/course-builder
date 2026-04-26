@@ -1,13 +1,13 @@
 .env
 .env.local
-_workspace/
 _workspace_prev*/
-course/
 course_prev*/
+course/build/
 .omc/
 scripts/__pycache__/
 *.pyc
 .DS_Store
 .claude/reports/handoff/
+.claude/scheduled_tasks.lock
 .wrangler/
 .deploy-stash-bundle.zip

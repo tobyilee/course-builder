@@ -1,0 +1,107 @@
+{
+  "class_id": "S4.C3",
+  "title": "함정 — JSX 위치 ≠ 트리 위치 & 컴포넌트 정의 중첩 금지",
+  "lo_ids": ["LO-S4.4", "LO-S4.2"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "두 가지 코드 스니펫을 미리 보여주고 '결과를 예측해 보라'고 던진다",
+        "하나는 if 분기로 JSX를 따로 썼는데도 state가 사라지지 않는다",
+        "다른 하나는 컴포넌트 안에 컴포넌트를 정의했더니 글자 입력이 매번 사라진다",
+        "두 함정 모두 트리 위치 규칙으로 깔끔히 설명된다는 예고"
+      ],
+      "lo_ids": ["LO-S4.4", "LO-S4.2"],
+      "visual_hint": "두 코드 카드 + '결과는?' 의문부호 오버레이",
+      "speaker_affect": "호기심 유발"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "함정 1 — JSX 위치(코드 라인)와 트리 위치(렌더된 슬롯)는 다르다",
+        "if 분기로 두 군데에 <Counter/>를 적어도 React는 '부모의 첫 자식'으로 같은 위치라 본다",
+        "기준은 코드 위치가 아니라 '리턴된 트리에서 부모의 몇 번째 자식인가'",
+        "이 규칙을 모르면 '코드를 분리했는데 왜 보존되지?' 라는 디버깅 미궁에 빠진다"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "두 if 분기 코드 → 동일한 트리 다이어그램으로 합쳐지는 화살표",
+      "speaker_affect": "차분하게"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "코드 예: if (isFancy) return <div><Counter isFancy={true}/></div>; else return <div><Counter isFancy={false}/></div>;",
+        "둘 다 'div의 첫 자식 = Counter' — 트리상 같은 위치, 같은 타입",
+        "결과 — isFancy 토글해도 score 보존 (의도가 리셋이었다면 버그)",
+        "고치는 법 — 정말 리셋이 필요하면 key prop을 주거나 두 분기를 다른 부모 슬롯에 둔다",
+        "교훈: '코드가 두 군데로 갈라졌다'는 시각이 아니라 '리턴된 트리'를 머릿속에 그려라"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "왼쪽 if-else 코드, 오른쪽 단일 트리 그림 + 보존 표시 + key 추가 리팩터링 후",
+      "speaker_affect": "실전 팁 강조"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 120,
+      "key_points": [
+        "함정 2 — 컴포넌트 정의를 다른 컴포넌트 함수 본문 안에 두지 말 것",
+        "부모가 렌더될 때마다 자식 컴포넌트 함수가 '새로운 함수 객체'로 다시 만들어진다",
+        "React 입장에서는 매 렌더마다 컴포넌트 타입이 바뀐 셈 → 같은 위치/다른 타입 → state 리셋",
+        "증상은 '입력하다가 한 글자 칠 때마다 input이 비워짐' 같은 미스터리 버그로 나타난다"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "MyComponent 박스 안에 매 렌더마다 새 MyTextField 박스가 다시 그려지는 애니메이션 스타일",
+      "speaker_affect": "강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "안티패턴 코드: function MyComponent(){ function MyTextField(){ const [text,setText]=useState(''); ... } return <MyTextField/>; }",
+        "리팩터링: MyTextField 정의를 파일 top-level로 이동",
+        "필요한 데이터는 props로 전달 — 안에 있어야 할 이유는 거의 없다",
+        "리팩터링 후 같은 위치 + 같은 (이제는 안정된) 타입 → state 정상 보존",
+        "리뷰 체크리스트: '이 함수 안에 다른 컴포넌트 정의가 있는가?' 한 줄 룰"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "Before(중첩 정의)→After(top-level 분리) 코드 diff, 입력창 동작 비교 GIF",
+      "speaker_affect": "친근하게 설명"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 70,
+      "key_points": [
+        "미니 연습: 'props를 클로저로 캡처하려고 컴포넌트를 안에 정의했다'는 동료 코드를 본다면?",
+        "스스로 답 — top-level로 빼고 그 데이터를 props로 넘기면 끝",
+        "함정 1과 함정 2를 한 번씩 머릿속에서 트리 그림으로 재현해 보기",
+        "두 함정의 공통 진단 도구는 동일하다 — '리턴된 트리에서 위치와 타입을 보라'"
+      ],
+      "lo_ids": ["LO-S4.4", "LO-S4.2"],
+      "visual_hint": "체크리스트 카드 2장: '같은 위치인가?' / '컴포넌트 정의가 중첩되었나?'",
+      "speaker_affect": "도전적이지만 친근하게"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 35,
+      "key_points": [
+        "JSX의 코드 위치가 아니라 리턴된 트리의 위치가 기준이다",
+        "컴포넌트 정의는 항상 top-level에 — 안에 두면 매 렌더마다 타입이 새로 생겨 리셋된다",
+        "S4 전체 도구 — 위치, 타입, key 세 가지로 보존/리셋을 100% 통제한다"
+      ],
+      "lo_ids": ["LO-S4.4", "LO-S4.2"],
+      "visual_hint": "S4 전체 요약 카드: 위치/타입/key 3개 키워드 트라이앵글",
+      "speaker_affect": "정리하듯 차분하게"
+    }
+  ]
+}
