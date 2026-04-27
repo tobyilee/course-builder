@@ -258,6 +258,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
   .btn-cta .title{{display:block}}
   footer{{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}}
   footer a{{margin:0 10px}}
+  footer .ver{{display:inline-block;background:#1f2a44;color:#9fb0cc;padding:1px 7px;border-radius:4px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-left:10px}}
   /* Resume banner */
   #resume-banner{{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}}
   #resume-banner.show{{display:flex}}
@@ -318,6 +319,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
 <footer>
   <a href="{quiz_href}">📝 {tx_quiz_cta_footer}</a>
   <a href="{back_href}">{tx_back_to_toc}</a>
+  {version_badge}
 </footer>
 
 <script>
@@ -560,13 +562,14 @@ QUIZ_TMPL = """<!DOCTYPE html>
   .score{{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}}
   .nav{{margin-bottom:16px}}
   ul{{margin:6px 0 0 18px;padding:0}}li{{margin:4px 0}}
+  .ver{{display:inline-block;background:#1f2a44;color:#9fb0cc;padding:1px 7px;border-radius:4px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-left:8px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="nav"><a href="{back_href}">← {tx_back_toc_short}</a></div>
   <h1>{section_title} · {tx_quiz_title}</h1>
-  <p class="meta">{n_items} {tx_items_unit} · Bloom: {bloom_summary}</p>
+  <p class="meta">{n_items} {tx_items_unit} · Bloom: {bloom_summary}{version_badge}</p>
   <div class="score" id="score" style="display:none"></div>
   <form id="quiz">
 {items_html}
@@ -770,7 +773,8 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
                        class_number: int = 1,
                        total_classes: int = 1,
                        toc_html: str = "",
-                       lang: str = "ko"):
+                       lang: str = "ko",
+                       course_version: str | None = None):
     cls_rel_dir = Path(cls["assets"]["slide_source"]).parent
     cls_dir = root / cls_rel_dir
 
@@ -808,6 +812,10 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
     course_progress_pct = round(class_number / total_classes * 100, 1)
     t = _tx(lang)
     tx_kwargs = {f"tx_{k}": v for k, v in t.items()}
+    version_badge = (
+        f'<span class="ver">v{html.escape(course_version)}</span>'
+        if course_version else ""
+    )
     html_out = PLAYER_TMPL.format(
         title=html.escape(cls["title"]),
         lo_ids=html.escape(lo_ids),
@@ -822,6 +830,7 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
         course_progress_pct=course_progress_pct,
         toc_html=toc_html,
         lang=lang,
+        version_badge=version_badge,
         **tx_kwargs,
     )
     (cls_dir / "player.html").write_text(html_out, encoding="utf-8")
@@ -832,7 +841,8 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
 def build_section_quiz(sec: dict, root: Path,
                        next_sec_first_class: dict | None = None,
                        next_sec: dict | None = None,
-                       lang: str = "ko") -> int:
+                       lang: str = "ko",
+                       course_version: str | None = None) -> int:
     quiz_path_rel = sec.get("quiz_path") or f"sections/{sec['slug']}/quiz.json"
     quiz_json_path = root / quiz_path_rel
     if not quiz_json_path.exists():
@@ -851,6 +861,10 @@ def build_section_quiz(sec: dict, root: Path,
         next_href = None
         next_title = None
     tx_kwargs = {f"tx_{k}": v for k, v in t.items()}
+    version_badge = (
+        f' · <span class="ver">v{html.escape(course_version)}</span>'
+        if course_version else ""
+    )
     out = QUIZ_TMPL.format(
         section_title=html.escape(sec["title"]),
         n_items=len(items),
@@ -862,6 +876,7 @@ def build_section_quiz(sec: dict, root: Path,
         next_title_json=json.dumps(next_title, ensure_ascii=False),
         back_href_json=json.dumps("../../index.html"),
         lang=lang,
+        version_badge=version_badge,
         **tx_kwargs,
     )
     (quiz_json_path.parent / "quiz.html").write_text(out, encoding="utf-8")
@@ -876,7 +891,8 @@ padding-bottom:6px;border-bottom:1px solid #2a3345}
 ul{list-style:none;padding:0;margin:0}li{padding:10px 0;border-bottom:1px solid #1a1f29}
 .los{color:#8b95a7;font-size:13px;margin-left:8px}
 .quiz-link{color:#3a8a4f;font-weight:500}
-.meta{color:#8b95a7;margin-bottom:24px}"""
+.meta{color:#8b95a7;margin-bottom:24px}
+.ver{display:inline-block;background:#1f2a44;color:#9fb0cc;padding:1px 7px;border-radius:4px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}"""
 
 
 def audience_to_str(aud) -> str:
@@ -897,11 +913,16 @@ def build_index(manifest: dict, per_class_info: list, quiz_counts: dict, root: P
                 lang: str = "ko"):
     topic = manifest["course"]["topic"]
     audience = audience_to_str(manifest["course"].get("audience", ""))
+    course_version = manifest["course"].get("version")
     t = _tx(lang)
     stats_txt = t["landing_stats_tpl"].format(
         n_cls=manifest["stats"]["classes"],
         n_lo=manifest["stats"]["lo_count"],
         mins=manifest["stats"].get("actual_audio_duration_sec", 0) / 60.0,
+    )
+    version_badge = (
+        f' · <span class="ver">v{html.escape(course_version)}</span>'
+        if course_version else ""
     )
     lines = [
         f'<!DOCTYPE html><html lang="{lang}"><head>',
@@ -911,7 +932,7 @@ def build_index(manifest: dict, per_class_info: list, quiz_counts: dict, root: P
         '</head><body>',
         f'<h1>{html.escape(topic)}</h1>',
         f'<p class="meta">{html.escape(audience)} · '
-        f'{manifest["course"]["language"]} · {html.escape(stats_txt)}</p>',
+        f'{manifest["course"]["language"]} · {html.escape(stats_txt)}{version_badge}</p>',
     ]
     for sec in manifest["sections"]:
         lines.append(f'<h2>{html.escape(sec["title"])}</h2><ul>')
@@ -944,6 +965,7 @@ def main():
     lang = (manifest.get("course", {}) or {}).get("language", "ko")
     if lang not in _PLAYER_STRINGS:
         lang = "ko"
+    course_version = (manifest.get("course", {}) or {}).get("version")
 
     per_class_info = []
     quiz_counts = {}
@@ -1008,6 +1030,7 @@ def main():
             total_classes=total_classes,
             toc_html=toc_html,
             lang=lang,
+            course_version=course_version,
         )
         per_class_info.append(info)
 
@@ -1016,7 +1039,7 @@ def main():
     for i, sec in enumerate(sections):
         next_sec = sections[i + 1] if i + 1 < len(sections) else None
         next_first = next_sec["classes"][0] if (next_sec and next_sec.get("classes")) else None
-        build_section_quiz(sec, root, next_sec_first_class=next_first, next_sec=next_sec, lang=lang)
+        build_section_quiz(sec, root, next_sec_first_class=next_first, next_sec=next_sec, lang=lang, course_version=course_version)
 
     build_index(manifest, per_class_info, quiz_counts, root, lang=lang)
     print(f"✓ Generated index.html + {len(per_class_info)} player.html + {len(quiz_counts)} quiz.html")

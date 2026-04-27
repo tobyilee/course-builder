@@ -26,55 +26,81 @@
   .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
   .nav{margin-bottom:16px}
   ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+  .ver{display:inline-block;background:#1f2a44;color:#9fb0cc;padding:1px 7px;border-radius:4px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-left:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="nav"><a href="../../index.html">← 목차</a></div>
   <h1>오리엔테이션 — 왜 state 설계가 따로 필요한가 · 퀴즈</h1>
-  <p class="meta">6 문항 · Bloom: Remember:1, Understand:2, Apply:1, Analyze:2</p>
+  <p class="meta">6 문항 · Bloom: Remember:1, Understand:2, Apply:1, Analyze:2 · <span class="ver">v1.0.0</span></p>
   <div class="score" id="score" style="display:none"></div>
   <form id="quiz">
 <div class="q" id="q0">
   <span class="tag">Q1</span>
   <span class="tag">Remember</span>
-  <span class="tag">mc</span>
+  <span class="tag">mcq_single</span>
   <h3>이 강의가 다루는 &#x27;state 설계&#x27;의 4가지 통증 패턴이 아닌 것은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> 중복(redundancy) — 같은 정보를 여러 state에 복제해 모순이 생김</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> 동기화 버그 — props를 useState 초기값으로 mirror 했더니 prop 변경이 화면에 안 따라옴</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> prop drilling — 깊은 트리를 통과하느라 무관한 컴포넌트가 prop을 단순 전달만 함</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> 메모리 누수 — useEffect 정리 함수를 빠뜨려 구독이 쌓임</span></label>
   <div class="explain"><strong>정답: D</strong><br>오리엔테이션에서 정의한 4가지 state 통증은 중복·동기화 버그·prop drilling·의도치 않은 리셋입니다. 메모리 누수는 effect/cleanup 영역의 문제로, 이 강의의 state 설계 통증 분류에 포함되지 않습니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 통증 #1(중복)에 해당하는 정확한 진술입니다.</li><li><strong>B.</strong> 통증 #2(동기화 버그)에 해당하는 정확한 진술입니다.</li><li><strong>C.</strong> 통증 #3(prop drilling)에 해당하는 정확한 진술입니다.</li></ul></div>
 </div>
 <div class="q" id="q1">
   <span class="tag">Q2</span>
   <span class="tag">Understand</span>
-  <span class="tag">mc</span>
+  <span class="tag">mcq_single</span>
   <h3>강의 전체를 관통하는 출발선으로 못 박은 선언형 UI의 핵심 명제는 무엇인가?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> 이벤트가 일어나면 DOM을 직접 변경한다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> 상태 → UI 자동 반영 (지금 상태가 X이면 UI는 Y이다)</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> 성능 최적화를 위해 렌더링을 수동으로 통제한다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> useState 대신 useReducer를 우선 사용한다</span></label>
   <div class="explain"><strong>정답: B</strong><br>선언형 UI의 핵심은 &#x27;상태만 정확히 정의하면 React가 알아서 그려준다&#x27;는 명제입니다. 명령형은 &#x27;DOM을 어떻게 바꿔라&#x27;를 단계별로 지시하는 반면, 선언형은 &#x27;상태 X → UI Y&#x27;의 매핑을 선언합니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 이는 정확히 명령형(imperative) 접근법으로, 선언형의 반대 명제입니다.</li><li><strong>C.</strong> 성능 최적화는 별개 주제이며, 선언형 명제와 직접 관련이 없습니다.</li><li><strong>D.</strong> useReducer 선택은 S5의 트레이드오프 주제이고, 선언형 UI 명제 자체는 훅 선택과 무관합니다.</li></ul></div>
 </div>
 <div class="q" id="q2">
   <span class="tag">Q3</span>
   <span class="tag">Analyze</span>
-  <span class="tag">mc</span>
+  <span class="tag">mcq_single</span>
   <h3>동료가 이렇게 코드를 짰습니다: &#x27;폼 컴포넌트에 isLoading, isError, isSuccess, isEmpty 4개 boolean을 따로 두니 (isLoading=true, isSuccess=true) 같은 모순 조합이 가끔 만들어진다.&#x27; 이 통증은 4가지 중 어느 것에 가장 가까운가?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> 통증 #1 — 중복(redundancy) / 모순 가능 상태</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> 통증 #3 — prop drilling</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> 통증 #4 — 의도치 않은 리셋</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> 이건 state 설계 통증이 아니라 단순 타입 오류일 뿐이다</span></label>
   <div class="explain"><strong>정답: A</strong><br>여러 boolean이 동일한 &#x27;폼의 상태&#x27;라는 한 진실을 분산 표현하면서 모순 조합(2^4 = 16가지 중 의미 있는 건 4개)을 허용한 사례입니다. 이는 단일 출처(single source of truth)가 무너진 통증 #1의 전형이며, status enum 한 변수로 정리하는 것이 다음 챕터의 처방입니다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> prop drilling은 깊은 트리에 prop이 통과되는 문제로, 한 컴포넌트 내부의 boolean 모순과 무관합니다.</li><li><strong>C.</strong> 리셋은 트리 위치/key prop 영역의 통증이며, 모순 조합 문제와 다릅니다.</li><li><strong>D.</strong> TypeScript로 boolean 타입 자체는 맞지만 모순 조합은 막히지 않습니다 — 이는 state 모양(구조) 결정의 문제입니다.</li></ul></div>
 </div>
 <div class="q" id="q3">
   <span class="tag">Q4</span>
   <span class="tag">Apply</span>
-  <span class="tag">mc</span>
+  <span class="tag">mcq_single</span>
   <h3>&#x27;같은 폼 컴포넌트인데 글 작성 탭만 바꾸면 이전 글의 입력값이 새 글에 그대로 남아 있다&#x27;는 버그를 보고했다. 코스 맵상 이 통증은 어느 챕터에서 정면으로 풀리는가?</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> S2 state 구조 설계 — 5원칙으로 평탄화하면 해결</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> S3 lifting state up — 공통 부모로 끌어올리면 해결</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> S4 state 보존과 리셋 — 트리 위치 규칙과 key prop으로 해결</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> S6 context — Provider로 감싸면 해결</span></label>
   <div class="explain"><strong>정답: C</strong><br>같은 트리 위치에 같은 컴포넌트 타입이 머물면 React는 state를 보존합니다. 이는 통증 #4(의도치 않은 — 또는 의도된 — 리셋) 영역이며, S4에서 트리 위치 규칙과 key prop(예: `&lt;PostForm key={postId} /&gt;`)으로 리셋 의도를 표현하는 것이 정답 처방입니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> S2는 중복/동기화/평탄화 영역으로, 트리 위치에 의한 보존/리셋 문제와 다릅니다.</li><li><strong>B.</strong> lifting은 형제 컴포넌트 협조(통증 #3 일부)에 대한 처방이며, 동일 위치 보존 현상과 직접 관련이 없습니다.</li><li><strong>D.</strong> context는 prop drilling(통증 #3) 처방이지 리셋 통증의 처방이 아닙니다.</li></ul></div>
 </div>
 <div class="q" id="q4">
   <span class="tag">Q5</span>
   <span class="tag">Understand</span>
-  <span class="tag">multi-select</span>
+  <span class="tag">mcq_multi</span>
   <h3>코스 맵에서 &#x27;구조 잡기&#x27; 묶음(state를 어디에 어떤 모양으로 둘지 결정)으로 분류된 챕터를 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q4" value="A"><span><strong>A.</strong> S1 선언형 사고</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="B"><span><strong>B.</strong> S2 state 구조 설계</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="C"><span><strong>C.</strong> S3 lifting state up</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="D"><span><strong>D.</strong> S5 reducer</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="E"><span><strong>E.</strong> S7 reducer + context</span></label>
   <div class="explain"><strong>정답: A, B, C</strong><br>코스 맵은 7개 챕터를 두 묶음으로 나눕니다 — &#x27;구조 잡기&#x27;(S1·S2·S3)는 state의 모양과 위치를 결정하고, &#x27;동작 다듬기&#x27;(S4·S5·S6·S7)는 그 위에서 리셋·로직·전달을 정교화합니다.<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> S5(reducer)는 흩어진 setState를 통합하는 &#x27;동작 다듬기&#x27; 묶음입니다.</li><li><strong>E.</strong> S7(reducer+context)은 대규모 분산 상태 확장으로 &#x27;동작 다듬기&#x27; 묶음의 마지막 챕터입니다.</li></ul></div>
 </div>
 <div class="q" id="q5">
   <span class="tag">Q6</span>
   <span class="tag">Analyze</span>
-  <span class="tag">mc</span>
+  <span class="tag">mcq_single</span>
   <h3>한 학습자가 &#x27;내 프로젝트의 SettingsPanel은 4단계 깊이의 자식 컴포넌트가 theme 값을 받기 위해 중간 컴포넌트들이 모두 theme prop을 통과만 시키고 있다&#x27;고 자기 진단을 했다. 코스 맵상 이 가설은 어느 챕터(들)에서 검증·해결되는가?</h3>
+  <label class="choice"><input type="radio" name="q5" value="A"><span><strong>A.</strong> S1 — visual states 열거 5단계로 풀린다</span></label>
+  <label class="choice"><input type="radio" name="q5" value="B"><span><strong>B.</strong> S3 lifting state up과 S6 context — 통증 #3(prop drilling)의 1차·2차 처방</span></label>
+  <label class="choice"><input type="radio" name="q5" value="C"><span><strong>C.</strong> S4 — key prop으로 풀린다</span></label>
+  <label class="choice"><input type="radio" name="q5" value="D"><span><strong>D.</strong> S5 reducer — (state, action) =&gt; nextState로 풀린다</span></label>
   <div class="explain"><strong>정답: B</strong><br>이 시나리오는 정확히 통증 #3(prop drilling)입니다. 코스 맵은 이 통증에 두 처방을 둡니다 — S3 lifting state up(공통 부모 위치 결정, 1차 처방)과 S6 context(theming/auth 같은 전역성 데이터에 대한 2차 처방). theme처럼 트리 전체에 걸치는 값은 특히 S6의 전형적 사례입니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> S1은 한 컴포넌트 내부의 모순/중복 정리(통증 #1·#2 뿌리)로, 깊은 트리 통과 문제와 다릅니다.</li><li><strong>C.</strong> S4는 리셋 통증(#4) 영역이라 theme 전달 시나리오와 무관합니다.</li><li><strong>D.</strong> S5는 흩어진 setState 통합 영역으로, prop이 트리를 통과만 시키는 문제와 다릅니다.</li></ul></div>
 </div>
     <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
@@ -82,7 +108,7 @@
   <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
 </div>
 <script>
-const ITEMS = [{"id": "Q-S0-1", "type": "mc", "stem": "이 강의가 다루는 'state 설계'의 4가지 통증 패턴이 아닌 것은?", "choices": ["중복(redundancy) — 같은 정보를 여러 state에 복제해 모순이 생김", "동기화 버그 — props를 useState 초기값으로 mirror 했더니 prop 변경이 화면에 안 따라옴", "prop drilling — 깊은 트리를 통과하느라 무관한 컴포넌트가 prop을 단순 전달만 함", "메모리 누수 — useEffect 정리 함수를 빠뜨려 구독이 쌓임"], "correct": ["D"], "explanation": "오리엔테이션에서 정의한 4가지 state 통증은 중복·동기화 버그·prop drilling·의도치 않은 리셋입니다. 메모리 누수는 effect/cleanup 영역의 문제로, 이 강의의 state 설계 통증 분류에 포함되지 않습니다.", "distractor_rationales": {"A": "통증 #1(중복)에 해당하는 정확한 진술입니다.", "B": "통증 #2(동기화 버그)에 해당하는 정확한 진술입니다.", "C": "통증 #3(prop drilling)에 해당하는 정확한 진술입니다."}, "lo_ids": ["LO-S0.1"], "bloom": "Remember", "difficulty": 2}, {"id": "Q-S0-2", "type": "mc", "stem": "강의 전체를 관통하는 출발선으로 못 박은 선언형 UI의 핵심 명제는 무엇인가?", "choices": ["이벤트가 일어나면 DOM을 직접 변경한다", "상태 → UI 자동 반영 (지금 상태가 X이면 UI는 Y이다)", "성능 최적화를 위해 렌더링을 수동으로 통제한다", "useState 대신 useReducer를 우선 사용한다"], "correct": ["B"], "explanation": "선언형 UI의 핵심은 '상태만 정확히 정의하면 React가 알아서 그려준다'는 명제입니다. 명령형은 'DOM을 어떻게 바꿔라'를 단계별로 지시하는 반면, 선언형은 '상태 X → UI Y'의 매핑을 선언합니다.", "distractor_rationales": {"A": "이는 정확히 명령형(imperative) 접근법으로, 선언형의 반대 명제입니다.", "C": "성능 최적화는 별개 주제이며, 선언형 명제와 직접 관련이 없습니다.", "D": "useReducer 선택은 S5의 트레이드오프 주제이고, 선언형 UI 명제 자체는 훅 선택과 무관합니다."}, "lo_ids": ["LO-S0.3"], "bloom": "Understand", "difficulty": 1}, {"id": "Q-S0-3", "type": "mc", "stem": "동료가 이렇게 코드를 짰습니다: '폼 컴포넌트에 isLoading, isError, isSuccess, isEmpty 4개 boolean을 따로 두니 (isLoading=true, isSuccess=true) 같은 모순 조합이 가끔 만들어진다.' 이 통증은 4가지 중 어느 것에 가장 가까운가?", "choices": ["통증 #1 — 중복(redundancy) / 모순 가능 상태", "통증 #3 — prop drilling", "통증 #4 — 의도치 않은 리셋", "이건 state 설계 통증이 아니라 단순 타입 오류일 뿐이다"], "correct": ["A"], "explanation": "여러 boolean이 동일한 '폼의 상태'라는 한 진실을 분산 표현하면서 모순 조합(2^4 = 16가지 중 의미 있는 건 4개)을 허용한 사례입니다. 이는 단일 출처(single source of truth)가 무너진 통증 #1의 전형이며, status enum 한 변수로 정리하는 것이 다음 챕터의 처방입니다.", "distractor_rationales": {"B": "prop drilling은 깊은 트리에 prop이 통과되는 문제로, 한 컴포넌트 내부의 boolean 모순과 무관합니다.", "C": "리셋은 트리 위치/key prop 영역의 통증이며, 모순 조합 문제와 다릅니다.", "D": "TypeScript로 boolean 타입 자체는 맞지만 모순 조합은 막히지 않습니다 — 이는 state 모양(구조) 결정의 문제입니다."}, "lo_ids": ["LO-S0.1", "LO-S0.2"], "bloom": "Analyze", "difficulty": 3}, {"id": "Q-S0-4", "type": "mc", "stem": "'같은 폼 컴포넌트인데 글 작성 탭만 바꾸면 이전 글의 입력값이 새 글에 그대로 남아 있다'는 버그를 보고했다. 코스 맵상 이 통증은 어느 챕터에서 정면으로 풀리는가?", "choices": ["S2 state 구조 설계 — 5원칙으로 평탄화하면 해결", "S3 lifting state up — 공통 부모로 끌어올리면 해결", "S4 state 보존과 리셋 — 트리 위치 규칙과 key prop으로 해결", "S6 context — Provider로 감싸면 해결"], "correct": ["C"], "explanation": "같은 트리 위치에 같은 컴포넌트 타입이 머물면 React는 state를 보존합니다. 이는 통증 #4(의도치 않은 — 또는 의도된 — 리셋) 영역이며, S4에서 트리 위치 규칙과 key prop(예: `<PostForm key={postId} />`)으로 리셋 의도를 표현하는 것이 정답 처방입니다.", "distractor_rationales": {"A": "S2는 중복/동기화/평탄화 영역으로, 트리 위치에 의한 보존/리셋 문제와 다릅니다.", "B": "lifting은 형제 컴포넌트 협조(통증 #3 일부)에 대한 처방이며, 동일 위치 보존 현상과 직접 관련이 없습니다.", "D": "context는 prop drilling(통증 #3) 처방이지 리셋 통증의 처방이 아닙니다."}, "lo_ids": ["LO-S0.1", "LO-S0.2"], "bloom": "Apply", "difficulty": 3}, {"id": "Q-S0-5", "type": "multi-select", "stem": "코스 맵에서 '구조 잡기' 묶음(state를 어디에 어떤 모양으로 둘지 결정)으로 분류된 챕터를 모두 고르시오. (정답 3개)", "choices": ["S1 선언형 사고", "S2 state 구조 설계", "S3 lifting state up", "S5 reducer", "S7 reducer + context"], "correct": ["A", "B", "C"], "explanation": "코스 맵은 7개 챕터를 두 묶음으로 나눕니다 — '구조 잡기'(S1·S2·S3)는 state의 모양과 위치를 결정하고, '동작 다듬기'(S4·S5·S6·S7)는 그 위에서 리셋·로직·전달을 정교화합니다.", "distractor_rationales": {"D": "S5(reducer)는 흩어진 setState를 통합하는 '동작 다듬기' 묶음입니다.", "E": "S7(reducer+context)은 대규모 분산 상태 확장으로 '동작 다듬기' 묶음의 마지막 챕터입니다."}, "lo_ids": ["LO-S0.1"], "bloom": "Understand", "difficulty": 2}, {"id": "Q-S0-6", "type": "mc", "stem": "한 학습자가 '내 프로젝트의 SettingsPanel은 4단계 깊이의 자식 컴포넌트가 theme 값을 받기 위해 중간 컴포넌트들이 모두 theme prop을 통과만 시키고 있다'고 자기 진단을 했다. 코스 맵상 이 가설은 어느 챕터(들)에서 검증·해결되는가?", "choices": ["S1 — visual states 열거 5단계로 풀린다", "S3 lifting state up과 S6 context — 통증 #3(prop drilling)의 1차·2차 처방", "S4 — key prop으로 풀린다", "S5 reducer — (state, action) => nextState로 풀린다"], "correct": ["B"], "explanation": "이 시나리오는 정확히 통증 #3(prop drilling)입니다. 코스 맵은 이 통증에 두 처방을 둡니다 — S3 lifting state up(공통 부모 위치 결정, 1차 처방)과 S6 context(theming/auth 같은 전역성 데이터에 대한 2차 처방). theme처럼 트리 전체에 걸치는 값은 특히 S6의 전형적 사례입니다.", "distractor_rationales": {"A": "S1은 한 컴포넌트 내부의 모순/중복 정리(통증 #1·#2 뿌리)로, 깊은 트리 통과 문제와 다릅니다.", "C": "S4는 리셋 통증(#4) 영역이라 theme 전달 시나리오와 무관합니다.", "D": "S5는 흩어진 setState 통합 영역으로, prop이 트리를 통과만 시키는 문제와 다릅니다."}, "lo_ids": ["LO-S0.2"], "bloom": "Analyze", "difficulty": 3}];
+const ITEMS = [{"id": "Q-S0-1", "type": "mcq_single", "stem": "이 강의가 다루는 'state 설계'의 4가지 통증 패턴이 아닌 것은?", "choices": ["중복(redundancy) — 같은 정보를 여러 state에 복제해 모순이 생김", "동기화 버그 — props를 useState 초기값으로 mirror 했더니 prop 변경이 화면에 안 따라옴", "prop drilling — 깊은 트리를 통과하느라 무관한 컴포넌트가 prop을 단순 전달만 함", "메모리 누수 — useEffect 정리 함수를 빠뜨려 구독이 쌓임"], "correct": ["D"], "explanation": "오리엔테이션에서 정의한 4가지 state 통증은 중복·동기화 버그·prop drilling·의도치 않은 리셋입니다. 메모리 누수는 effect/cleanup 영역의 문제로, 이 강의의 state 설계 통증 분류에 포함되지 않습니다.", "distractor_rationales": {"A": "통증 #1(중복)에 해당하는 정확한 진술입니다.", "B": "통증 #2(동기화 버그)에 해당하는 정확한 진술입니다.", "C": "통증 #3(prop drilling)에 해당하는 정확한 진술입니다."}, "lo_ids": ["LO-S0.1"], "bloom": "Remember", "difficulty": 2}, {"id": "Q-S0-2", "type": "mcq_single", "stem": "강의 전체를 관통하는 출발선으로 못 박은 선언형 UI의 핵심 명제는 무엇인가?", "choices": ["이벤트가 일어나면 DOM을 직접 변경한다", "상태 → UI 자동 반영 (지금 상태가 X이면 UI는 Y이다)", "성능 최적화를 위해 렌더링을 수동으로 통제한다", "useState 대신 useReducer를 우선 사용한다"], "correct": ["B"], "explanation": "선언형 UI의 핵심은 '상태만 정확히 정의하면 React가 알아서 그려준다'는 명제입니다. 명령형은 'DOM을 어떻게 바꿔라'를 단계별로 지시하는 반면, 선언형은 '상태 X → UI Y'의 매핑을 선언합니다.", "distractor_rationales": {"A": "이는 정확히 명령형(imperative) 접근법으로, 선언형의 반대 명제입니다.", "C": "성능 최적화는 별개 주제이며, 선언형 명제와 직접 관련이 없습니다.", "D": "useReducer 선택은 S5의 트레이드오프 주제이고, 선언형 UI 명제 자체는 훅 선택과 무관합니다."}, "lo_ids": ["LO-S0.3"], "bloom": "Understand", "difficulty": 1}, {"id": "Q-S0-3", "type": "mcq_single", "stem": "동료가 이렇게 코드를 짰습니다: '폼 컴포넌트에 isLoading, isError, isSuccess, isEmpty 4개 boolean을 따로 두니 (isLoading=true, isSuccess=true) 같은 모순 조합이 가끔 만들어진다.' 이 통증은 4가지 중 어느 것에 가장 가까운가?", "choices": ["통증 #1 — 중복(redundancy) / 모순 가능 상태", "통증 #3 — prop drilling", "통증 #4 — 의도치 않은 리셋", "이건 state 설계 통증이 아니라 단순 타입 오류일 뿐이다"], "correct": ["A"], "explanation": "여러 boolean이 동일한 '폼의 상태'라는 한 진실을 분산 표현하면서 모순 조합(2^4 = 16가지 중 의미 있는 건 4개)을 허용한 사례입니다. 이는 단일 출처(single source of truth)가 무너진 통증 #1의 전형이며, status enum 한 변수로 정리하는 것이 다음 챕터의 처방입니다.", "distractor_rationales": {"B": "prop drilling은 깊은 트리에 prop이 통과되는 문제로, 한 컴포넌트 내부의 boolean 모순과 무관합니다.", "C": "리셋은 트리 위치/key prop 영역의 통증이며, 모순 조합 문제와 다릅니다.", "D": "TypeScript로 boolean 타입 자체는 맞지만 모순 조합은 막히지 않습니다 — 이는 state 모양(구조) 결정의 문제입니다."}, "lo_ids": ["LO-S0.1", "LO-S0.2"], "bloom": "Analyze", "difficulty": 3}, {"id": "Q-S0-4", "type": "mcq_single", "stem": "'같은 폼 컴포넌트인데 글 작성 탭만 바꾸면 이전 글의 입력값이 새 글에 그대로 남아 있다'는 버그를 보고했다. 코스 맵상 이 통증은 어느 챕터에서 정면으로 풀리는가?", "choices": ["S2 state 구조 설계 — 5원칙으로 평탄화하면 해결", "S3 lifting state up — 공통 부모로 끌어올리면 해결", "S4 state 보존과 리셋 — 트리 위치 규칙과 key prop으로 해결", "S6 context — Provider로 감싸면 해결"], "correct": ["C"], "explanation": "같은 트리 위치에 같은 컴포넌트 타입이 머물면 React는 state를 보존합니다. 이는 통증 #4(의도치 않은 — 또는 의도된 — 리셋) 영역이며, S4에서 트리 위치 규칙과 key prop(예: `<PostForm key={postId} />`)으로 리셋 의도를 표현하는 것이 정답 처방입니다.", "distractor_rationales": {"A": "S2는 중복/동기화/평탄화 영역으로, 트리 위치에 의한 보존/리셋 문제와 다릅니다.", "B": "lifting은 형제 컴포넌트 협조(통증 #3 일부)에 대한 처방이며, 동일 위치 보존 현상과 직접 관련이 없습니다.", "D": "context는 prop drilling(통증 #3) 처방이지 리셋 통증의 처방이 아닙니다."}, "lo_ids": ["LO-S0.1", "LO-S0.2"], "bloom": "Apply", "difficulty": 3}, {"id": "Q-S0-5", "type": "mcq_multi", "stem": "코스 맵에서 '구조 잡기' 묶음(state를 어디에 어떤 모양으로 둘지 결정)으로 분류된 챕터를 모두 고르시오. (정답 3개)", "choices": ["S1 선언형 사고", "S2 state 구조 설계", "S3 lifting state up", "S5 reducer", "S7 reducer + context"], "correct": ["A", "B", "C"], "explanation": "코스 맵은 7개 챕터를 두 묶음으로 나눕니다 — '구조 잡기'(S1·S2·S3)는 state의 모양과 위치를 결정하고, '동작 다듬기'(S4·S5·S6·S7)는 그 위에서 리셋·로직·전달을 정교화합니다.", "distractor_rationales": {"D": "S5(reducer)는 흩어진 setState를 통합하는 '동작 다듬기' 묶음입니다.", "E": "S7(reducer+context)은 대규모 분산 상태 확장으로 '동작 다듬기' 묶음의 마지막 챕터입니다."}, "lo_ids": ["LO-S0.1"], "bloom": "Understand", "difficulty": 2}, {"id": "Q-S0-6", "type": "mcq_single", "stem": "한 학습자가 '내 프로젝트의 SettingsPanel은 4단계 깊이의 자식 컴포넌트가 theme 값을 받기 위해 중간 컴포넌트들이 모두 theme prop을 통과만 시키고 있다'고 자기 진단을 했다. 코스 맵상 이 가설은 어느 챕터(들)에서 검증·해결되는가?", "choices": ["S1 — visual states 열거 5단계로 풀린다", "S3 lifting state up과 S6 context — 통증 #3(prop drilling)의 1차·2차 처방", "S4 — key prop으로 풀린다", "S5 reducer — (state, action) => nextState로 풀린다"], "correct": ["B"], "explanation": "이 시나리오는 정확히 통증 #3(prop drilling)입니다. 코스 맵은 이 통증에 두 처방을 둡니다 — S3 lifting state up(공통 부모 위치 결정, 1차 처방)과 S6 context(theming/auth 같은 전역성 데이터에 대한 2차 처방). theme처럼 트리 전체에 걸치는 값은 특히 S6의 전형적 사례입니다.", "distractor_rationales": {"A": "S1은 한 컴포넌트 내부의 모순/중복 정리(통증 #1·#2 뿌리)로, 깊은 트리 통과 문제와 다릅니다.", "C": "S4는 리셋 통증(#4) 영역이라 theme 전달 시나리오와 무관합니다.", "D": "S5는 흩어진 setState 통합 영역으로, prop이 트리를 통과만 시키는 문제와 다릅니다."}, "lo_ids": ["LO-S0.2"], "bloom": "Analyze", "difficulty": 3}];
 const NEXT_HREF = "../01-declarative-thinking/classes/01-visual-states-and-triggers/player.html";
 const NEXT_TITLE = "visual states 열거하기 — 디자이너처럼 UI를 펼쳐보기";
 const BACK_HREF = "../../index.html";

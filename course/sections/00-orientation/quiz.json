@@ -3,7 +3,7 @@
   "items": [
     {
       "id": "Q-S0-1",
-      "type": "mc",
+      "type": "mcq_single",
       "stem": "이 강의가 다루는 'state 설계'의 4가지 통증 패턴이 아닌 것은?",
       "choices": [
         "중복(redundancy) — 같은 정보를 여러 state에 복제해 모순이 생김",
@@ -24,7 +24,7 @@
     },
     {
       "id": "Q-S0-2",
-      "type": "mc",
+      "type": "mcq_single",
       "stem": "강의 전체를 관통하는 출발선으로 못 박은 선언형 UI의 핵심 명제는 무엇인가?",
       "choices": [
         "이벤트가 일어나면 DOM을 직접 변경한다",
@@ -45,7 +45,7 @@
     },
     {
       "id": "Q-S0-3",
-      "type": "mc",
+      "type": "mcq_single",
       "stem": "동료가 이렇게 코드를 짰습니다: '폼 컴포넌트에 isLoading, isError, isSuccess, isEmpty 4개 boolean을 따로 두니 (isLoading=true, isSuccess=true) 같은 모순 조합이 가끔 만들어진다.' 이 통증은 4가지 중 어느 것에 가장 가까운가?",
       "choices": [
         "통증 #1 — 중복(redundancy) / 모순 가능 상태",
@@ -66,7 +66,7 @@
     },
     {
       "id": "Q-S0-4",
-      "type": "mc",
+      "type": "mcq_single",
       "stem": "'같은 폼 컴포넌트인데 글 작성 탭만 바꾸면 이전 글의 입력값이 새 글에 그대로 남아 있다'는 버그를 보고했다. 코스 맵상 이 통증은 어느 챕터에서 정면으로 풀리는가?",
       "choices": [
         "S2 state 구조 설계 — 5원칙으로 평탄화하면 해결",
@@ -87,7 +87,7 @@
     },
     {
       "id": "Q-S0-5",
-      "type": "multi-select",
+      "type": "mcq_multi",
       "stem": "코스 맵에서 '구조 잡기' 묶음(state를 어디에 어떤 모양으로 둘지 결정)으로 분류된 챕터를 모두 고르시오. (정답 3개)",
       "choices": [
         "S1 선언형 사고",
@@ -108,7 +108,7 @@
     },
     {
       "id": "Q-S0-6",
-      "type": "mc",
+      "type": "mcq_single",
       "stem": "한 학습자가 '내 프로젝트의 SettingsPanel은 4단계 깊이의 자식 컴포넌트가 theme 값을 받기 위해 중간 컴포넌트들이 모두 theme prop을 통과만 시키고 있다'고 자기 진단을 했다. 코스 맵상 이 가설은 어느 챕터(들)에서 검증·해결되는가?",
       "choices": [
         "S1 — visual states 열거 5단계로 풀린다",
