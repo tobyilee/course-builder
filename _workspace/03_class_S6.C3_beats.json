@@ -1,0 +1,97 @@
+{
+  "class_id": "S6.C3",
+  "title": "Effect Event의 제약과 안티패턴 — 외부에 노출 금지",
+  "lo_ids": ["LO-S6.3"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "지난 시간에 배운 useEffectEvent — 너무 편해서 아무 데나 쓰고 싶어진다",
+        "하지만 잘못 쓰면 오히려 React가 추적하지 못하는 코드가 됨",
+        "Timer 예제: onTick을 useTimer(onTick, 1000)에 넘기는 흔한 시도가 왜 위험한가",
+        "오늘은 '쓰지 말아야 할 곳'을 명확히 긋는다"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "useEffectEvent를 손에 든 이미지 위에 'Use with care' 경고 사인",
+      "speaker_affect": "약간 진지하게, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "제약 3가지 명시: (1) Effect 안에서만 호출 (2) 다른 컴포넌트/Hook에 인자로 전달 금지 (3) Effect deps에 포함 금지",
+        "이유: Effect Event는 'reactive 흐름에서 분리된 섬' — 외부로 새어나가면 추적 불가",
+        "deps에 올리면 무의미 — 어차피 매 렌더 새로 만들어지므로 무한 재실행만 유발",
+        "'사용처 동거' 원칙: 그 Effect Event를 정의한 곳에서만 쓴다"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "3개 금지 표지판 아이콘 + 'Effect 안에서만' 영역 표시",
+      "speaker_affect": "또박또박, 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 210,
+      "key_points": [
+        "안티패턴 코드: function Timer() 내부에서 onTick = useEffectEvent(...) 정의 후 useTimer(onTick, 1000)",
+        "왜 잘못인가: useTimer는 onTick의 reactive 여부를 모르고, 결국 사용처가 분리됨",
+        "리팩터링: useTimer 내부에서 callback을 받아 onTick = useEffectEvent(() => callback())",
+        "useEffect(() => setInterval(onTick, delay)) deps는 [delay]만",
+        "사용처(useTimer Hook)에 useEffectEvent를 동거시키니 추적 가능해짐",
+        "Timer 컴포넌트는 그냥 useTimer(() => setCount(c => c+1), 1000)으로 깔끔"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "Before/After 코드 — Before에 빨간 X, After에 초록 체크. 화살표로 'onTick 정의 위치 이동' 표시",
+      "speaker_affect": "시범 보이는 톤, 진단하는 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "또 다른 안티패턴: linter suppress (eslint-disable react-hooks/exhaustive-deps)로 deps 누락",
+        "원칙: 'suppress 대신 useEffectEvent' — non-reactive로 만들어야 할 부분이라면 명시적으로 추출",
+        "Naming 가이드: 'on + 발생한 일' 형식 — onMessage, onTick, onVisit, onConnected (✓)",
+        "지양할 이름: onMount, onUpdate, onAfterRender — lifecycle 어휘는 잘못된 멘탈 모델 유도",
+        "이름이 '무슨 사건이 일어났나'를 가리키도록 — Effect Event는 사건 핸들러"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "✓/✗ 두 컬럼 — ✓: onMessage/onTick/onVisit/onConnected, ✗: onMount/onUpdate/onAfterRender",
+      "speaker_affect": "또박또박, 친근하게"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 130,
+      "key_points": [
+        "미니 자문자답: 어떤 컴포넌트가 onSearch라는 콜백을 prop으로 받고, 그걸 useEffectEvent로 감싸 자식 Hook에 넘기려 한다 — 어디가 잘못인가?",
+        "진단: '다른 Hook에 인자로 전달' 제약 위반 — 자식 Hook 내부에서 callback을 받아 그곳에서 useEffectEvent로 감싸야 함",
+        "수정 방향 스케치: 자식 Hook 시그니처를 useThing(onSearch) → 내부에서 onSearchEvent = useEffectEvent(...)",
+        "추가 점검: 이름이 onMount/onUpdate 같은 lifecycle 형이면 다시 짓기",
+        "체크리스트로 자기 코드 점검 습관화"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "체크리스트 4줄: ① Effect 안에서만? ② 외부 전달 X? ③ deps에서 뺐나? ④ 이름이 사건 형?",
+      "speaker_affect": "초대하는 톤, 부드럽게"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 75,
+      "key_points": [
+        "제약 3가지: Effect 안에서만 / 외부 전달 금지 / deps에 안 넣기",
+        "안티패턴 처방: 사용처(Hook)에 useEffectEvent를 동거시켜라",
+        "Naming: 'on + 사건' (onMessage/onTick) ✓, lifecycle 어휘 ✗",
+        "재차 강조: useEffectEvent는 React 실험적(experimental) API — stable 출시 전엔 production 사용 신중, 채택 시점에 따라 import 경로가 달라질 수 있음",
+        "S6 마무리: 결정 질문 → useEffectEvent 추출 → 제약 준수, 세 단계로 Event/Effect를 깔끔히 분리"
+      ],
+      "lo_ids": ["LO-S6.3"],
+      "visual_hint": "최종 체크리스트 + experimental 배지 강조 + S6 전체 흐름 요약 미니 다이어그램",
+      "speaker_affect": "정리하는 톤, 단단하게, 마지막은 따뜻하게"
+    }
+  ]
+}

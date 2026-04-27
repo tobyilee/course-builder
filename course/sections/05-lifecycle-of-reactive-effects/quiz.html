@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>반응형 Effect의 라이프사이클 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>반응형 Effect의 라이프사이클 · 퀴즈</h1>
+  <p class="meta">7 문항 · Bloom: Understand:3, Analyze:1, Apply:1, Evaluate:2</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>컴포넌트 라이프사이클과 Effect 라이프사이클의 관계를 가장 정확히 설명한 것은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. Effect는 컴포넌트가 mount될 때 시작되고 unmount될 때 끝나는, 컴포넌트와 동일한 시계를 공유한다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. 컴포넌트는 mount→update→unmount의 일생을 살지만, Effect는 그 안에서 &#x27;동기화 시작 ↔ 중지&#x27;라는 독립적인 사이클을 반복하며, 매 렌더는 그 시점의 props/state를 가둔 자기 closure를 만든다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. Effect는 컴포넌트 라이프사이클과 무관하게, 페이지가 로드될 때 한 번만 실행된 후 종료된다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. Effect는 매 렌더마다 새 함수가 만들어지지만 closure는 모든 렌더가 공유하는 단일 스코프다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>컴포넌트는 한 번 마운트되어 살아 있어도, 그 안의 Effect는 reactive 값이 바뀔 때마다 cleanup → 재실행을 반복하며 자기 시계를 따로 돈다. 또한 매 렌더는 그 시점의 props/state를 캡처한 자체 closure를 만들기 때문에 Effect 본문의 식별자는 &#x27;그 렌더 시점의 값&#x27;을 가리킨다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> Effect를 componentDidMount/Will Unmount의 자리로 보는 흔한 오해 — 같은 컴포넌트가 살아있는 동안에도 Effect는 여러 번 connect/disconnect를 겪는다.</li><li><strong>C.</strong> 빈 [] deps도 &#x27;한 번만&#x27;이 아니라 &#x27;재동기화가 필요 없다&#x27;는 주장이다. 게다가 컴포넌트가 unmount되면 cleanup이 호출되므로 &#x27;종료&#x27;의 시점도 다르다.</li><li><strong>D.</strong> 각 렌더는 자기만의 closure를 가진다 — 공유하는 단일 스코프가 아니라 렌더마다 새로운 props/state 스냅샷이 캡처된다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다음 식별자 중 useEffect deps에 들어가야 하는 &#x27;reactive&#x27; 값을 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q1" value="A"><span><strong>A.</strong> A. 컴포넌트 함수의 prop으로 받은 roomId</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="B"><span><strong>B.</strong> B. 컴포넌트 파일의 최상위에 const로 선언된 모듈 상수 serverUrl</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="C"><span><strong>C.</strong> C. useState로 선언한 query 변수에서 .toLowerCase()로 파생한 normalized 변수</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="D"><span><strong>D.</strong> D. useRef로 만든 timerRef.current</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="E"><span><strong>E.</strong> E. 컴포넌트 외부 모듈에 정의된 utils.formatDate 함수</span></label>
+  <div class="explain"><strong>정답: A, C</strong><br>Reactive = props, state, 그리고 컴포넌트 본문에서 그것들로부터 파생된 변수. roomId는 prop, normalized는 state에서 파생된 값이라 매 렌더에서 다시 계산되며 deps에 들어가야 한다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 모듈 상수는 컴포넌트 밖에서 한 번 정의되어 변하지 않는 non-reactive 값 — deps 생략 OK.</li><li><strong>D.</strong> ref.current의 mutation은 React에 보고되지 않아 Object.is가 변화를 감지할 수 없다. 따라서 non-reactive이며 deps에 넣어도 재실행 신호가 오지 않는다.</li><li><strong>E.</strong> 컴포넌트 밖에서 정의된 함수는 매 렌더마다 새로 만들어지지 않고 React의 데이터 흐름 바깥에 있어 non-reactive.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>ChatRoom의 roomId prop이 &#x27;general&#x27;에서 &#x27;travel&#x27;로 바뀌었다. React가 useEffect(..., [roomId])를 처리하는 단계 순서로 가장 정확한 것은?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> A. 즉시 본문을 다시 실행한 뒤, 다음 마이크로태스크에서 이전 cleanup을 호출한다.</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> B. 이전 deps와 새 deps를 Object.is로 비교 → false 반환 → 이전 cleanup 호출 → 새 closure로 본문 재실행 → 새 roomId 캡처.</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> C. 컴포넌트가 unmount된 뒤 다시 mount되면서 Effect가 처음부터 새로 시작된다.</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> D. roomId 변경은 props 변경이므로 React가 strict equality(===)로 비교하고, 다르면 본문만 재실행한다(cleanup은 unmount 시점까지 보류).</span></label>
+  <div class="explain"><strong>정답: B</strong><br>React는 deps 배열을 항목별로 Object.is(prev, next)로 비교하고, 하나라도 false이면 이전 cleanup → 새 본문 실행 순서로 동기화를 다시 한다. 컴포넌트는 그대로 살아있고 새 closure가 새 roomId를 캡처한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> cleanup은 새 본문 실행 &#x27;이전&#x27;에 호출된다 — 좀비 연결을 막기 위한 순서.</li><li><strong>C.</strong> roomId 변경은 컴포넌트 unmount/remount가 아니라 같은 인스턴스 안에서의 update — Effect만 재동기화 사이클을 돈다.</li><li><strong>D.</strong> React는 ===가 아니라 Object.is로 비교한다(NaN, -0 처리 차이). 또 cleanup은 unmount까지 보류되지 않고 deps 변화 즉시 실행된다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Understand</span>
+  <span class="tag">true_false</span>
+  <h3>useEffect(() =&gt; { ... }, []) 의 빈 [] 는 &#x27;Effect를 컴포넌트 lifetime 동안 한 번만 실행한다&#x27;는 의도를 표현하는 표준 방법이다.</h3>
+  <label class="choice"><input type="radio" name="q3" value="T"><span>참 (True)</span></label>
+  <label class="choice"><input type="radio" name="q3" value="F"><span>거짓 (False)</span></label>
+  <div class="explain"><strong>정답: B</strong><br>거짓. 빈 [] 는 &#x27;이 Effect는 어떤 reactive 값도 읽지 않으니 재동기화가 필요 없다&#x27;는 주장이다. Strict Mode dev 더블 마운트, unmount 시 cleanup 등은 여전히 일어나며, 만약 본문이 reactive 값을 몰래 읽고 있다면 그 주장은 거짓말이 되어 stale closure 버그로 이어진다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 흔한 오해 — &#x27;한 번만&#x27;으로 받아들이면 reactive 값을 읽고도 deps를 비워두는 안티패턴으로 이어진다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드에서 ESLint react-hooks/exhaustive-deps가 theme를 deps에 추가하라고 경고한다. 그러나 채팅 연결은 theme이 바뀌어도 재연결되면 안 된다. 가장 적절한 해결 전략은?
+
+```js
+useEffect(() =&gt; {
+  const c = createConnection(serverUrl, roomId);
+  c.on(&#x27;message&#x27;, (m) =&gt; showNotification(m, theme));
+  c.connect();
+  return () =&gt; c.disconnect();
+}, [roomId]); // theme missing
+```</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> A. // eslint-disable-next-line 으로 경고를 덮는다 — theme 재연결은 정말 원치 않으니까.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> B. theme를 deps에 추가한다 — linter가 시키는 대로 따르는 게 안전하다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> C. theme를 사용하는 부분(showNotification)을 useEffectEvent로 추출해 &#x27;최신 theme는 보지만 재동기화는 일으키지 않는&#x27; 분리를 만든다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> D. theme를 useRef로 감싸 themeRef.current로 읽고 deps를 그대로 둔다.</span></label>
+  <div class="explain"><strong>정답: C</strong><br>옵션 3 — &#x27;최신 값은 필요하지만 재동기화는 싫다&#x27;는 정확히 useEffectEvent의 용도. 비-반응형 부분(알림 표시)을 추출해 reactive 의존성에서 분리한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> linter suppress는 절대 금지 — closure가 굳어 stale theme로 알림이 가는 디버깅 지옥을 만든다.</li><li><strong>B.</strong> theme를 deps에 넣으면 theme이 바뀔 때마다 채팅이 재연결된다 — 의도한 동기화 경계를 무너뜨리는 잘못된 처방.</li><li><strong>D.</strong> ref로 우회하는 패턴은 React가 권장하지 않는 안티패턴 — 같은 의도를 정식 도구로 표현하는 useEffectEvent가 정답.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 Effect는 채팅 연결과 방문 분석 로깅을 한 번에 처리한다. 어떻게 리팩터링하는 것이 &#x27;Effect 분리&#x27; 원칙에 가장 부합하는가?
+
+```js
+useEffect(() =&gt; {
+  logVisit(roomId);
+  const c = createConnection(serverUrl, roomId);
+  c.connect();
+  return () =&gt; c.disconnect();
+}, [roomId]);
+```</h3>
+  <label class="choice"><input type="radio" name="q5" value="A"><span><strong>A.</strong> A. logVisit과 connection은 둘 다 roomId에 의존하므로 한 Effect에 두는 것이 가장 효율적이다 — 그대로 둔다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="B"><span><strong>B.</strong> B. logVisit을 별도 Effect(deps: [roomId])로, 채팅 연결을 또 다른 Effect(deps: [roomId])로 분리해 각자의 cleanup과 deps를 갖게 한다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="C"><span><strong>C.</strong> C. logVisit을 컴포넌트 본문(렌더 중)으로 옮겨 매 렌더 호출되게 한다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="D"><span><strong>D.</strong> D. logVisit을 useEffectEvent로 감싸 deps에서 제거한다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>두 동작은 의미상 무관한 동기화 — &#x27;방 방문 로깅&#x27;과 &#x27;실시간 연결&#x27;은 다른 시스템이다. 각자 별도 Effect로 분리하면 추후 logVisit이 userId를 같이 로깅해야 할 때 채팅 연결을 건드리지 않고 첫 Effect의 deps만 늘리면 된다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 현재 deps가 우연히 같다고 같이 둘 이유가 되지 않는다 — 한쪽 정책이 바뀌면 양쪽이 함께 재실행되어 동기화 경계가 무너진다.</li><li><strong>C.</strong> 렌더 중 호출은 순수성을 깨고 Strict Mode 더블 렌더 시 두 번 로깅된다 — 부수효과는 Effect 안에 있어야 한다.</li><li><strong>D.</strong> useEffectEvent는 &#x27;최신 값은 필요하나 재동기화는 싫을 때&#x27;의 도구 — 여기선 logVisit이 roomId 변화에 정확히 반응해야 하므로 잘못된 도구 선택.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Apply</span>
+  <span class="tag">short_answer</span>
+  <h3>다음 Effect는 한 Effect 안에 (1) 윈도우 resize 리스너 등록과 (2) roomId에 따른 채팅 연결을 함께 처리하고 있다. &#x27;Effect 분리&#x27; 원칙에 따라 두 Effect로 쪼갠 코드를 작성하고, 각각의 deps가 왜 그렇게 정해지는지 한 줄씩 근거를 적으시오.
+
+```js
+useEffect(() =&gt; {
+  const onResize = () =&gt; setSize(window.innerWidth);
+  window.addEventListener(&#x27;resize&#x27;, onResize);
+  const c = createConnection(serverUrl, roomId);
+  c.connect();
+  return () =&gt; {
+    window.removeEventListener(&#x27;resize&#x27;, onResize);
+    c.disconnect();
+  };
+}, [roomId]);
+```</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain"><strong>정답: 분리된 두 Effect 작성 + 각 deps 근거</strong><br>모범 답안:
+```js
+useEffect(() =&gt; {
+  const onResize = () =&gt; setSize(window.innerWidth);
+  window.addEventListener(&#x27;resize&#x27;, onResize);
+  return () =&gt; window.removeEventListener(&#x27;resize&#x27;, onResize);
+}, []); // reactive 값을 안 읽으므로 재동기화 불필요
+
+useEffect(() =&gt; {
+  const c = createConnection(serverUrl, roomId);
+  c.connect();
+  return () =&gt; c.disconnect();
+}, [roomId]); // roomId(reactive)가 바뀔 때마다 재연결
+```
+resize 리스너는 어떤 reactive 값도 읽지 않으므로 [], 채팅 연결은 reactive prop인 roomId를 읽으므로 [roomId].<strong>채점 기준:</strong><ul><li>[1점] 두 개의 별도 useEffect로 분리되어 있다 (한 Effect = 한 동기화).</li><li>[1점] resize Effect의 deps가 [] 이고 cleanup으로 removeEventListener를 호출한다.</li><li>[1점] 채팅 Effect의 deps가 [roomId] 이고 cleanup으로 disconnect를 호출한다.</li><li>[1점] 각 deps의 근거가 reactive/non-reactive 분류로 설명되어 있다(특히 [] 가 &#x27;재동기화 불필요&#x27;의 의미라는 점).</li><li>감점: 두 Effect를 하나로 둔 경우, eslint-disable로 처리한 경우, ref.current/모듈 상수를 deps에 넣은 경우.</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S5.Q1", "type": "mcq_single", "stem": "컴포넌트 라이프사이클과 Effect 라이프사이클의 관계를 가장 정확히 설명한 것은?", "choices": ["A. Effect는 컴포넌트가 mount될 때 시작되고 unmount될 때 끝나는, 컴포넌트와 동일한 시계를 공유한다.", "B. 컴포넌트는 mount→update→unmount의 일생을 살지만, Effect는 그 안에서 '동기화 시작 ↔ 중지'라는 독립적인 사이클을 반복하며, 매 렌더는 그 시점의 props/state를 가둔 자기 closure를 만든다.", "C. Effect는 컴포넌트 라이프사이클과 무관하게, 페이지가 로드될 때 한 번만 실행된 후 종료된다.", "D. Effect는 매 렌더마다 새 함수가 만들어지지만 closure는 모든 렌더가 공유하는 단일 스코프다."], "correct": ["B"], "explanation": "컴포넌트는 한 번 마운트되어 살아 있어도, 그 안의 Effect는 reactive 값이 바뀔 때마다 cleanup → 재실행을 반복하며 자기 시계를 따로 돈다. 또한 매 렌더는 그 시점의 props/state를 캡처한 자체 closure를 만들기 때문에 Effect 본문의 식별자는 '그 렌더 시점의 값'을 가리킨다.", "distractor_rationales": {"A": "Effect를 componentDidMount/Will Unmount의 자리로 보는 흔한 오해 — 같은 컴포넌트가 살아있는 동안에도 Effect는 여러 번 connect/disconnect를 겪는다.", "C": "빈 [] deps도 '한 번만'이 아니라 '재동기화가 필요 없다'는 주장이다. 게다가 컴포넌트가 unmount되면 cleanup이 호출되므로 '종료'의 시점도 다르다.", "D": "각 렌더는 자기만의 closure를 가진다 — 공유하는 단일 스코프가 아니라 렌더마다 새로운 props/state 스냅샷이 캡처된다."}, "lo_ids": ["LO-S5.1"], "bloom": "Understand", "difficulty": 2}, {"id": "S5.Q2", "type": "mcq_multi", "stem": "다음 식별자 중 useEffect deps에 들어가야 하는 'reactive' 값을 모두 고르시오. (정답 2개)", "choices": ["A. 컴포넌트 함수의 prop으로 받은 roomId", "B. 컴포넌트 파일의 최상위에 const로 선언된 모듈 상수 serverUrl", "C. useState로 선언한 query 변수에서 .toLowerCase()로 파생한 normalized 변수", "D. useRef로 만든 timerRef.current", "E. 컴포넌트 외부 모듈에 정의된 utils.formatDate 함수"], "correct": ["A", "C"], "explanation": "Reactive = props, state, 그리고 컴포넌트 본문에서 그것들로부터 파생된 변수. roomId는 prop, normalized는 state에서 파생된 값이라 매 렌더에서 다시 계산되며 deps에 들어가야 한다.", "distractor_rationales": {"B": "모듈 상수는 컴포넌트 밖에서 한 번 정의되어 변하지 않는 non-reactive 값 — deps 생략 OK.", "D": "ref.current의 mutation은 React에 보고되지 않아 Object.is가 변화를 감지할 수 없다. 따라서 non-reactive이며 deps에 넣어도 재실행 신호가 오지 않는다.", "E": "컴포넌트 밖에서 정의된 함수는 매 렌더마다 새로 만들어지지 않고 React의 데이터 흐름 바깥에 있어 non-reactive."}, "lo_ids": ["LO-S5.2"], "bloom": "Analyze", "difficulty": 3}, {"id": "S5.Q3", "type": "mcq_single", "stem": "ChatRoom의 roomId prop이 'general'에서 'travel'로 바뀌었다. React가 useEffect(..., [roomId])를 처리하는 단계 순서로 가장 정확한 것은?", "choices": ["A. 즉시 본문을 다시 실행한 뒤, 다음 마이크로태스크에서 이전 cleanup을 호출한다.", "B. 이전 deps와 새 deps를 Object.is로 비교 → false 반환 → 이전 cleanup 호출 → 새 closure로 본문 재실행 → 새 roomId 캡처.", "C. 컴포넌트가 unmount된 뒤 다시 mount되면서 Effect가 처음부터 새로 시작된다.", "D. roomId 변경은 props 변경이므로 React가 strict equality(===)로 비교하고, 다르면 본문만 재실행한다(cleanup은 unmount 시점까지 보류)."], "correct": ["B"], "explanation": "React는 deps 배열을 항목별로 Object.is(prev, next)로 비교하고, 하나라도 false이면 이전 cleanup → 새 본문 실행 순서로 동기화를 다시 한다. 컴포넌트는 그대로 살아있고 새 closure가 새 roomId를 캡처한다.", "distractor_rationales": {"A": "cleanup은 새 본문 실행 '이전'에 호출된다 — 좀비 연결을 막기 위한 순서.", "C": "roomId 변경은 컴포넌트 unmount/remount가 아니라 같은 인스턴스 안에서의 update — Effect만 재동기화 사이클을 돈다.", "D": "React는 ===가 아니라 Object.is로 비교한다(NaN, -0 처리 차이). 또 cleanup은 unmount까지 보류되지 않고 deps 변화 즉시 실행된다."}, "lo_ids": ["LO-S5.3"], "bloom": "Understand", "difficulty": 3}, {"id": "S5.Q4", "type": "true_false", "stem": "useEffect(() => { ... }, []) 의 빈 [] 는 'Effect를 컴포넌트 lifetime 동안 한 번만 실행한다'는 의도를 표현하는 표준 방법이다.", "choices": ["A. 참", "B. 거짓"], "correct": ["B"], "explanation": "거짓. 빈 [] 는 '이 Effect는 어떤 reactive 값도 읽지 않으니 재동기화가 필요 없다'는 주장이다. Strict Mode dev 더블 마운트, unmount 시 cleanup 등은 여전히 일어나며, 만약 본문이 reactive 값을 몰래 읽고 있다면 그 주장은 거짓말이 되어 stale closure 버그로 이어진다.", "distractor_rationales": {"A": "흔한 오해 — '한 번만'으로 받아들이면 reactive 값을 읽고도 deps를 비워두는 안티패턴으로 이어진다."}, "lo_ids": ["LO-S5.3"], "bloom": "Understand", "difficulty": 2}, {"id": "S5.Q5", "type": "mcq_single", "stem": "다음 코드에서 ESLint react-hooks/exhaustive-deps가 theme를 deps에 추가하라고 경고한다. 그러나 채팅 연결은 theme이 바뀌어도 재연결되면 안 된다. 가장 적절한 해결 전략은?\n\n```js\nuseEffect(() => {\n  const c = createConnection(serverUrl, roomId);\n  c.on('message', (m) => showNotification(m, theme));\n  c.connect();\n  return () => c.disconnect();\n}, [roomId]); // theme missing\n```", "choices": ["A. // eslint-disable-next-line 으로 경고를 덮는다 — theme 재연결은 정말 원치 않으니까.", "B. theme를 deps에 추가한다 — linter가 시키는 대로 따르는 게 안전하다.", "C. theme를 사용하는 부분(showNotification)을 useEffectEvent로 추출해 '최신 theme는 보지만 재동기화는 일으키지 않는' 분리를 만든다.", "D. theme를 useRef로 감싸 themeRef.current로 읽고 deps를 그대로 둔다."], "correct": ["C"], "explanation": "옵션 3 — '최신 값은 필요하지만 재동기화는 싫다'는 정확히 useEffectEvent의 용도. 비-반응형 부분(알림 표시)을 추출해 reactive 의존성에서 분리한다.", "distractor_rationales": {"A": "linter suppress는 절대 금지 — closure가 굳어 stale theme로 알림이 가는 디버깅 지옥을 만든다.", "B": "theme를 deps에 넣으면 theme이 바뀔 때마다 채팅이 재연결된다 — 의도한 동기화 경계를 무너뜨리는 잘못된 처방.", "D": "ref로 우회하는 패턴은 React가 권장하지 않는 안티패턴 — 같은 의도를 정식 도구로 표현하는 useEffectEvent가 정답."}, "lo_ids": ["LO-S5.4"], "bloom": "Evaluate", "difficulty": 4}, {"id": "S5.Q6", "type": "mcq_single", "stem": "다음 Effect는 채팅 연결과 방문 분석 로깅을 한 번에 처리한다. 어떻게 리팩터링하는 것이 'Effect 분리' 원칙에 가장 부합하는가?\n\n```js\nuseEffect(() => {\n  logVisit(roomId);\n  const c = createConnection(serverUrl, roomId);\n  c.connect();\n  return () => c.disconnect();\n}, [roomId]);\n```", "choices": ["A. logVisit과 connection은 둘 다 roomId에 의존하므로 한 Effect에 두는 것이 가장 효율적이다 — 그대로 둔다.", "B. logVisit을 별도 Effect(deps: [roomId])로, 채팅 연결을 또 다른 Effect(deps: [roomId])로 분리해 각자의 cleanup과 deps를 갖게 한다.", "C. logVisit을 컴포넌트 본문(렌더 중)으로 옮겨 매 렌더 호출되게 한다.", "D. logVisit을 useEffectEvent로 감싸 deps에서 제거한다."], "correct": ["B"], "explanation": "두 동작은 의미상 무관한 동기화 — '방 방문 로깅'과 '실시간 연결'은 다른 시스템이다. 각자 별도 Effect로 분리하면 추후 logVisit이 userId를 같이 로깅해야 할 때 채팅 연결을 건드리지 않고 첫 Effect의 deps만 늘리면 된다.", "distractor_rationales": {"A": "현재 deps가 우연히 같다고 같이 둘 이유가 되지 않는다 — 한쪽 정책이 바뀌면 양쪽이 함께 재실행되어 동기화 경계가 무너진다.", "C": "렌더 중 호출은 순수성을 깨고 Strict Mode 더블 렌더 시 두 번 로깅된다 — 부수효과는 Effect 안에 있어야 한다.", "D": "useEffectEvent는 '최신 값은 필요하나 재동기화는 싫을 때'의 도구 — 여기선 logVisit이 roomId 변화에 정확히 반응해야 하므로 잘못된 도구 선택."}, "lo_ids": ["LO-S5.5"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S5.Q7", "type": "short_answer", "stem": "다음 Effect는 한 Effect 안에 (1) 윈도우 resize 리스너 등록과 (2) roomId에 따른 채팅 연결을 함께 처리하고 있다. 'Effect 분리' 원칙에 따라 두 Effect로 쪼갠 코드를 작성하고, 각각의 deps가 왜 그렇게 정해지는지 한 줄씩 근거를 적으시오.\n\n```js\nuseEffect(() => {\n  const onResize = () => setSize(window.innerWidth);\n  window.addEventListener('resize', onResize);\n  const c = createConnection(serverUrl, roomId);\n  c.connect();\n  return () => {\n    window.removeEventListener('resize', onResize);\n    c.disconnect();\n  };\n}, [roomId]);\n```", "correct": ["분리된 두 Effect 작성 + 각 deps 근거"], "explanation": "모범 답안:\n```js\nuseEffect(() => {\n  const onResize = () => setSize(window.innerWidth);\n  window.addEventListener('resize', onResize);\n  return () => window.removeEventListener('resize', onResize);\n}, []); // reactive 값을 안 읽으므로 재동기화 불필요\n\nuseEffect(() => {\n  const c = createConnection(serverUrl, roomId);\n  c.connect();\n  return () => c.disconnect();\n}, [roomId]); // roomId(reactive)가 바뀔 때마다 재연결\n```\nresize 리스너는 어떤 reactive 값도 읽지 않으므로 [], 채팅 연결은 reactive prop인 roomId를 읽으므로 [roomId].", "rubric": ["[1점] 두 개의 별도 useEffect로 분리되어 있다 (한 Effect = 한 동기화).", "[1점] resize Effect의 deps가 [] 이고 cleanup으로 removeEventListener를 호출한다.", "[1점] 채팅 Effect의 deps가 [roomId] 이고 cleanup으로 disconnect를 호출한다.", "[1점] 각 deps의 근거가 reactive/non-reactive 분류로 설명되어 있다(특히 [] 가 '재동기화 불필요'의 의미라는 점).", "감점: 두 Effect를 하나로 둔 경우, eslint-disable로 처리한 경우, ref.current/모듈 상수를 deps에 넣은 경우."], "lo_ids": ["LO-S5.5", "LO-S5.2"], "bloom": "Apply", "difficulty": 4}];
+const NEXT_HREF = "../06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/player.html";
+const NEXT_TITLE = "Event냐 Effect냐 — '왜 실행돼야 하나?'로 가르기";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

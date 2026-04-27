@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Custom Hook으로 로직 재사용하기 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Custom Hook으로 로직 재사용하기 · 퀴즈</h1>
+  <p class="meta">7 문항 · Bloom: Apply:2, Analyze:2, Evaluate:2, Create:1</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 중 `use` 접두사 명명 규칙을 **올바르게** 적용한 함수는?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. `function useSorted(items) { return items.slice().sort(); }` — Hook을 호출하지 않지만 일관성을 위해 use를 붙임</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. `function useAuth() { return useContext(AuthContext); }` — 내부에서 useContext를 호출</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. `function getUserStatus() { const [s] = useState(true); return s; }` — useState를 호출하지만 일반 함수처럼 보이게 get으로 시작</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. `function UseProfile() { return useState(null); }` — PascalCase로 작성해 컴포넌트와 통일</span></label>
+  <div class="explain"><strong>정답: B</strong><br>`use` 접두사는 &#x27;내부에서 Hook을 호출한다&#x27;는 계약 신호다. (B)는 useContext를 호출하므로 `use*`가 정당하다. linter가 Rules of Hooks를 검사할 수 있게 만드는 것이 이 규칙의 핵심이다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> Hook을 호출하지 않는 순수 함수에 use를 붙이면 안 된다. linter가 잘못된 위치 제약을 강제하고 협업자에게 잘못된 신호를 준다. 그냥 `sortItems`로 둬야 한다.</li><li><strong>C.</strong> useState를 호출하는 함수는 반드시 `use*`로 시작해야 한다. `getUserStatus`처럼 두면 linter가 Hook 규칙 검사를 끄게 되어 위반을 놓친다.</li><li><strong>D.</strong> PascalCase는 컴포넌트 컨벤션이다. Hook은 camelCase + `use` 접두사여야 linter가 Hook으로 인식한다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>두 컴포넌트 `StatusBar`와 `SaveButton`이 각각 `const isOnline = useOnlineStatus();`를 호출했다. 네트워크가 연결된 상태에서 `StatusBar`만 `setIsOnline(false)`로 강제 변경한다고 가정하면 어떤 일이 벌어지는가? (Hook 내부에 setter 노출이 있다고 가정)</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> A. 두 컴포넌트의 isOnline이 모두 false가 된다 — 같은 Hook을 호출했으므로 state가 공유됨</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> B. StatusBar만 false가 되고 SaveButton의 isOnline은 영향받지 않는다 — 호출마다 독립된 useState slot</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> C. 런타임 에러가 발생한다 — Custom Hook은 setter를 노출할 수 없음</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> D. SaveButton만 false가 된다 — Hook이 마지막 호출자에게 state를 위임</span></label>
+  <div class="explain"><strong>정답: B</strong><br>Custom Hook은 &#x27;stateful 로직&#x27;을 공유할 뿐 &#x27;state 인스턴스&#x27;는 공유하지 않는다. `useOnlineStatus()`를 두 번 호출하면 내부의 `useState(true)`도 두 번 실행되어 독립된 slot이 생긴다. 두 컴포넌트가 동시에 같은 값을 보이는 것은 같은 외부 시스템(window 이벤트)에 동기화되기 때문이지 state를 공유해서가 아니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 가장 흔한 오해다. lifting state up과 Custom Hook 추출을 혼동한 것 — 진짜로 state를 공유하려면 부모로 끌어올리거나 Context를 써야 한다.</li><li><strong>C.</strong> Hook이 setter를 노출하는 것은 자유다(useFormInput의 onChange처럼). 본 문항의 핵심과 무관한 분산.</li><li><strong>D.</strong> Hook이 호출 순서로 state를 위임하는 메커니즘은 존재하지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>`useFormInput(initial)`을 작성한다. 사용처에서 `&lt;input {...firstName} /&gt;` 스프레드로 한 줄에 꽂고 싶다. 다음 중 가장 적절한 구현은?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> A. `function useFormInput(initial) { const [v, setV] = useState(initial); return [v, setV]; }`</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> B. `function formInput(initial) { const [v, setV] = useState(initial); return { value: v, onChange: e =&gt; setV(e.target.value) }; }`</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> C. `function useFormInput(initial) { const [v, setV] = useState(initial); return { value: v, onChange: e =&gt; setV(e.target.value) }; }`</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> D. `function useFormInput(initial) { let v = initial; return { value: v, onChange: e =&gt; { v = e.target.value; } }; }`</span></label>
+  <div class="explain"><strong>정답: C</strong><br>(C)가 정답. `use` 접두사 + `useState` 호출 + `&lt;input&gt;`이 기대하는 prop 모양({value, onChange})을 객체로 반환해 스프레드를 가능하게 한다. 두 번 호출하면 각자 독립된 state slot이 생겨 input들이 서로 영향 없이 동작한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 배열 반환은 useState 자체와 같아서 스프레드(`{...firstName}`)로 input prop에 꽂을 수 없다. 도메인 의미도 흐려진다.</li><li><strong>B.</strong> useState를 호출하는데 `use` 접두사가 없다 — Rules of Hooks linter 검사가 꺼져 잘못된 위치 호출을 잡지 못한다.</li><li><strong>D.</strong> 일반 변수 `let v`는 React의 렌더 모델 밖이라 setter가 재렌더를 트리거하지 않고 화면이 갱신되지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다음 `useChatRoom` 구현이 &#x27;roomId/serverUrl이 바뀔 때만 재연결, onReceiveMessage가 매 렌더 새 함수여도 재연결되지 않게&#x27; 동작하려면 **반드시** 갖춰야 할 조건은? (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q3" value="A"><span><strong>A.</strong> A. `onReceiveMessage`를 `useEffectEvent`로 wrap한 `onMessage`를 Effect 본체에서 호출</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="B"><span><strong>B.</strong> B. `useEffect`의 deps 배열에 `[serverUrl, roomId]`만 넣고 `onMessage`/`onReceiveMessage`는 넣지 않음</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="C"><span><strong>C.</strong> C. `onReceiveMessage`를 `useCallback`으로 감싸 deps 배열에 함께 넣음</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="D"><span><strong>D.</strong> D. `useChatRoom` 호출 측에서 `onReceiveMessage`를 `useMemo`로 메모이즈</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="E"><span><strong>E.</strong> E. Effect 안에서 `onReceiveMessage`를 직접 호출하고 deps는 비워둠</span></label>
+  <div class="explain"><strong>정답: A, B</strong><br>정답은 (A)와 (B). 핸들러는 reactive하지 않다는 의도를 `useEffectEvent`로 표현하고(A), reactive 값만 deps에 넣는다(B). 이 둘이 동시에 성립해야 deps 오염 없이 핸들러 최신화가 달성된다.<br><strong>오답 해설:</strong><ul><li><strong>C.</strong> useCallback은 deps가 같을 때만 같은 참조를 보장한다. 핸들러가 의존하는 state(예: 최신 theme)가 바뀌면 참조가 또 바뀌어 deps 오염이 재발한다 — 의도가 다르다.</li><li><strong>D.</strong> 호출처가 메모이즈를 책임지면 캡슐화가 깨진다. Hook 내부에서 useEffectEvent로 흡수해 호출처는 평범한 콜백을 넘기게 해야 한다.</li><li><strong>E.</strong> deps에서 빼면 ESLint 경고 + stale closure로 옛날 핸들러를 호출할 위험. wrap 없이 단순히 빼는 것은 잘못된 해법이다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>팀에서 `function useMount(fn) { useEffect(fn, []); }`를 도입하자는 제안이 나왔다. 다음 중 이 제안을 **거절해야 하는** 가장 강력한 이유는?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> A. 함수 이름이 너무 짧아서 자동완성에서 충돌한다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> B. `fn` 안에서 reactive 값(예: roomId)을 참조해도 deps가 [] 고정이라 ESLint exhaustive-deps가 분석하지 못해 stale closure를 양산하고, &#x27;도메인 없는 lifecycle wrapper&#x27;라 동기화 의도도 드러나지 않는다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> C. useEffect가 React 19에서 deprecated될 예정이라 useMount는 곧 동작하지 않는다</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> D. useMount는 React.memo와 함께 쓰면 무한 루프를 일으킨다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>(B)가 정답. useMount는 &#x27;도메인 없음 + linter 무력화 + stale closure 양산&#x27; 3종 세트다. fn이 참조하는 roomId 같은 reactive 값을 linter가 useMount의 fn 내부까지 들여다보지 못하므로 거짓 lifecycle을 흉내내며 검사 회피만 만든다. Effect는 라이프사이클이 아니라 &#x27;동기화&#x27;이며 Hook 이름은 &#x27;무엇과 동기화하는지&#x27;가 드러나야 한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 이름 충돌은 사소한 표면 이슈이지 거절의 본질적 근거가 아니다.</li><li><strong>C.</strong> 사실이 아니다. useEffect는 deprecated되지 않았다.</li><li><strong>D.</strong> 사실이 아니다. React.memo와 무한 루프는 별개의 메커니즘이다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 네 시나리오 중 **Custom Hook으로 추출하는 것이 정당한** 경우는?</h3>
+  <label class="choice"><input type="radio" name="q5" value="A"><span><strong>A.</strong> A. 한 컴포넌트에서만 쓰이는 5줄 짜리 fetch + setState Effect — 재사용 가능해 보여 일단 빼두기</span></label>
+  <label class="choice"><input type="radio" name="q5" value="B"><span><strong>B.</strong> B. `function useSorted(items) { return [...items].sort(); }` — 도메인 의미를 부여하기 위해</span></label>
+  <label class="choice"><input type="radio" name="q5" value="C"><span><strong>C.</strong> C. 두 페이지(ShippingForm, BillingForm)에서 동일하게 반복되는 fetch + cleanup 패턴을 `useData(url)`로 추출</span></label>
+  <label class="choice"><input type="radio" name="q5" value="D"><span><strong>D.</strong> D. `useEffect(fn, [])` 패턴을 `useEffectOnce(fn)`으로 추출해 모든 mount-only 로직을 일관화</span></label>
+  <div class="explain"><strong>정답: C</strong><br>(C)가 정답. 추출 기준은 &#x27;실제 두 곳 이상에서 동일 패턴 반복 + 도메인 의미가 이름에 드러남&#x27;이다. `useData(url)`은 두 사용처에서 반복되고 &#x27;데이터 모양&#x27;이라는 도메인을 명확히 표현한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 단일 사용처에서 너무 일찍 추상화하면 잘못된 모양으로 굳는다. 두 번째 사용처가 생길 때 추출해도 늦지 않다.</li><li><strong>B.</strong> Hook을 호출하지 않는 순수 함수에 use 접두사를 붙이면 안 된다. 그냥 `sortItems`로 일반 함수.</li><li><strong>D.</strong> useEffectOnce/useMount 같은 lifecycle wrapper는 도메인 없음 + linter 무력화 + stale closure 양산의 안티패턴이다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Create</span>
+  <span class="tag">short_answer</span>
+  <h3>1초마다 카운트가 올라가는 `useCounter(delay)` Hook을 `useInterval`과 composition으로 설계하라. (1) `useInterval(callback, delay)` 시그니처와 본체, (2) `useCounter(delay)` 본체를 작성하고, (3) 향후 React가 더 좋은 timer 동기화 API를 내놓을 때 &#x27;callsite 변경 0&#x27;으로 교체 가능한 이유 한 줄을 덧붙여라.</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain">rubric 기반 자기채점. 모범 답안: `function useInterval(callback, delay) { const onTick = useEffectEvent(callback); useEffect(() =&gt; { const id = setInterval(onTick, delay); return () =&gt; clearInterval(id); }, [delay]); }` / `function useCounter(delay) { const [count, setCount] = useState(0); useInterval(() =&gt; setCount(c =&gt; c + 1), delay); return count; }` / 캡슐화 이유: 호출처는 `const count = useCounter(1000);` 한 줄이라 useInterval 내부 구현(예: useSyncExternalStore 등)이 바뀌어도 인터페이스(인자 delay, 반환 count)가 같으므로 호출처 코드 한 글자도 바뀌지 않는다.<strong>채점 기준:</strong><ul><li>[2점] useInterval이 callback을 useEffectEvent로 wrap하고 deps에 [delay]만 넣어 매 렌더 setInterval 재생성을 방지함</li><li>[2점] useCounter가 useState로 count를 갖고 useInterval(() =&gt; setCount(c =&gt; c + 1), delay)로 updater 패턴 사용 (count를 deps로 노출하지 않음)</li><li>[1점] Hook이 다른 Hook을 top-level에서 호출하는 composition 구조가 명확</li><li>[1점] &#x27;호출처 인터페이스(인자/반환)가 동일하므로 내부 구현만 useSyncExternalStore 등으로 교체해도 callsite 변경 0&#x27; 이라는 캡슐화 보상을 명시</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S8.Q1", "type": "mcq_single", "stem": "다음 중 `use` 접두사 명명 규칙을 **올바르게** 적용한 함수는?", "choices": ["A. `function useSorted(items) { return items.slice().sort(); }` — Hook을 호출하지 않지만 일관성을 위해 use를 붙임", "B. `function useAuth() { return useContext(AuthContext); }` — 내부에서 useContext를 호출", "C. `function getUserStatus() { const [s] = useState(true); return s; }` — useState를 호출하지만 일반 함수처럼 보이게 get으로 시작", "D. `function UseProfile() { return useState(null); }` — PascalCase로 작성해 컴포넌트와 통일"], "correct": ["B"], "explanation": "`use` 접두사는 '내부에서 Hook을 호출한다'는 계약 신호다. (B)는 useContext를 호출하므로 `use*`가 정당하다. linter가 Rules of Hooks를 검사할 수 있게 만드는 것이 이 규칙의 핵심이다.", "distractor_rationales": {"A": "Hook을 호출하지 않는 순수 함수에 use를 붙이면 안 된다. linter가 잘못된 위치 제약을 강제하고 협업자에게 잘못된 신호를 준다. 그냥 `sortItems`로 둬야 한다.", "C": "useState를 호출하는 함수는 반드시 `use*`로 시작해야 한다. `getUserStatus`처럼 두면 linter가 Hook 규칙 검사를 끄게 되어 위반을 놓친다.", "D": "PascalCase는 컴포넌트 컨벤션이다. Hook은 camelCase + `use` 접두사여야 linter가 Hook으로 인식한다."}, "lo_ids": ["LO-S8.1"], "bloom": "Analyze", "difficulty": 2}, {"id": "S8.Q2", "type": "mcq_single", "stem": "두 컴포넌트 `StatusBar`와 `SaveButton`이 각각 `const isOnline = useOnlineStatus();`를 호출했다. 네트워크가 연결된 상태에서 `StatusBar`만 `setIsOnline(false)`로 강제 변경한다고 가정하면 어떤 일이 벌어지는가? (Hook 내부에 setter 노출이 있다고 가정)", "choices": ["A. 두 컴포넌트의 isOnline이 모두 false가 된다 — 같은 Hook을 호출했으므로 state가 공유됨", "B. StatusBar만 false가 되고 SaveButton의 isOnline은 영향받지 않는다 — 호출마다 독립된 useState slot", "C. 런타임 에러가 발생한다 — Custom Hook은 setter를 노출할 수 없음", "D. SaveButton만 false가 된다 — Hook이 마지막 호출자에게 state를 위임"], "correct": ["B"], "explanation": "Custom Hook은 'stateful 로직'을 공유할 뿐 'state 인스턴스'는 공유하지 않는다. `useOnlineStatus()`를 두 번 호출하면 내부의 `useState(true)`도 두 번 실행되어 독립된 slot이 생긴다. 두 컴포넌트가 동시에 같은 값을 보이는 것은 같은 외부 시스템(window 이벤트)에 동기화되기 때문이지 state를 공유해서가 아니다.", "distractor_rationales": {"A": "가장 흔한 오해다. lifting state up과 Custom Hook 추출을 혼동한 것 — 진짜로 state를 공유하려면 부모로 끌어올리거나 Context를 써야 한다.", "C": "Hook이 setter를 노출하는 것은 자유다(useFormInput의 onChange처럼). 본 문항의 핵심과 무관한 분산.", "D": "Hook이 호출 순서로 state를 위임하는 메커니즘은 존재하지 않는다."}, "lo_ids": ["LO-S8.1"], "bloom": "Analyze", "difficulty": 3}, {"id": "S8.Q3", "type": "mcq_single", "stem": "`useFormInput(initial)`을 작성한다. 사용처에서 `<input {...firstName} />` 스프레드로 한 줄에 꽂고 싶다. 다음 중 가장 적절한 구현은?", "choices": ["A. `function useFormInput(initial) { const [v, setV] = useState(initial); return [v, setV]; }`", "B. `function formInput(initial) { const [v, setV] = useState(initial); return { value: v, onChange: e => setV(e.target.value) }; }`", "C. `function useFormInput(initial) { const [v, setV] = useState(initial); return { value: v, onChange: e => setV(e.target.value) }; }`", "D. `function useFormInput(initial) { let v = initial; return { value: v, onChange: e => { v = e.target.value; } }; }`"], "correct": ["C"], "explanation": "(C)가 정답. `use` 접두사 + `useState` 호출 + `<input>`이 기대하는 prop 모양({value, onChange})을 객체로 반환해 스프레드를 가능하게 한다. 두 번 호출하면 각자 독립된 state slot이 생겨 input들이 서로 영향 없이 동작한다.", "distractor_rationales": {"A": "배열 반환은 useState 자체와 같아서 스프레드(`{...firstName}`)로 input prop에 꽂을 수 없다. 도메인 의미도 흐려진다.", "B": "useState를 호출하는데 `use` 접두사가 없다 — Rules of Hooks linter 검사가 꺼져 잘못된 위치 호출을 잡지 못한다.", "D": "일반 변수 `let v`는 React의 렌더 모델 밖이라 setter가 재렌더를 트리거하지 않고 화면이 갱신되지 않는다."}, "lo_ids": ["LO-S8.2"], "bloom": "Apply", "difficulty": 2}, {"id": "S8.Q4", "type": "mcq_multi", "stem": "다음 `useChatRoom` 구현이 'roomId/serverUrl이 바뀔 때만 재연결, onReceiveMessage가 매 렌더 새 함수여도 재연결되지 않게' 동작하려면 **반드시** 갖춰야 할 조건은? (정답 2개)", "choices": ["A. `onReceiveMessage`를 `useEffectEvent`로 wrap한 `onMessage`를 Effect 본체에서 호출", "B. `useEffect`의 deps 배열에 `[serverUrl, roomId]`만 넣고 `onMessage`/`onReceiveMessage`는 넣지 않음", "C. `onReceiveMessage`를 `useCallback`으로 감싸 deps 배열에 함께 넣음", "D. `useChatRoom` 호출 측에서 `onReceiveMessage`를 `useMemo`로 메모이즈", "E. Effect 안에서 `onReceiveMessage`를 직접 호출하고 deps는 비워둠"], "correct": ["A", "B"], "explanation": "정답은 (A)와 (B). 핸들러는 reactive하지 않다는 의도를 `useEffectEvent`로 표현하고(A), reactive 값만 deps에 넣는다(B). 이 둘이 동시에 성립해야 deps 오염 없이 핸들러 최신화가 달성된다.", "distractor_rationales": {"C": "useCallback은 deps가 같을 때만 같은 참조를 보장한다. 핸들러가 의존하는 state(예: 최신 theme)가 바뀌면 참조가 또 바뀌어 deps 오염이 재발한다 — 의도가 다르다.", "D": "호출처가 메모이즈를 책임지면 캡슐화가 깨진다. Hook 내부에서 useEffectEvent로 흡수해 호출처는 평범한 콜백을 넘기게 해야 한다.", "E": "deps에서 빼면 ESLint 경고 + stale closure로 옛날 핸들러를 호출할 위험. wrap 없이 단순히 빼는 것은 잘못된 해법이다."}, "lo_ids": ["LO-S8.3"], "bloom": "Apply", "difficulty": 3}, {"id": "S8.Q5", "type": "mcq_single", "stem": "팀에서 `function useMount(fn) { useEffect(fn, []); }`를 도입하자는 제안이 나왔다. 다음 중 이 제안을 **거절해야 하는** 가장 강력한 이유는?", "choices": ["A. 함수 이름이 너무 짧아서 자동완성에서 충돌한다", "B. `fn` 안에서 reactive 값(예: roomId)을 참조해도 deps가 [] 고정이라 ESLint exhaustive-deps가 분석하지 못해 stale closure를 양산하고, '도메인 없는 lifecycle wrapper'라 동기화 의도도 드러나지 않는다", "C. useEffect가 React 19에서 deprecated될 예정이라 useMount는 곧 동작하지 않는다", "D. useMount는 React.memo와 함께 쓰면 무한 루프를 일으킨다"], "correct": ["B"], "explanation": "(B)가 정답. useMount는 '도메인 없음 + linter 무력화 + stale closure 양산' 3종 세트다. fn이 참조하는 roomId 같은 reactive 값을 linter가 useMount의 fn 내부까지 들여다보지 못하므로 거짓 lifecycle을 흉내내며 검사 회피만 만든다. Effect는 라이프사이클이 아니라 '동기화'이며 Hook 이름은 '무엇과 동기화하는지'가 드러나야 한다.", "distractor_rationales": {"A": "이름 충돌은 사소한 표면 이슈이지 거절의 본질적 근거가 아니다.", "C": "사실이 아니다. useEffect는 deprecated되지 않았다.", "D": "사실이 아니다. React.memo와 무한 루프는 별개의 메커니즘이다."}, "lo_ids": ["LO-S8.4"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S8.Q6", "type": "mcq_single", "stem": "다음 네 시나리오 중 **Custom Hook으로 추출하는 것이 정당한** 경우는?", "choices": ["A. 한 컴포넌트에서만 쓰이는 5줄 짜리 fetch + setState Effect — 재사용 가능해 보여 일단 빼두기", "B. `function useSorted(items) { return [...items].sort(); }` — 도메인 의미를 부여하기 위해", "C. 두 페이지(ShippingForm, BillingForm)에서 동일하게 반복되는 fetch + cleanup 패턴을 `useData(url)`로 추출", "D. `useEffect(fn, [])` 패턴을 `useEffectOnce(fn)`으로 추출해 모든 mount-only 로직을 일관화"], "correct": ["C"], "explanation": "(C)가 정답. 추출 기준은 '실제 두 곳 이상에서 동일 패턴 반복 + 도메인 의미가 이름에 드러남'이다. `useData(url)`은 두 사용처에서 반복되고 '데이터 모양'이라는 도메인을 명확히 표현한다.", "distractor_rationales": {"A": "단일 사용처에서 너무 일찍 추상화하면 잘못된 모양으로 굳는다. 두 번째 사용처가 생길 때 추출해도 늦지 않다.", "B": "Hook을 호출하지 않는 순수 함수에 use 접두사를 붙이면 안 된다. 그냥 `sortItems`로 일반 함수.", "D": "useEffectOnce/useMount 같은 lifecycle wrapper는 도메인 없음 + linter 무력화 + stale closure 양산의 안티패턴이다."}, "lo_ids": ["LO-S8.4"], "bloom": "Evaluate", "difficulty": 2}, {"id": "S8.Q7", "type": "short_answer", "stem": "1초마다 카운트가 올라가는 `useCounter(delay)` Hook을 `useInterval`과 composition으로 설계하라. (1) `useInterval(callback, delay)` 시그니처와 본체, (2) `useCounter(delay)` 본체를 작성하고, (3) 향후 React가 더 좋은 timer 동기화 API를 내놓을 때 'callsite 변경 0'으로 교체 가능한 이유 한 줄을 덧붙여라.", "correct": [], "explanation": "rubric 기반 자기채점. 모범 답안: `function useInterval(callback, delay) { const onTick = useEffectEvent(callback); useEffect(() => { const id = setInterval(onTick, delay); return () => clearInterval(id); }, [delay]); }` / `function useCounter(delay) { const [count, setCount] = useState(0); useInterval(() => setCount(c => c + 1), delay); return count; }` / 캡슐화 이유: 호출처는 `const count = useCounter(1000);` 한 줄이라 useInterval 내부 구현(예: useSyncExternalStore 등)이 바뀌어도 인터페이스(인자 delay, 반환 count)가 같으므로 호출처 코드 한 글자도 바뀌지 않는다.", "rubric": ["[2점] useInterval이 callback을 useEffectEvent로 wrap하고 deps에 [delay]만 넣어 매 렌더 setInterval 재생성을 방지함", "[2점] useCounter가 useState로 count를 갖고 useInterval(() => setCount(c => c + 1), delay)로 updater 패턴 사용 (count를 deps로 노출하지 않음)", "[1점] Hook이 다른 Hook을 top-level에서 호출하는 composition 구조가 명확", "[1점] '호출처 인터페이스(인자/반환)가 동일하므로 내부 구현만 useSyncExternalStore 등으로 교체해도 callsite 변경 0' 이라는 캡슐화 보상을 명시"], "distractor_rationales": {}, "lo_ids": ["LO-S8.5"], "bloom": "Create", "difficulty": 4}];
+const NEXT_HREF = "../09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/player.html";
+const NEXT_TITLE = "안티패턴 진단 클리닉 — 코드 6개, 어디가 잘못됐나";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

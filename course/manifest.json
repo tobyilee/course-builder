@@ -1,0 +1,1742 @@
+{
+  "course": {
+    "topic": "React Escape Hatches 심화 — Refs · Effects · Custom Hooks",
+    "audience": "TypeScript/JavaScript와 React UI 컴포넌트 개발에 능숙한 중급 개발자. 직전 'Managing State' 코스(useState, lifting, key, useReducer, context, reducer+context)를 마쳤지만 Refs · Effects · Custom Hooks 영역에서 멘탈모델과 의사결정 깊이가 부족함.",
+    "depth": "deep",
+    "language": "ko",
+    "tone": "friendly",
+    "total_duration_min": 360,
+    "build_ts": "2026-04-27T02:19:42+00:00",
+    "harness_version": "1.1.0"
+  },
+  "learning_objectives": [
+    {
+      "id": "LO-S0.1",
+      "section_id": "S0",
+      "text": "React의 '기본 흐름(선언형 렌더 + 순수 함수 + 단방향 props)'과 'Escape Hatch가 필요한 상황(외부 시스템 동기화, 명령형 DOM 작업, 비-렌더 데이터 보관)'을 자기 언어로 구분해 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "managing-state S? — useState/렌더 모델"
+      ]
+    },
+    {
+      "id": "LO-S0.2",
+      "section_id": "S0",
+      "text": "주어진 요구사항이 'Escape Hatch가 필요한 경우'인지 아닌지를 결정 트리(외부 시스템 존재? 렌더 중 계산 가능? 인터랙션 결과?)로 판별할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S0.1"
+      ]
+    },
+    {
+      "id": "LO-S0.3",
+      "section_id": "S0",
+      "text": "'Escape Hatch는 마지막 수단'이라는 원칙을 받아들이는 이유(예측 가능성, 테스트 용이성, 동기화 비용)를 비교하여 정당화할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S0.1"
+      ]
+    },
+    {
+      "id": "LO-S1.1",
+      "section_id": "S1",
+      "text": "useRef가 반환하는 객체의 형태와 동작(`{ current }`, mutation 시 재렌더 없음, 렌더 사이 보존)을 코드 수준에서 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "managing-state S? — useState 기본"
+      ]
+    },
+    {
+      "id": "LO-S1.2",
+      "section_id": "S1",
+      "text": "useRef와 useState를 '재렌더 트리거', '렌더 중 읽기 가능 여부', '직접 mutation 가능 여부' 기준으로 비교하고, 주어진 데이터에 어느 쪽이 적합한지 결정할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S1.1"
+      ]
+    },
+    {
+      "id": "LO-S1.3",
+      "section_id": "S1",
+      "text": "timeout/interval ID, 디바운서 인스턴스, 비동기 콜백용 최신 값 등 비-렌더 데이터를 useRef로 보관하는 코드를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S1.1"
+      ]
+    },
+    {
+      "id": "LO-S1.4",
+      "section_id": "S1",
+      "text": "렌더 중 ref.current를 읽거나 쓰는 안티패턴 코드(stale 표시, 비결정적 렌더)를 식별하고 그 결과를 추론할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S1.2"
+      ]
+    },
+    {
+      "id": "LO-S1.5",
+      "section_id": "S1",
+      "text": "전역 변수로 timeout을 관리하는 컴포넌트를 ref 기반으로 리팩터링해 인스턴스별 격리를 회복하는 코드를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S1.3",
+        "LO-S1.4"
+      ]
+    },
+    {
+      "id": "LO-S2.1",
+      "section_id": "S2",
+      "text": "ref={myRef} 패턴으로 DOM 노드에 접근하고 focus / scrollIntoView / play / getBoundingClientRect를 호출하는 컴포넌트를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S1.1"
+      ]
+    },
+    {
+      "id": "LO-S2.2",
+      "section_id": "S2",
+      "text": "render → commit → effect 타이밍을 토대로, 왜 렌더 중에는 ref.current가 null이고 이벤트 핸들러나 Effect에서만 안전하게 읽을 수 있는지 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S2.1"
+      ]
+    },
+    {
+      "id": "LO-S2.3",
+      "section_id": "S2",
+      "text": "state setter 직후 새 DOM을 즉시 읽어야 하는 시나리오에 flushSync를 적용해 동기 업데이트를 강제하는 코드를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S2.2"
+      ]
+    },
+    {
+      "id": "LO-S2.4",
+      "section_id": "S2",
+      "text": "React가 관리하는 노드를 직접 remove/append하는 코드의 위험(React state와 DOM의 불일치, 충돌, 크래시)을 분석하고 안전한 영역(빈 컨테이너 등)을 구분할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S2.1"
+      ]
+    },
+    {
+      "id": "LO-S2.5",
+      "section_id": "S2",
+      "text": "forwardRef 패턴과 React 19의 ref-as-prop 모델을 비교하고, useImperativeHandle로 자식 컴포넌트가 노출하는 명령형 API를 의도적으로 좁히는 설계를 평가할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S2.1"
+      ]
+    },
+    {
+      "id": "LO-S3.1",
+      "section_id": "S3",
+      "text": "Effect가 '라이프사이클 훅'이 아니라 '외부 시스템과의 동기화'라는 정의로 재구성되는 이유를 메시지 전송(이벤트) vs 연결 유지(Effect) 비유로 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S0.1"
+      ]
+    },
+    {
+      "id": "LO-S3.2",
+      "section_id": "S3",
+      "text": "useEffect 의존성 배열의 세 형태(생략 / [] / [a,b])가 각각 어떤 시점에 콜백을 실행시키는지 코드로 시연할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S3.1"
+      ]
+    },
+    {
+      "id": "LO-S3.3",
+      "section_id": "S3",
+      "text": "connection.connect/disconnect, addEventListener/removeEventListener, fetch race condition(ignore flag) 같은 cleanup 패턴을 적용한 Effect를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S3.2"
+      ]
+    },
+    {
+      "id": "LO-S3.4",
+      "section_id": "S3",
+      "text": "Strict Mode의 dev 더블 마운트가 cleanup의 정확성을 검증하기 위한 의도임을 설명하고, ref guard로 더블 호출을 회피하는 시도가 왜 잘못된 처방인지(unmount 누수) 분석할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S3.3"
+      ]
+    },
+    {
+      "id": "LO-S4.1",
+      "section_id": "S4",
+      "text": "주어진 컴포넌트 코드에서 'Effect로 옮기지 말아야 할' 12가지 안티패턴(derived state, 캐싱, 리셋, 핸들러 로직, chains, init, 부모 통지, 외부 store, fetch race 등)을 식별하고 분류할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S3.1"
+      ]
+    },
+    {
+      "id": "LO-S4.2",
+      "section_id": "S4",
+      "text": "props/state로부터 derived 값을 계산하는 Effect를 render 중 계산이나 useMemo로 리팩터링한 후, useMemo 사용 기준(비싼 계산 + 의존성 안정)을 적용할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S4.1"
+      ]
+    },
+    {
+      "id": "LO-S4.3",
+      "section_id": "S4",
+      "text": "prop 변경 시 state를 리셋/조정하는 Effect를 key prop, state-during-render, 또는 derived value로 대체하는 적절한 기법을 선택할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S4.1"
+      ]
+    },
+    {
+      "id": "LO-S4.4",
+      "section_id": "S4",
+      "text": "여러 Effect가 서로의 state 변화를 trigger하는 chain을 단일 이벤트 핸들러로 합쳐 캐스케이딩 재렌더를 제거하는 리팩터링을 수행할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S4.1"
+      ]
+    },
+    {
+      "id": "LO-S4.5",
+      "section_id": "S4",
+      "text": "수동 subscribe Effect를 useSyncExternalStore로, race condition 가능 fetch Effect를 ignore-flag 패턴 또는 useData 커스텀 훅으로 변환하는 코드를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S4.1"
+      ]
+    },
+    {
+      "id": "LO-S4.6",
+      "section_id": "S4",
+      "text": "'render 중 계산 / useMemo / 핸들러 / Effect / key / useSyncExternalStore' 결정 트리를 새로운 시나리오에 적용해 도구를 정당화하며 선택할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S4.2",
+        "LO-S4.3",
+        "LO-S4.4",
+        "LO-S4.5"
+      ]
+    },
+    {
+      "id": "LO-S5.1",
+      "section_id": "S5",
+      "text": "컴포넌트 라이프사이클(mount/update/unmount)과 Effect 라이프사이클(synchronization 시작/중지)을 구분하고, 각 렌더가 자체 closure를 가진다는 모델을 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S3.1"
+      ]
+    },
+    {
+      "id": "LO-S5.2",
+      "section_id": "S5",
+      "text": "주어진 식별자(prop, state, 모듈 상수, ref.current, 외부 mutable global)를 reactive / non-reactive로 분류하고 그 근거를 제시할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S5.1"
+      ]
+    },
+    {
+      "id": "LO-S5.3",
+      "section_id": "S5",
+      "text": "roomId가 변할 때 React가 Object.is 비교로 cleanup → 재실행을 결정하는 흐름을 단계별로 추적하고, 빈 [] deps의 정확한 의미를 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S5.1"
+      ]
+    },
+    {
+      "id": "LO-S5.4",
+      "section_id": "S5",
+      "text": "ESLint react-hooks/exhaustive-deps 경고를 suppress 하지 않고 코드를 바꿔서 해결하는 3가지 옵션(deps 추가 / 비-반응형 외부화 / useEffectEvent)을 비교해 선택할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S5.2"
+      ]
+    },
+    {
+      "id": "LO-S5.5",
+      "section_id": "S5",
+      "text": "한 Effect 안에 묶인 무관한 동기화(예: 채팅 연결 + 분석 로깅)를 독립적인 Effect로 분리해 의존성과 재실행 시점을 깔끔히 만드는 리팩터링을 수행할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S5.3"
+      ]
+    },
+    {
+      "id": "LO-S6.1",
+      "section_id": "S6",
+      "text": "'왜 이 코드가 실행돼야 하나?'(인터랙션 응답 vs 표시 중 동기화)라는 질문으로 동일 로직을 event handler와 Effect 중 어디에 둘지 결정할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S3.1",
+        "LO-S5.1"
+      ]
+    },
+    {
+      "id": "LO-S6.2",
+      "section_id": "S6",
+      "text": "Effect 내 reactive 값과 non-reactive 로직(예: 최신 theme로 알림)을 구분하고, useEffectEvent로 후자를 추출해 불필요한 재동기화를 제거하는 코드를 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S5.4"
+      ]
+    },
+    {
+      "id": "LO-S6.3",
+      "section_id": "S6",
+      "text": "useEffectEvent의 제약(Effect 안에서만 호출, 다른 Hook/컴포넌트에 전달 금지, deps에 포함 금지)을 어긴 코드를 식별하고 사용처(Hook)에 함께 정의하도록 수정할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S6.2"
+      ]
+    },
+    {
+      "id": "LO-S6.4",
+      "section_id": "S6",
+      "text": "'reactive 값은 인자로, non-reactive는 Effect Event 본체에서 직접' 패턴을 page visit 로깅 시나리오에 적용해 재발화 조건을 의도대로 설계할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S6.2"
+      ]
+    },
+    {
+      "id": "LO-S7.1",
+      "section_id": "S7",
+      "text": "deps는 코드의 거울이며 'deps가 아니라 코드를 바꾼다'는 워크플로(작성 → linter 따르기 → 코드 변경 → 반복)를 자기 언어로 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S5.4"
+      ]
+    },
+    {
+      "id": "LO-S7.2",
+      "section_id": "S7",
+      "text": "정적 값 컴포넌트 외부화 / 객체·함수를 Effect 안에서 생성 / updater 함수 / useEffectEvent / Effect 분리 / 객체 prop을 원시값으로 분해 — 6가지 전략 각각의 적용 신호를 식별할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S7.1"
+      ]
+    },
+    {
+      "id": "LO-S7.3",
+      "section_id": "S7",
+      "text": "setCount(c => c + 1) updater 패턴으로 setInterval Effect의 count 의존성을 제거해 매 tick 재생성을 방지하는 리팩터링을 작성할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S7.2"
+      ]
+    },
+    {
+      "id": "LO-S7.4",
+      "section_id": "S7",
+      "text": "options 객체 prop을 원시값으로 분해하거나 함수를 Effect 안에서 정의해 부모 렌더마다 새 참조가 생기는 무한 재동기화를 해소할 수 있다.",
+      "bloom": "Apply",
+      "prerequisites": [
+        "LO-S7.2"
+      ]
+    },
+    {
+      "id": "LO-S7.5",
+      "section_id": "S7",
+      "text": "주어진 '재연결이 너무 많은 Effect' 케이스에서 6가지 전략 중 어느 조합이 가장 적절한지 트레이드오프(가독성, 캡슐화, 마이그레이션 비용)를 평가해 선택할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S7.2",
+        "LO-S7.3",
+        "LO-S7.4"
+      ]
+    },
+    {
+      "id": "LO-S8.1",
+      "section_id": "S8",
+      "text": "'use' 접두사 규칙(Hook을 호출할 때만 사용)과 Custom Hook이 'stateful 로직만 공유 — state 자체는 공유 X' 라는 원칙을 코드 예제로 설명할 수 있다.",
+      "bloom": "Understand",
+      "prerequisites": [
+        "LO-S3.1"
+      ]
+    },
+    {
+      "id": "LO-S8.2",
+      "section_id": "S8",
+      "text": "useOnlineStatus / useFormInput / useData 같은 도메인 의미 있는 Custom Hook을 작성하고 여러 컴포넌트에서 독립 인스턴스로 활용할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S8.1"
+      ]
+    },
+    {
+      "id": "LO-S8.3",
+      "section_id": "S8",
+      "text": "reactive 값(roomId, serverUrl)을 인자로 받고 핸들러를 useEffectEvent로 wrap하는 useChatRoom 패턴을 구현해 deps 오염 없이 핸들러 최신화를 달성할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S8.2",
+        "LO-S6.2"
+      ]
+    },
+    {
+      "id": "LO-S8.4",
+      "section_id": "S8",
+      "text": "useMount, useEffectOnce 같은 lifecycle wrapper를 추출하지 말아야 하는 이유와, 단일 사용처/Hook 미호출 함수에서 Custom Hook을 자제해야 하는 기준을 평가할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S8.1"
+      ]
+    },
+    {
+      "id": "LO-S8.5",
+      "section_id": "S8",
+      "text": "useInterval + useCounter 처럼 Custom Hook composition으로 더 추상적인 도메인 Hook을 합성하고, 향후 useSyncExternalStore 같은 새 API로 내부 구현만 교체 가능한 구조를 설계할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S8.2"
+      ]
+    },
+    {
+      "id": "LO-S9.1",
+      "section_id": "S9",
+      "text": "Refs · Effects · Custom Hooks가 모두 등장하는 예제 앱에서 안티패턴을 진단하고 우선순위(영향도 × 수정 난이도)를 매긴 리팩터링 계획을 수립할 수 있다.",
+      "bloom": "Analyze",
+      "prerequisites": [
+        "LO-S4.6",
+        "LO-S7.5"
+      ]
+    },
+    {
+      "id": "LO-S9.2",
+      "section_id": "S9",
+      "text": "검색 가능한 채팅방(useChatRoom + useData + 자동 스크롤 ref + 온라인 상태)을 코스 전체 결정 트리에 따라 단계적으로 구현해 통합 케이스를 산출할 수 있다.",
+      "bloom": "Create",
+      "prerequisites": [
+        "LO-S2.3",
+        "LO-S8.3",
+        "LO-S8.5"
+      ]
+    },
+    {
+      "id": "LO-S9.3",
+      "section_id": "S9",
+      "text": "최종 솔루션의 각 escape hatch 사용에 대해 '왜 이 도구인가, 다른 선택지는 무엇이었나, 어떤 트레이드오프를 받아들였나'를 동료에게 review 형식으로 정당화할 수 있다.",
+      "bloom": "Evaluate",
+      "prerequisites": [
+        "LO-S9.2"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "S0",
+      "slug": "00-orientation-escape-hatch-mental-model",
+      "title": "오리엔테이션 — Escape Hatch 멘탈모델",
+      "summary": "React의 기본 흐름(선언형/순수 렌더/단방향 props)에서 '벗어날 때' 쓰는 도구들이라는 챕터 전체의 프레이밍을 잡는다. '왜 이 도구들은 기본이 아닌가', '언제 쓰는 게 정당한가'를 결정 트리로 정리한다.",
+      "lo_ids": [
+        "LO-S0.1",
+        "LO-S0.2",
+        "LO-S0.3"
+      ],
+      "classes": [
+        {
+          "id": "S0.C1",
+          "slug": "01-why-escape-hatches",
+          "title": "왜 'Escape Hatch'인가 — React의 기본 흐름과 마지막 수단",
+          "lo_ids": [
+            "LO-S0.1",
+            "LO-S0.3"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slide.source.md",
+            "slide_html": "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slide.html",
+            "note_md": "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/note.md",
+            "transcript_txt": "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/transcript.txt",
+            "audio_full": "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/full.mp3",
+            "audio_slides": [
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_01.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_02.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_03.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_04.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_05.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_06.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slides_png/slide.001.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slides_png/slide.002.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slides_png/slide.003.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slides_png/slide.004.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slides_png/slide.005.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/slides_png/slide.006.png"
+            ]
+          },
+          "actual_audio_duration_sec": 317.3
+        },
+        {
+          "id": "S0.C2",
+          "slug": "02-escape-hatch-decision-tree",
+          "title": "결정 트리 — 지금 이 코드, Escape Hatch가 정말 필요한가?",
+          "lo_ids": [
+            "LO-S0.2"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slide.source.md",
+            "slide_html": "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slide.html",
+            "note_md": "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/note.md",
+            "transcript_txt": "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/transcript.txt",
+            "audio_full": "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/full.mp3",
+            "audio_slides": [
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_01.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_02.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_03.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_04.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_05.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_06.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_07.mp3",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.001.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.002.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.003.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.004.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.005.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.006.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.007.png",
+              "sections/00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 306.2
+        }
+      ],
+      "quiz_path": "sections/00-orientation-escape-hatch-mental-model/quiz.json"
+    },
+    {
+      "id": "S1",
+      "slug": "01-referencing-values-with-refs",
+      "title": "Ref로 값 참조하기 — 재렌더 없이 기억하기",
+      "summary": "useRef의 기본 동작과 state와의 차이를 이해하고, timeout/interval ID, 디바운싱, 비동기 콜백의 최신 값 같은 비-렌더 데이터에 ref를 적용한다. 렌더 중 ref.current 읽기/쓰기 안티패턴을 짚는다.",
+      "lo_ids": [
+        "LO-S1.1",
+        "LO-S1.2",
+        "LO-S1.3",
+        "LO-S1.4",
+        "LO-S1.5"
+      ],
+      "classes": [
+        {
+          "id": "S1.C1",
+          "slug": "01-useref-basics-vs-state",
+          "title": "useRef 기본과 state와의 차이",
+          "lo_ids": [
+            "LO-S1.1",
+            "LO-S1.2"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slide.source.md",
+            "slide_html": "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slide.html",
+            "note_md": "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/note.md",
+            "transcript_txt": "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/transcript.txt",
+            "audio_full": "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/full.mp3",
+            "audio_slides": [
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_01.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_02.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_03.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_04.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_05.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_06.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_07.mp3",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.001.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.002.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.003.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.004.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.005.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.006.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.007.png",
+              "sections/01-referencing-values-with-refs/classes/01-useref-basics-vs-state/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 266.9
+        },
+        {
+          "id": "S1.C2",
+          "slug": "02-ref-good-use-cases",
+          "title": "Ref의 좋은 사용 사례 — timeout, 디바운싱, 최신 값",
+          "lo_ids": [
+            "LO-S1.3"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slide.source.md",
+            "slide_html": "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slide.html",
+            "note_md": "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/note.md",
+            "transcript_txt": "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/transcript.txt",
+            "audio_full": "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/full.mp3",
+            "audio_slides": [
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_01.mp3",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_02.mp3",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_03.mp3",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_04.mp3",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_05.mp3",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_06.mp3",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.001.png",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.002.png",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.003.png",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.004.png",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.005.png",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.006.png",
+              "sections/01-referencing-values-with-refs/classes/02-ref-good-use-cases/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 274.0
+        },
+        {
+          "id": "S1.C3",
+          "slug": "03-ref-antipatterns-and-refactor",
+          "title": "Ref 안티패턴과 전역 변수 → ref 리팩터링",
+          "lo_ids": [
+            "LO-S1.4",
+            "LO-S1.5"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slide.source.md",
+            "slide_html": "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slide.html",
+            "note_md": "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/note.md",
+            "transcript_txt": "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/transcript.txt",
+            "audio_full": "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/full.mp3",
+            "audio_slides": [
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_01.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_02.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_03.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_04.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_05.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_06.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_07.mp3",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.001.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.002.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.003.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.004.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.005.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.006.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.007.png",
+              "sections/01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 312.4
+        }
+      ],
+      "quiz_path": "sections/01-referencing-values-with-refs/quiz.json"
+    },
+    {
+      "id": "S2",
+      "slug": "02-manipulating-dom-with-refs",
+      "title": "Ref로 DOM 조작하기 — focus, scroll, 그리고 통제된 노출",
+      "summary": "ref={...}로 DOM 노드에 접근해 focus/scroll/measure/play 같이 React가 대체하지 못하는 작업을 수행하는 패턴, flushSync로 state→DOM 타이밍을 맞추는 법, forwardRef → React 19 ref-as-prop, useImperativeHandle로 노출 API를 좁히는 설계를 다룬다.",
+      "lo_ids": [
+        "LO-S2.1",
+        "LO-S2.2",
+        "LO-S2.3",
+        "LO-S2.4",
+        "LO-S2.5"
+      ],
+      "classes": [
+        {
+          "id": "S2.C1",
+          "slug": "01-ref-to-dom-basics",
+          "title": "ref={...}로 DOM 만지기 — focus·scroll·measure·play",
+          "lo_ids": [
+            "LO-S2.1",
+            "LO-S2.2"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slide.source.md",
+            "slide_html": "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slide.html",
+            "note_md": "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/note.md",
+            "transcript_txt": "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/transcript.txt",
+            "audio_full": "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_01.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_02.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_03.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_04.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_05.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_06.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.001.png",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.002.png",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.003.png",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.004.png",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.005.png",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.006.png",
+              "sections/02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 245.6
+        },
+        {
+          "id": "S2.C2",
+          "slug": "02-flushsync-and-dont-touch-react-dom",
+          "title": "flushSync로 타이밍 맞추기 + React가 관리하는 DOM은 손대지 않기",
+          "lo_ids": [
+            "LO-S2.3",
+            "LO-S2.4"
+          ],
+          "duration_min": 11,
+          "assets": {
+            "slide_source": "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slide.source.md",
+            "slide_html": "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slide.html",
+            "note_md": "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/note.md",
+            "transcript_txt": "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/transcript.txt",
+            "audio_full": "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_01.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_02.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_03.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_04.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_05.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_06.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.001.png",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.002.png",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.003.png",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.004.png",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.005.png",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.006.png",
+              "sections/02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 258.6
+        },
+        {
+          "id": "S2.C3",
+          "slug": "03-forwardref-to-ref-as-prop-and-imperative-handle",
+          "title": "자식에게 ref 넘기기 — forwardRef → React 19 ref prop, 그리고 useImperativeHandle",
+          "lo_ids": [
+            "LO-S2.5"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slide.source.md",
+            "slide_html": "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slide.html",
+            "note_md": "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/note.md",
+            "transcript_txt": "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/transcript.txt",
+            "audio_full": "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/full.mp3",
+            "audio_slides": [
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_01.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_02.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_03.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_04.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_05.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_06.mp3",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.001.png",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.002.png",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.003.png",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.004.png",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.005.png",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.006.png",
+              "sections/02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 260.7
+        }
+      ],
+      "quiz_path": "sections/02-manipulating-dom-with-refs/quiz.json"
+    },
+    {
+      "id": "S3",
+      "slug": "03-synchronizing-with-effects",
+      "title": "Effect로 동기화하기 — 라이프사이클이 아닌 동기화 모델",
+      "summary": "useEffect를 'mount/update/unmount 훅'이 아닌 '외부 시스템과의 동기화'로 재정의한다. 의존성 배열, cleanup 패턴(connect/subscribe/animation/race), Strict Mode 더블 호출의 의도와 ref로 회피하지 말아야 하는 이유를 다룬다.",
+      "lo_ids": [
+        "LO-S3.1",
+        "LO-S3.2",
+        "LO-S3.3",
+        "LO-S3.4"
+      ],
+      "classes": [
+        {
+          "id": "S3.C1",
+          "slug": "01-effect-as-synchronization",
+          "title": "Effect는 라이프사이클이 아니라 동기화다",
+          "lo_ids": [
+            "LO-S3.1"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slide.source.md",
+            "slide_html": "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slide.html",
+            "note_md": "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/note.md",
+            "transcript_txt": "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/transcript.txt",
+            "audio_full": "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/full.mp3",
+            "audio_slides": [
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_01.mp3",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_02.mp3",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_03.mp3",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_04.mp3",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_05.mp3",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_06.mp3",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.001.png",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.002.png",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.003.png",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.004.png",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.005.png",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.006.png",
+              "sections/03-synchronizing-with-effects/classes/01-effect-as-synchronization/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 327.0
+        },
+        {
+          "id": "S3.C2",
+          "slug": "02-useeffect-signature-deps-cleanup",
+          "title": "useEffect 시그니처, 의존성 배열, cleanup 패턴",
+          "lo_ids": [
+            "LO-S3.2",
+            "LO-S3.3"
+          ],
+          "duration_min": 14,
+          "assets": {
+            "slide_source": "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slide.source.md",
+            "slide_html": "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slide.html",
+            "note_md": "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/note.md",
+            "transcript_txt": "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/transcript.txt",
+            "audio_full": "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/full.mp3",
+            "audio_slides": [
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_01.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_02.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_03.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_04.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_05.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_06.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_07.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_08.mp3",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.001.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.002.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.003.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.004.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.005.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.006.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.007.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.008.png",
+              "sections/03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 461.1
+        },
+        {
+          "id": "S3.C3",
+          "slug": "03-strict-mode-double-invoke-and-ref-antipattern",
+          "title": "Strict Mode 더블 호출의 의도와 ref-회피 안티패턴",
+          "lo_ids": [
+            "LO-S3.4"
+          ],
+          "duration_min": 14,
+          "assets": {
+            "slide_source": "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slide.source.md",
+            "slide_html": "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slide.html",
+            "note_md": "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/note.md",
+            "transcript_txt": "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/transcript.txt",
+            "audio_full": "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/full.mp3",
+            "audio_slides": [
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_01.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_02.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_03.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_04.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_05.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_06.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_07.mp3",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.001.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.002.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.003.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.004.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.005.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.006.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.007.png",
+              "sections/03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 432.3
+        }
+      ],
+      "quiz_path": "sections/03-synchronizing-with-effects/quiz.json"
+    },
+    {
+      "id": "S4",
+      "slug": "04-you-might-not-need-an-effect",
+      "title": "Effect 안 써도 되는 경우 — 12가지 안티패턴 진단",
+      "summary": "이 코스에서 가장 중요한 섹션. Derived state, useMemo, key prop, state-during-render, 핸들러 추출, chains, 앱 초기화, 부모 통지, useSyncExternalStore, fetch race condition까지 안티패턴 12종을 Before/After로 학습하고 결정 트리로 종합한다.",
+      "lo_ids": [
+        "LO-S4.1",
+        "LO-S4.2",
+        "LO-S4.3",
+        "LO-S4.4",
+        "LO-S4.5",
+        "LO-S4.6"
+      ],
+      "classes": [
+        {
+          "id": "S4.C1",
+          "slug": "01-diagnosis-frame-and-decision-tree",
+          "title": "Effect 안 써도 되는 경우 — 진단 프레임과 결정 트리",
+          "lo_ids": [
+            "LO-S4.1"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slide.source.md",
+            "slide_html": "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slide.html",
+            "note_md": "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/note.md",
+            "transcript_txt": "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/transcript.txt",
+            "audio_full": "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_01.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_02.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_03.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_04.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_05.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_06.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.001.png",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.002.png",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.003.png",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.004.png",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.005.png",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.006.png",
+              "sections/04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 263.5
+        },
+        {
+          "id": "S4.C2",
+          "slug": "02-derived-state-and-memo",
+          "title": "Derived state — render 중 계산과 useMemo",
+          "lo_ids": [
+            "LO-S4.2"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slide.source.md",
+            "slide_html": "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slide.html",
+            "note_md": "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/note.md",
+            "transcript_txt": "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/transcript.txt",
+            "audio_full": "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_01.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_02.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_03.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_04.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_05.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_06.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_07.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.001.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.002.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.003.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.004.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.005.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.006.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.007.png",
+              "sections/04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 251.9
+        },
+        {
+          "id": "S4.C3",
+          "slug": "03-resetting-and-adjusting-state",
+          "title": "State 리셋과 조정 — key prop과 state-during-render",
+          "lo_ids": [
+            "LO-S4.3"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slide.source.md",
+            "slide_html": "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slide.html",
+            "note_md": "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/note.md",
+            "transcript_txt": "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/transcript.txt",
+            "audio_full": "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_01.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_02.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_03.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_04.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_05.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_06.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.001.png",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.002.png",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.003.png",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.004.png",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.005.png",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.006.png",
+              "sections/04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 258.3
+        },
+        {
+          "id": "S4.C4",
+          "slug": "04-handlers-vs-effects",
+          "title": "인터랙션 vs 표시 — 핸들러로 옮겨야 할 6가지",
+          "lo_ids": [
+            "LO-S4.4"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slide.source.md",
+            "slide_html": "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slide.html",
+            "note_md": "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/note.md",
+            "transcript_txt": "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/transcript.txt",
+            "audio_full": "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_01.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_02.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_03.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_04.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_05.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_06.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_07.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_08.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.001.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.002.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.003.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.004.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.005.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.006.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.007.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.008.png",
+              "sections/04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 312.1
+        },
+        {
+          "id": "S4.C5",
+          "slug": "05-external-store-fetch-and-tree",
+          "title": "외부 통합과 종합 결정 트리 — useSyncExternalStore · fetch race",
+          "lo_ids": [
+            "LO-S4.5",
+            "LO-S4.6"
+          ],
+          "duration_min": 11,
+          "assets": {
+            "slide_source": "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slide.source.md",
+            "slide_html": "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slide.html",
+            "note_md": "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/note.md",
+            "transcript_txt": "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/transcript.txt",
+            "audio_full": "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/full.mp3",
+            "audio_slides": [
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_01.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_02.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_03.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_04.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_05.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_06.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_07.mp3",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.001.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.002.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.003.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.004.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.005.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.006.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.007.png",
+              "sections/04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 309.6
+        }
+      ],
+      "quiz_path": "sections/04-you-might-not-need-an-effect/quiz.json"
+    },
+    {
+      "id": "S5",
+      "slug": "05-lifecycle-of-reactive-effects",
+      "title": "반응형 Effect의 라이프사이클",
+      "summary": "Effect를 '동기화 시작/중지' 사이클로 재해석한다. 매 렌더가 자체 closure를 갖는 모델, reactive vs non-reactive 값 판정, ESLint exhaustive-deps의 정당성, 그리고 무관한 동기화는 Effect를 분리해야 하는 이유를 채팅방 재연결 예제로 따라간다.",
+      "lo_ids": [
+        "LO-S5.1",
+        "LO-S5.2",
+        "LO-S5.3",
+        "LO-S5.4",
+        "LO-S5.5"
+      ],
+      "classes": [
+        {
+          "id": "S5.C1",
+          "slug": "01-component-vs-effect-lifecycle",
+          "title": "컴포넌트 라이프사이클 vs Effect 라이프사이클 — 매 렌더가 자기 closure",
+          "lo_ids": [
+            "LO-S5.1"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slide.source.md",
+            "slide_html": "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slide.html",
+            "note_md": "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/note.md",
+            "transcript_txt": "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/transcript.txt",
+            "audio_full": "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_01.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_02.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_03.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_04.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_05.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_06.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.001.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.002.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.003.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.004.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.005.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.006.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 248.9
+        },
+        {
+          "id": "S5.C2",
+          "slug": "02-reactive-values-and-rerun-flow",
+          "title": "Reactive vs Non-reactive 값 — Object.is로 판정되는 재실행 흐름",
+          "lo_ids": [
+            "LO-S5.2",
+            "LO-S5.3"
+          ],
+          "duration_min": 14,
+          "assets": {
+            "slide_source": "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slide.source.md",
+            "slide_html": "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slide.html",
+            "note_md": "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/note.md",
+            "transcript_txt": "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/transcript.txt",
+            "audio_full": "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_01.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_02.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_03.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_04.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_05.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_06.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_07.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_08.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.001.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.002.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.003.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.004.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.005.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.006.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.007.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.008.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 337.8
+        },
+        {
+          "id": "S5.C3",
+          "slug": "03-exhaustive-deps-and-effect-splitting",
+          "title": "exhaustive-deps 해결 3가지 옵션과 Effect 분리 원칙",
+          "lo_ids": [
+            "LO-S5.4",
+            "LO-S5.5"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slide.source.md",
+            "slide_html": "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slide.html",
+            "note_md": "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/note.md",
+            "transcript_txt": "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/transcript.txt",
+            "audio_full": "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/full.mp3",
+            "audio_slides": [
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_01.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_02.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_03.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_04.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_05.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_06.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_07.mp3",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.001.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.002.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.003.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.004.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.005.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.006.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.007.png",
+              "sections/05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 306.1
+        }
+      ],
+      "quiz_path": "sections/05-lifecycle-of-reactive-effects/quiz.json"
+    },
+    {
+      "id": "S6",
+      "slug": "06-separating-events-from-effects",
+      "title": "Event와 Effect 분리하기 — useEffectEvent",
+      "summary": "'왜 이 코드가 실행돼야 하나?' 라는 질문으로 Event handler와 Effect를 가른다. useEffectEvent로 Effect 내부의 non-reactive 부분을 추출해 불필요한 재동기화(예: theme 토글마다 채팅 재연결)를 제거하고, 제한 사항(Effect 외부 노출 금지)도 명확히 한다.",
+      "lo_ids": [
+        "LO-S6.1",
+        "LO-S6.2",
+        "LO-S6.3",
+        "LO-S6.4"
+      ],
+      "classes": [
+        {
+          "id": "S6.C1",
+          "slug": "01-event-vs-effect-mental-model",
+          "title": "Event냐 Effect냐 — '왜 실행돼야 하나?'로 가르기",
+          "lo_ids": [
+            "LO-S6.1"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slide.source.md",
+            "slide_html": "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slide.html",
+            "note_md": "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/note.md",
+            "transcript_txt": "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/transcript.txt",
+            "audio_full": "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/full.mp3",
+            "audio_slides": [
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_01.mp3",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_02.mp3",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_03.mp3",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_04.mp3",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_05.mp3",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_06.mp3",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.001.png",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.002.png",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.003.png",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.004.png",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.005.png",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.006.png",
+              "sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 237.5
+        },
+        {
+          "id": "S6.C2",
+          "slug": "02-useeffectevent-extract-nonreactive",
+          "title": "useEffectEvent로 non-reactive 추출 — theme/roomId 패턴",
+          "lo_ids": [
+            "LO-S6.2",
+            "LO-S6.4"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slide.source.md",
+            "slide_html": "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slide.html",
+            "note_md": "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/note.md",
+            "transcript_txt": "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/transcript.txt",
+            "audio_full": "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/full.mp3",
+            "audio_slides": [
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_01.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_02.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_03.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_04.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_05.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_06.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_07.mp3",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.001.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.002.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.003.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.004.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.005.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.006.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.007.png",
+              "sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 306.4
+        },
+        {
+          "id": "S6.C3",
+          "slug": "03-effect-event-limits-and-antipatterns",
+          "title": "Effect Event의 제약과 안티패턴 — 외부에 노출 금지",
+          "lo_ids": [
+            "LO-S6.3"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slide.source.md",
+            "slide_html": "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slide.html",
+            "note_md": "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/note.md",
+            "transcript_txt": "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/transcript.txt",
+            "audio_full": "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/full.mp3",
+            "audio_slides": [
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_01.mp3",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_02.mp3",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_03.mp3",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_04.mp3",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_05.mp3",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_06.mp3",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.001.png",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.002.png",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.003.png",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.004.png",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.005.png",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.006.png",
+              "sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 323.0
+        }
+      ],
+      "quiz_path": "sections/06-separating-events-from-effects/quiz.json"
+    },
+    {
+      "id": "S7",
+      "slug": "07-removing-effect-dependencies",
+      "title": "Effect 의존성 줄이기 — 6가지 전략",
+      "summary": "linter suppress 금지 원칙 하에서, 정적값 외부화 / 객체·함수 Effect 안 생성 / updater / useEffectEvent / Effect 분리 / 객체 prop을 원시값으로 분해 — 6가지 전략을 실전 케이스(타이머, 애니메이션, 채팅 options)에 적용한다.",
+      "lo_ids": [
+        "LO-S7.1",
+        "LO-S7.2",
+        "LO-S7.3",
+        "LO-S7.4",
+        "LO-S7.5"
+      ],
+      "classes": [
+        {
+          "id": "S7.C1",
+          "slug": "01-deps-mirror-code-no-suppress",
+          "title": "deps는 코드의 거울 — linter suppress 절대 금지 원칙",
+          "lo_ids": [
+            "LO-S7.1",
+            "LO-S7.2"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slide.source.md",
+            "slide_html": "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slide.html",
+            "note_md": "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/note.md",
+            "transcript_txt": "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/transcript.txt",
+            "audio_full": "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/full.mp3",
+            "audio_slides": [
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_01.mp3",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_02.mp3",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_03.mp3",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_04.mp3",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_05.mp3",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_06.mp3",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.001.png",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.002.png",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.003.png",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.004.png",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.005.png",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.006.png",
+              "sections/07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 236.8
+        },
+        {
+          "id": "S7.C2",
+          "slug": "02-strategies-1-to-3-static-inline-updater",
+          "title": "전략 1-3 — 정적값 외부화 · 객체/함수 안에서 생성 · updater",
+          "lo_ids": [
+            "LO-S7.2",
+            "LO-S7.3"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slide.source.md",
+            "slide_html": "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slide.html",
+            "note_md": "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/note.md",
+            "transcript_txt": "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/transcript.txt",
+            "audio_full": "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/full.mp3",
+            "audio_slides": [
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_01.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_02.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_03.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_04.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_05.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_06.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_07.mp3",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.001.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.002.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.003.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.004.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.005.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.006.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.007.png",
+              "sections/07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 264.5
+        },
+        {
+          "id": "S7.C3",
+          "slug": "03-strategies-4-to-6-effect-event-split-primitives",
+          "title": "전략 4-6 — useEffectEvent · Effect 분리 · 객체 prop 분해",
+          "lo_ids": [
+            "LO-S7.2",
+            "LO-S7.4"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slide.source.md",
+            "slide_html": "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slide.html",
+            "note_md": "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/note.md",
+            "transcript_txt": "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/transcript.txt",
+            "audio_full": "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/full.mp3",
+            "audio_slides": [
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_01.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_02.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_03.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_04.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_05.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_06.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_07.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_08.mp3",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/audio/slide_09.mp3"
+            ],
+            "slide_pngs": [
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.001.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.002.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.003.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.004.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.005.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.006.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.007.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.008.png",
+              "sections/07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/slides_png/slide.009.png"
+            ]
+          },
+          "actual_audio_duration_sec": 284.1
+        },
+        {
+          "id": "S7.C4",
+          "slug": "04-case-study-and-tradeoff-evaluation",
+          "title": "실전 케이스 스터디 — 6 전략 조합 선택과 트레이드오프 평가",
+          "lo_ids": [
+            "LO-S7.5"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slide.source.md",
+            "slide_html": "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slide.html",
+            "note_md": "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/note.md",
+            "transcript_txt": "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/transcript.txt",
+            "audio_full": "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/full.mp3",
+            "audio_slides": [
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_01.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_02.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_03.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_04.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_05.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_06.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_07.mp3",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.001.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.002.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.003.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.004.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.005.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.006.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.007.png",
+              "sections/07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 288.3
+        }
+      ],
+      "quiz_path": "sections/07-removing-effect-dependencies/quiz.json"
+    },
+    {
+      "id": "S8",
+      "slug": "08-reusing-logic-with-custom-hooks",
+      "title": "Custom Hook으로 로직 재사용하기",
+      "summary": "use 접두사 규칙, 'state는 공유 안 함 — 로직만 공유' 원칙을 useOnlineStatus / useFormInput / useChatRoom / useData로 학습한다. 핸들러를 useEffectEvent로 wrap하는 패턴, composition, 그리고 추출하지 말아야 하는 경우(단일 사용처, lifecycle wrapper)를 가른다.",
+      "lo_ids": [
+        "LO-S8.1",
+        "LO-S8.2",
+        "LO-S8.3",
+        "LO-S8.4",
+        "LO-S8.5"
+      ],
+      "classes": [
+        {
+          "id": "S8.C1",
+          "slug": "01-custom-hook-rules-and-shared-logic",
+          "title": "Custom Hook의 규칙 — use 접두사와 '로직만 공유' 원칙",
+          "lo_ids": [
+            "LO-S8.1"
+          ],
+          "duration_min": 10,
+          "assets": {
+            "slide_source": "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slide.source.md",
+            "slide_html": "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slide.html",
+            "note_md": "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/note.md",
+            "transcript_txt": "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/transcript.txt",
+            "audio_full": "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/full.mp3",
+            "audio_slides": [
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_01.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_02.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_03.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_04.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_05.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_06.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_07.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.001.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.002.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.003.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.004.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.005.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.006.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.007.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 343.2
+        },
+        {
+          "id": "S8.C2",
+          "slug": "02-extracting-real-hooks-useFormInput-useChatRoom",
+          "title": "실전 추출 — useFormInput, useChatRoom과 useEffectEvent wrap",
+          "lo_ids": [
+            "LO-S8.2",
+            "LO-S8.3"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slide.source.md",
+            "slide_html": "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slide.html",
+            "note_md": "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/note.md",
+            "transcript_txt": "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/transcript.txt",
+            "audio_full": "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/full.mp3",
+            "audio_slides": [
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_01.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_02.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_03.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_04.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_05.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_06.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.001.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.002.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.003.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.004.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.005.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.006.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.007.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 397.8
+        },
+        {
+          "id": "S8.C3",
+          "slug": "03-when-to-extract-composition-future-proofing",
+          "title": "추출할 것인가 말 것인가 — composition과 미래 대비",
+          "lo_ids": [
+            "LO-S8.4",
+            "LO-S8.5"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slide.source.md",
+            "slide_html": "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slide.html",
+            "note_md": "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/note.md",
+            "transcript_txt": "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/transcript.txt",
+            "audio_full": "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/full.mp3",
+            "audio_slides": [
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_01.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_02.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_03.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_04.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_05.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_06.mp3",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.001.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.002.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.003.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.004.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.005.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.006.png",
+              "sections/08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 447.2
+        }
+      ],
+      "quiz_path": "sections/08-reusing-logic-with-custom-hooks/quiz.json"
+    },
+    {
+      "id": "S9",
+      "slug": "09-capstone-integrated-diagnosis",
+      "title": "종합 — 안티패턴 진단과 통합 케이스 스터디",
+      "summary": "Refs · Effects · Custom Hooks가 모두 등장하는 작은 앱(검색 가능한 채팅방 + 자동 스크롤 + 온라인 상태 표시)을 안티패턴 코드에서 출발해 단계적으로 리팩터링한다. 각 결정에 대해 '왜 이 escape hatch인가, 다른 선택지는 무엇이었나'를 평가한다.",
+      "lo_ids": [
+        "LO-S9.1",
+        "LO-S9.2",
+        "LO-S9.3"
+      ],
+      "classes": [
+        {
+          "id": "S9.C1",
+          "slug": "01-antipattern-diagnosis-clinic",
+          "title": "안티패턴 진단 클리닉 — 코드 6개, 어디가 잘못됐나",
+          "lo_ids": [
+            "LO-S9.1"
+          ],
+          "duration_min": 12,
+          "assets": {
+            "slide_source": "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slide.source.md",
+            "slide_html": "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slide.html",
+            "note_md": "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/note.md",
+            "transcript_txt": "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/transcript.txt",
+            "audio_full": "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/full.mp3",
+            "audio_slides": [
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_01.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_02.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_03.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_04.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_05.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_06.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/audio/slide_07.mp3"
+            ],
+            "slide_pngs": [
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.001.png",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.002.png",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.003.png",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.004.png",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.005.png",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.006.png",
+              "sections/09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/slides_png/slide.007.png"
+            ]
+          },
+          "actual_audio_duration_sec": 831.5
+        },
+        {
+          "id": "S9.C2",
+          "slug": "02-integrated-case-study-and-review",
+          "title": "통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지",
+          "lo_ids": [
+            "LO-S9.2",
+            "LO-S9.3"
+          ],
+          "duration_min": 13,
+          "assets": {
+            "slide_source": "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slide.source.md",
+            "slide_html": "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slide.html",
+            "note_md": "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/note.md",
+            "transcript_txt": "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/transcript.txt",
+            "audio_full": "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/full.mp3",
+            "audio_slides": [
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_01.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_02.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_03.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_04.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_05.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_06.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_07.mp3",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/audio/slide_08.mp3"
+            ],
+            "slide_pngs": [
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.001.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.002.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.003.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.004.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.005.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.006.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.007.png",
+              "sections/09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/slides_png/slide.008.png"
+            ]
+          },
+          "actual_audio_duration_sec": 1037.6
+        }
+      ],
+      "quiz_path": "sections/09-capstone-integrated-diagnosis/quiz.json"
+    }
+  ],
+  "stats": {
+    "sections": 10,
+    "classes": 31,
+    "total_slides": 238,
+    "lo_count": 45,
+    "bloom_distribution": {
+      "Understand": 8,
+      "Analyze": 11,
+      "Evaluate": 8,
+      "Apply": 14,
+      "Create": 4
+    },
+    "actual_audio_duration_sec": 10748.2
+  }
+}

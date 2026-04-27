@@ -1,0 +1,120 @@
+{
+  "class_id": "S0.C2",
+  "title": "결정 트리 — 지금 이 코드, Escape Hatch가 정말 필요한가?",
+  "lo_ids": ["LO-S0.2"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "C1에서 'Escape Hatch는 마지막 수단'이라는 자세를 잡았다",
+        "그런데 실무에서 PR 리뷰 중 useEffect 코드를 보면 '이건 필요한 건가, 빼도 되는 건가' 망설이게 된다",
+        "오늘은 그 망설임을 단 3개 질문으로 끝내는 결정 트리를 만든다",
+        "이 트리는 앞으로 S1~S9 전체를 항해하는 나침반이 된다"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "갈림길 일러스트: 코드 한 조각 앞에서 '?' 떠 있고, 세 갈래 길로 분기. 'useEffect 필요해?' 자막",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "결정 트리 1번 질문: '외부 시스템이 끼어 있는가?' — 서버, 타이머, DOM 노드, 서드파티 라이브러리",
+        "Yes → Effect 영역(연결/해제), 또는 ref(인스턴스 보관)로 진입. 여기서 멈춤",
+        "No → 2번 질문으로",
+        "여기서 외부 시스템의 정의가 핵심 — '리렌더가 끝나도 React가 정리해주지 않는 모든 것'"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "결정 트리 1단계 다이어그램: '외부 시스템?' 마름모 노드, Yes 가지에 'Effect/Ref' 잎, No 가지는 다음 노드로 이어짐",
+      "speaker_affect": "또렷하게, 단계적으로"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "2번 질문: '렌더 중 계산만으로 충분한가?' — props/state로부터 값을 derive할 수 있나?",
+        "Yes → render 중 계산 또는 useMemo. Effect 절대 금지(S4의 핵심 안티패턴)",
+        "예: fullName = firstName + ' ' + lastName, filteredList = items.filter(...) — 모두 render 중에",
+        "No → 3번 질문으로 (사용자 인터랙션 결과)"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "결정 트리 2단계: '렌더 중 계산 가능?' 마름모. Yes 가지에 'render 중 계산 / useMemo' 잎",
+      "speaker_affect": "또렷하게, 비교 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 80,
+      "key_points": [
+        "3번 질문: '사용자 인터랙션의 결과인가?' — 클릭, 입력, 제출 같은 이벤트가 직접 trigger했나?",
+        "Yes → event handler. useEffect로 우회하지 말 것 (S4에서 자세히)",
+        "No이면서 1·2번도 모두 No → 그제야 진짜 Effect 후보. 단, 다시 한 번 의심할 것",
+        "세 질문은 순서가 중요 — '외부 시스템 → 렌더 계산 → 인터랙션' 순으로 흘러야 정답률이 높다"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "결정 트리 3단계 완성본: 세 마름모가 위→아래로 이어지고, 잎 노드 4개(Effect/Ref, 렌더 계산, handler, 진짜 Effect)가 색깔별로 표시",
+      "speaker_affect": "정리하듯, 강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 100,
+      "key_points": [
+        "시나리오 ①: 'items 배열에서 검색어로 필터링한 결과 표시' → 1번 No(외부 시스템 없음), 2번 Yes(렌더 중 filter) → render 중 계산",
+        "시나리오 ②: '페이지 로드 시 첫 input에 focus' → 1번 Yes(DOM 노드는 외부) → ref + Effect",
+        "시나리오 ③: 'roomId가 바뀌면 채팅 서버 재연결' → 1번 Yes(서버는 외부) → useEffect with cleanup",
+        "시나리오 ④: 'setTimeout ID를 저장해서 다음 입력 때 clear' → 1번 Yes(타이머는 외부 + 비-렌더 데이터) → useRef"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "4개 시나리오 카드 가로 배치. 각 카드에 결정 트리 경로가 화살표로 그려져 있음 (Q1→Q2→leaf)",
+      "speaker_affect": "구체적으로, 적용 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 55,
+      "key_points": [
+        "직접 적용해보자: '폼 제출 후 성공 토스트 띄우기 + 3초 후 자동 닫기'",
+        "1번 질문: 외부 시스템? — 타이머가 외부 → Yes",
+        "결론: 토스트 띄우기는 핸들러에서, 3초 타이머는 ref에 ID 저장 + (필요 시) Effect cleanup",
+        "포인트: 한 기능 안에도 결정 트리를 부분별로 따로 적용한다"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "토스트 UI 목업 + 옆에 결정 트리 두 갈래 적용 표시('띄우기→handler', '3초 닫기→timer ref')",
+      "speaker_affect": "친근하게, 같이 풀어보기"
+    },
+    {
+      "id": "b7",
+      "type": "teach",
+      "duration_sec": 70,
+      "key_points": [
+        "결정 트리를 코스 로드맵에 매핑한다 — 이 트리가 앞으로 어디서 깊어지는지 미리 본다",
+        "S1~S2: 'Refs 잎' 깊이 파기 — 값 보관 ref(S1), DOM ref(S2)",
+        "S3~S7: 'Effect 잎' 깊이 파기 — 동기화 모델(S3), 안티패턴 12종(S4), 라이프사이클(S5), useEffectEvent(S6), deps 줄이기(S7)",
+        "S8~S9: 재사용/통합 — Custom Hook(S8), 통합 케이스(S9)"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "결정 트리 위에 S1~S9 라벨이 겹쳐진 로드맵. 각 잎 노드 아래에 해당 섹션 번호가 트리 형태로 매달림",
+      "speaker_affect": "전체 조망, 안내자 톤"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "3개 질문 순서: 외부 시스템? → 렌더 중 계산? → 인터랙션 결과?",
+        "각각 잎: Effect/Ref / render 계산·useMemo / handler / (진짜) Effect",
+        "이 트리가 앞으로 S1~S9 모든 결정의 출발점",
+        "다음 시간(S1)부터 'Refs 잎'을 깊이 들어간다"
+      ],
+      "lo_ids": ["LO-S0.2"],
+      "visual_hint": "결정 트리 축약본 + '다음: S1 Ref로 값 참조하기' 티저",
+      "speaker_affect": "정리하듯, 따뜻하게"
+    }
+  ]
+}

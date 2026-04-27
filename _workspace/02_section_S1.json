@@ -1,0 +1,32 @@
+{
+  "section_id": "S1",
+  "classes": [
+    {
+      "id": "S1.C1",
+      "slug": "01-useref-basics-vs-state",
+      "title": "useRef 기본과 state와의 차이",
+      "lo_ids": ["LO-S1.1", "LO-S1.2"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "useRef가 반환하는 `{ current }` 객체의 형태와 동작(직접 mutation, 재렌더 미트리거, 렌더 사이 보존)을 코드로 확인한다. 이어서 useState와 '재렌더 트리거', '렌더 중 읽기 가능 여부', '직접 mutation 가능 여부'라는 세 축으로 비교하고, '화면에 보이면 state, 영향 없으면 ref'라는 판별 규칙을 손에 익힌다."
+    },
+    {
+      "id": "S1.C2",
+      "slug": "02-ref-good-use-cases",
+      "title": "Ref의 좋은 사용 사례 — timeout, 디바운싱, 최신 값",
+      "lo_ids": ["LO-S1.3"],
+      "duration_min": 10,
+      "depends_on": ["S1.C1"],
+      "summary": "비-렌더 데이터를 ref에 보관해야 하는 대표 시나리오 셋을 코드로 작성한다. (1) setTimeout/setInterval ID를 ref에 담아 cancel 가능하게 만들기, (2) Stopwatch에서 표시 값은 state·인터벌 ID는 ref로 분리하기, (3) 비동기 콜백이 최신 값을 읽도록 state와 ref를 동기 유지하기. 각 패턴에서 '왜 state가 아니라 ref인가'를 짚는다."
+    },
+    {
+      "id": "S1.C3",
+      "slug": "03-ref-antipatterns-and-refactor",
+      "title": "Ref 안티패턴과 전역 변수 → ref 리팩터링",
+      "lo_ids": ["LO-S1.4", "LO-S1.5"],
+      "duration_min": 10,
+      "depends_on": ["S1.C2"],
+      "summary": "렌더 중 ref.current를 읽거나 표시 값에 ref를 쓰는 두 안티패턴(stale 표시, 비결정적 렌더)을 카운터·토글 예제로 식별하고 그 결과를 추론한다. 그 위에서 전역 변수로 timeout을 관리하던 디바운싱 컴포넌트를 useRef 기반으로 리팩터링해, 인스턴스별 격리(버튼마다 자체 timeout)를 회복하는 코드를 직접 작성한다."
+    }
+  ]
+}

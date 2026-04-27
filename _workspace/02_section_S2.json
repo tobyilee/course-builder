@@ -1,0 +1,32 @@
+{
+  "section_id": "S2",
+  "classes": [
+    {
+      "id": "S2.C1",
+      "slug": "01-ref-to-dom-basics",
+      "title": "ref={...}로 DOM 만지기 — focus·scroll·measure·play",
+      "lo_ids": ["LO-S2.1", "LO-S2.2"],
+      "duration_min": 12,
+      "depends_on": [],
+      "summary": "useRef + ref={myRef} 패턴으로 DOM 노드를 잡아 focus / scrollIntoView / play / getBoundingClientRect 같은 React가 대체하지 못하는 명령형 작업을 수행한다. 그리고 'render phase에는 ref.current가 null, commit 이후 이벤트 핸들러나 Effect에서만 안전하게 읽을 수 있다'는 타이밍 모델을 함께 잡아, 왜 렌더 본문에서 ref를 만지면 안 되는지 멘탈모델로 굳힌다."
+    },
+    {
+      "id": "S2.C2",
+      "slug": "02-flushsync-and-dont-touch-react-dom",
+      "title": "flushSync로 타이밍 맞추기 + React가 관리하는 DOM은 손대지 않기",
+      "lo_ids": ["LO-S2.3", "LO-S2.4"],
+      "duration_min": 11,
+      "depends_on": ["S2.C1"],
+      "summary": "state setter는 비동기 batch라서 setTodos 직후 lastChild를 바로 읽으면 어긋난다 — flushSync로 동기 commit을 강제해 새 DOM을 곧바로 측정/스크롤하는 패턴을 익힌다. 이어서 ref.current.remove() 같은 '직접 DOM 조작'이 React state와 실제 DOM을 불일치시켜 충돌·크래시를 부르는 이유를 분석하고, 'JSX에서 늘 비어 있는 컨테이너'처럼 안전한 영역과 위험한 영역을 가른다."
+    },
+    {
+      "id": "S2.C3",
+      "slug": "03-forwardref-to-ref-as-prop-and-imperative-handle",
+      "title": "자식에게 ref 넘기기 — forwardRef → React 19 ref prop, 그리고 useImperativeHandle",
+      "lo_ids": ["LO-S2.5"],
+      "duration_min": 12,
+      "depends_on": ["S2.C1"],
+      "summary": "MyInput 같은 커스텀 컴포넌트에 부모가 ref를 꽂으려면 React 18까지는 forwardRef로 명시 노출해야 했고, React 19부터는 ref가 일반 prop처럼 동작해 보일러플레이트가 사라진다. 두 모델을 비교한 뒤, useImperativeHandle로 'focus()만 노출하고 .value 같은 내부는 막는' 캡슐화를 설계해, 자식이 부모에게 주는 명령형 API를 의도적으로 좁히는 평가 감각을 기른다."
+    }
+  ]
+}

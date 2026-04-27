@@ -1,0 +1,140 @@
+[slide 1]
+이번 강의 제목은 reactive 값 대 non-reactive 값입니다.
+부제는 오브젝트 이즈로 판정되는 재실행 흐름이에요.
+[pause:500]
+의존성 배열에 무엇을 넣어야 하는지 매번 헷갈렸다면, 이번 시간에 그 기준을 또렷하게 잡아 갈 수 있을 거예요.
+학습 목표는 LO-S5.2와 LO-S5.3 두 가지입니다.
+
+[slide 2]
+질문부터 던져볼게요.
+ChatRoom 안에서 roomId는 deps에 꼭 넣어야 합니다.
+그런데 같은 함수에서 같이 쓰는 serverUrl은 안 넣어도 돼요.
+왜 그럴까요?
+[pause:600]
+이 한 줄 차이가 사실은 reactive가 무엇인지에 대한 이해에서 출발합니다.
+그게 흐릿하면 deps 배열이 매번 추측 게임이 돼버려요.
+[pause:500]
+오늘은 그 한 줄 차이를 정확히 설명해 보겠습니다.
+
+[slide 3]
+먼저 reactive와 non-reactive를 분류해 볼게요.
+[pause:400]
+reactive 값은 렌더 중에 계산되어, 렌더마다 달라질 수 있는 값입니다.
+대표적으로 props, state, context, 그리고 이들로부터 파생된 derived 값이 여기에 속해요.
+[pause:500]
+non-reactive 값은 컴포넌트 바깥에 선언되어 절대 변하지 않는 값입니다.
+모듈 상수, 글로벌 URL이 대표적이에요.
+[pause:500]
+그리고 특수 케이스가 두 가지 있어요.
+첫 번째는 ref.current입니다.
+이건 의도적으로 mutable이라 React가 추적하지 않으므로 non-reactive로 취급해요.
+두 번째는 외부 mutable 글로벌입니다.
+location.pathname 같은 것들이죠.
+이런 값을 동기화하고 싶다면 useSyncExternalStore를 따로 써야 합니다.
+[pause:500]
+판정 기준은 한 줄로 외우면 좋아요.
+컴포넌트가 다시 렌더되면 이 값이 다른 값일 수 있나?
+이 질문에 yes라면 reactive입니다.
+
+[slide 4]
+이번엔 코드로 비교해 보겠습니다.
+[pause:400]
+첫 번째 코드는 우리가 본 그 ChatRoom이에요.
+serverUrl이 컴포넌트 밖에 const로 선언되어 있고, 안에서는 roomId를 prop으로 받아 사용합니다.
+deps에는 roomId만 들어가 있어요.
+serverUrl은 절대 변하지 않으니 React에게 추적해 달라고 말할 필요가 없거든요.
+[pause:600]
+두 번째 코드를 볼게요.
+같은 serverUrl을 useState로 옮겼습니다.
+그 순간 serverUrl은 reactive가 됐어요.
+이제 deps에는 roomId와 serverUrl 둘 다 필수입니다.
+[pause:500]
+재미있는 점은 코드 한 줄을 바꾸는 것만으로 무엇이 reactive인가가 달라진다는 거예요.
+const였던 값을 state로 옮기는 순간, 그 값의 라이프사이클이 컴포넌트 안으로 들어옵니다.
+
+[slide 5]
+이제 React가 어떻게 재실행을 결정하는지 들여다볼게요.
+[pause:500]
+React는 매 렌더마다 deps 배열을 보관합니다.
+첫 렌더에는 ['general'] 배열을, 다음 렌더에는 ['travel'] 배열을 기억해 둬요.
+[pause:500]
+그리고 두 배열을 같은 위치 원소끼리 한 칸씩 비교합니다.
+이때 사용하는 비교 함수가 바로 오브젝트 이즈예요.
+[pause:500]
+오브젝트 이즈로 general과 travel을 비교하면 false가 나옵니다.
+그러면 React는 이전 클린업을 호출하고 새 Effect 본체를 실행해요.
+[pause:400]
+반대로 모든 원소가 true로 같으면 아무 일도 일어나지 않습니다.
+재동기화 자체가 일어나지 않아요.
+[pause:600]
+한 가지 함정이 있습니다.
+원시값은 값으로 비교되지만, 객체와 함수는 참조로 비교돼요.
+그래서 매 렌더마다 새 객체를 만들어 deps에 넣으면, 매번 다른 참조라고 판단되어 무한 재동기화의 원인이 됩니다.
+이건 다음 강의들에서 자주 만날 함정이에요.
+
+[slide 6]
+이번엔 재실행 흐름을 한 컷씩 따라가 볼게요.
+[pause:500]
+1단계, 사용자가 travel 버튼을 클릭합니다.
+부모 컴포넌트가 setRoomId에 travel을 넣어 호출하면서 리렌더가 트리거돼요.
+[pause:400]
+2단계, ChatRoom 함수가 다시 호출됩니다.
+새 클로저가 만들어지고, useEffect의 deps는 이번엔 ['travel']이에요.
+[pause:400]
+3단계, React가 이전 deps인 ['general']과 새 deps인 ['travel']을 오브젝트 이즈로 비교합니다.
+결과는 false, 다르다고 판단해요.
+[pause:400]
+4단계, 이전 렌더의 클린업이 실행됩니다.
+general 연결이 disconnect돼요.
+[pause:400]
+5단계, 새 Effect 본체가 실행됩니다.
+travel에 connect합니다.
+[pause:400]
+6단계, 결과적으로 화면에서 선택한 방과 실제 연결이 항상 일치합니다.
+[pause:500]
+이 6단계 흐름이 결국 reactive 모델 전체의 작동 방식이에요.
+
+[slide 7]
+이제 자주 오해되는 빈 deps에 대해 짚어볼게요.
+[pause:500]
+빈 대괄호 deps의 진짜 의미는 이렇습니다.
+이 Effect는 어떤 reactive 값도 읽지 않으므로 재동기화가 필요 없다.
+이건 일종의 주장이에요.
+[pause:500]
+흔한 오해는 빈 deps가 한 번만 실행하라는 뜻이라고 보는 거예요.
+그건 아닙니다.
+정확히는 재동기화 조건이 없다는 선언이에요.
+[pause:500]
+그래서 만약 본문 안에서 props나 state를 읽고 있는데 deps가 비어 있다면, 린터가 즉시 잡습니다.
+거짓말을 하고 있으니까요.
+[pause:500]
+정당하게 빈 deps를 쓸 수 있는 경우는 두 가지예요.
+하나는 모든 의존이 컴포넌트 밖 const인 경우.
+다른 하나는 정말로 외부 reactive 값을 안 읽는 Effect인 경우입니다.
+
+[slide 8]
+짧은 자문자답을 풀어볼게요.
+[pause:500]
+ChatRoom 안에서 const greeting에 백틱으로 Welcome to roomId 문자열을 만들어요.
+그 greeting을 Effect 안에서 사용한다면, deps에는 무엇을 넣어야 할까요?
+[pause:800]
+정답은 [roomId]입니다.
+greeting 자체를 넣을 필요는 없어요.
+derived 값은 그것이 의존하는 reactive 값만 deps에 넣어주면 충분합니다.
+[pause:500]
+보너스 한 가지.
+[greeting]을 deps에 넣어도 무해해요.
+매 렌더마다 새 문자열이 만들어지지만, 값이 같으면 오브젝트 이즈가 true를 반환하기 때문에 재동기화가 일어나지 않습니다.
+
+[slide 9]
+정리하겠습니다.
+[pause:400]
+첫째, reactive 값은 렌더마다 달라질 수 있는 값입니다.
+props, state, derived가 여기에 속해요.
+non-reactive는 컴포넌트 밖 상수와 ref.current입니다.
+[pause:400]
+둘째, React는 deps를 오브젝트 이즈로 한 칸씩 비교해서 클린업과 재실행을 결정합니다.
+[pause:400]
+셋째, 빈 deps는 한 번 실행이 아니라 재동기화 조건 없음이라는 주장이에요.
+[pause:500]
+이 세 줄을 머리에 박아두면 다음 강의에서 다룰 익저스티브 뎁스 경고가 훨씬 명확하게 들릴 거예요.

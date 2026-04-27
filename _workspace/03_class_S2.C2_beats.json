@@ -1,0 +1,94 @@
+{
+  "class_id": "S2.C2",
+  "title": "flushSync로 타이밍 맞추기 + React가 관리하는 DOM은 손대지 않기",
+  "lo_ids": ["LO-S2.3", "LO-S2.4"],
+  "target_duration_sec": 660,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "todo-list 앱: 새 항목을 추가하면 자동으로 맨 아래로 스크롤되길 원한다",
+        "setTodos([...todos, newTodo]) 직후 listRef.current.lastChild.scrollIntoView() — 그런데 어긋난다",
+        "왜? state setter는 비동기 batch — 이 한 줄이 오늘의 출발점"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "todo 리스트 GIF 또는 정적 비교: 왼쪽(스크롤 한 칸 어긋남) vs 오른쪽(맨 아래로 정확히 도달)",
+      "speaker_affect": "호기심 유발, 살짝 미스터리하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 140,
+      "key_points": [
+        "기본적으로 setState는 batched — 이벤트 핸들러가 끝난 뒤에 한꺼번에 commit",
+        "그래서 setTodos 직후 lastChild를 읽으면 '예전' DOM의 마지막 자식을 본다",
+        "flushSync(() => setTodos(...))는 콜백 내부 setter를 동기적으로 commit하도록 강제",
+        "flushSync 다음 줄에서는 새 DOM이 이미 반영돼 있으므로 lastChild가 새 항목을 가리킨다",
+        "남용 금지: 매 setState마다 동기 commit은 batching 이점을 망친다 — 'DOM 즉시 측정' 같은 좁은 사용처에만"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "visual_hint": "좌: setTodos → (batched) → 다음 줄 lastChild=구 DOM. 우: flushSync(setTodos) → 즉시 commit → lastChild=새 DOM. 위/아래 두 줄짜리 시퀀스 다이어그램",
+      "speaker_affect": "차분하게 설명, '강제'에서 가벼운 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "리스트의 맨 아래 추가 + 자동 스크롤 패턴을 flushSync로 깔끔하게 처리",
+        "flushSync 콜백 안에서 state를 갱신하고, 콜백 다음 줄에서 listRef.current.lastChild.scrollIntoView()",
+        "import { flushSync } from 'react-dom' — react가 아니라 react-dom임에 주의",
+        "이 패턴은 measure/scroll 외에도 'state 변경 직후 새 DOM의 위치를 알아야 할 때' 일반화된다"
+      ],
+      "lo_ids": ["LO-S2.3"],
+      "examples": [
+        "function handleAdd() { const newTodo = { id: nextId++, text }; flushSync(() => { setText(''); setTodos([...todos, newTodo]); }); listRef.current.lastChild.scrollIntoView(); }"
+      ],
+      "visual_hint": "전체 handleAdd 함수 코드 슬라이드. flushSync 블록을 박스로 강조하고 그 다음 줄을 화살표로 '여기서 새 DOM 보장' 주석",
+      "speaker_affect": "활기차게, 코드 한 줄씩 짚어가며"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "ref.current.remove()로 노드를 직접 제거 + 이후 setShow(true)로 다시 보이려 하면 — React state는 '있다'고 믿는데 실제 DOM은 사라져 있다",
+        "다음 렌더에서 React가 그 노드를 갱신하려는 순간 충돌·크래시 발생",
+        "원칙: React가 JSX로 그리는 노드는 React만 추가/제거한다. 우리는 읽기/측정/명령형 메서드 호출만",
+        "안전한 영역: 'JSX에서 항상 비어있는 컨테이너' — 그 안쪽은 React가 손대지 않으므로 third-party(차트, 지도) 라이브러리가 직접 자식을 append/remove해도 충돌 없음"
+      ],
+      "lo_ids": ["LO-S2.4"],
+      "visual_hint": "좌측 빨간 영역: ref.current.remove() + setShow(true) 충돌 시퀀스. 우측 초록 영역: <div ref={chartRef}></div> 안에서 third-party 라이브러리가 자유롭게 그리는 그림",
+      "speaker_affect": "주의를 주는 톤, '충돌·크래시'에서 강조"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 140,
+      "key_points": [
+        "자문자답 1: setTodos 후 새 노드 위치를 알아야 한다 → flushSync 필요? (예 — 같은 핸들러 안에서 즉시 측정해야 하므로)",
+        "자문자답 2: setTodos 후 그냥 토스트 메시지만 띄우면? → flushSync 불필요 (DOM 즉시 측정이 아님)",
+        "자문자답 3: ref.current.remove()로 제거된 항목을 다시 보이게 하려면? → React state로만 제어, 직접 remove 폐기",
+        "자문자답 4: D3 차트를 React 안에 끼우려면? → JSX로 빈 <div ref={...}> 컨테이너만 두고 그 안쪽은 D3에 위임 (안전한 영역)"
+      ],
+      "lo_ids": ["LO-S2.3", "LO-S2.4"],
+      "visual_hint": "4문항 체크리스트 슬라이드 — flushSync 필요 여부와 안전 영역 판단 미니 퀴즈",
+      "speaker_affect": "차분하게, 학습자 스스로 답하도록 유도"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "flushSync는 setState batching을 깨고 '즉시 commit'을 강제 — 직후 새 DOM 측정/스크롤 가능",
+        "React 관리 노드 직접 제거/추가는 state-DOM 불일치를 만들어 충돌. 안전 영역은 'JSX에서 늘 비어있는 컨테이너' 내부뿐",
+        "다음 시간: 자식 컴포넌트에 ref를 어떻게 안전하게 넘기는가 — forwardRef, React 19 ref-as-prop, useImperativeHandle"
+      ],
+      "lo_ids": ["LO-S2.3", "LO-S2.4"],
+      "visual_hint": "3줄 정리 + 다음 class 티저 'forwardRef → ref prop, 노출 API 좁히기'",
+      "speaker_affect": "정리하는 톤, 부드러운 마무리"
+    }
+  ]
+}

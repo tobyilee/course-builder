@@ -1,0 +1,41 @@
+{
+  "section_id": "S7",
+  "classes": [
+    {
+      "id": "S7.C1",
+      "slug": "01-deps-mirror-code-no-suppress",
+      "title": "deps는 코드의 거울 — linter suppress 절대 금지 원칙",
+      "lo_ids": ["LO-S7.1", "LO-S7.2"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "deps는 '고르는 것'이 아니라 Effect 코드가 결정한다는 모델을 잡는다. 'suppress 한 줄'이 어떻게 stale closure 버그(카운터가 1에 멈춤)로 이어지는지 보여주고, '작성 → linter 따르기 → deps 마음에 안 들면 코드를 바꾼다 → 반복' 워크플로를 설명한다. 그리고 앞으로 다룰 6가지 전략(정적값 외부화 / 객체·함수 안에서 생성 / updater / useEffectEvent / Effect 분리 / 원시값 분해)의 적용 신호를 한눈에 매핑한다."
+    },
+    {
+      "id": "S7.C2",
+      "slug": "02-strategies-1-to-3-static-inline-updater",
+      "title": "전략 1-3 — 정적값 외부화 · 객체/함수 안에서 생성 · updater",
+      "lo_ids": ["LO-S7.2", "LO-S7.3"],
+      "duration_min": 12,
+      "depends_on": ["S7.C1"],
+      "summary": "처음 세 전략을 순서대로 적용한다. (1) 진짜 상수는 컴포넌트 밖으로 빼서 deps에서 제거. (2) 매 렌더 새로 생기는 객체/함수는 Effect 안에서 생성하고 원시값(roomId 등)만 deps에 둔다. (3) state 값을 읽기만 한다면 setCount(c => c + 1) updater로 의존성 자체를 끊는다. setInterval이 매 tick마다 재생성되던 타이머 예제를 updater로 고치는 핸즈온으로 마무리한다."
+    },
+    {
+      "id": "S7.C3",
+      "slug": "03-strategies-4-to-6-effect-event-split-primitives",
+      "title": "전략 4-6 — useEffectEvent · Effect 분리 · 객체 prop 분해",
+      "lo_ids": ["LO-S7.2", "LO-S7.4"],
+      "duration_min": 13,
+      "depends_on": ["S7.C2"],
+      "summary": "(4) 읽고 싶지만 반응시키고 싶지 않은 값(isMuted 같은)은 useEffectEvent로 추출해 deps에서 빼낸다. (5) 한 Effect에 묶인 무관한 동기화(country fetch + city fetch)는 두 개의 Effect로 분리해 재실행 트리거를 정확히 만든다. (6) 부모가 매 렌더 새로 만드는 options 객체 prop은 roomId/serverUrl 원시값으로 분해해 무한 재연결을 막는다. Welcome 컴포넌트의 FadeInAnimation duration 케이스를 useEffectEvent로 정리한다."
+    },
+    {
+      "id": "S7.C4",
+      "slug": "04-case-study-and-tradeoff-evaluation",
+      "title": "실전 케이스 스터디 — 6 전략 조합 선택과 트레이드오프 평가",
+      "lo_ids": ["LO-S7.5"],
+      "duration_min": 10,
+      "depends_on": ["S7.C3"],
+      "summary": "'재연결이 너무 많은' ChatRoom 케이스를 받아 6가지 전략 중 어느 조합이 최적인지 평가한다. updater + useEffectEvent + 원시값 분해를 함께 쓰는 시나리오를 두고, 가독성, 캡슐화, 마이그레이션 비용 트레이드오프를 비교한다. 마지막으로 '문제 → 해결' 매핑표(deps 너무 많음 / 무한 루프 / 읽기만 / 매 렌더 재생성 / 여러 동기화 묶임 / suppress 유혹)로 섹션을 recap하고, S8 Custom Hook으로의 자연스러운 다리를 놓는다."
+    }
+  ]
+}

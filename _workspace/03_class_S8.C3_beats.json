@@ -1,0 +1,111 @@
+{
+  "class_id": "S8.C3",
+  "title": "추출할 것인가 말 것인가 — composition과 미래 대비",
+  "lo_ids": ["LO-S8.4", "LO-S8.5"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "'Custom Hook 만들 줄 알게 됐으니 다 빼고 싶다'는 충동이 생기는 단계 — 멈춰야 함",
+        "오늘의 두 질문: (1) 언제 추출하고 언제 말아야 하는가, (2) 좋은 Hook은 어떻게 더 좋은 Hook으로 합쳐지고 미래 API로 갈아끼워지는가",
+        "안티패턴 셋: useMount/useEffectOnce 같은 lifecycle wrapper — 인기는 많지만 실제로는 deps 거짓말을 캡슐화한 함정",
+        "마지막에 useSyncExternalStore 갈아끼우기로 '캡슐화의 진짜 보상'을 보여줌"
+      ],
+      "lo_ids": ["LO-S8.4", "LO-S8.5"],
+      "visual_hint": "두 갈래 표지판: 왼쪽 '추출' / 오른쪽 '추출 금지' — 가운데 의문부호",
+      "speaker_affect": "호기심 유발, 살짝 경고하듯"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "추출하라 (✅): (1) 여러 컴포넌트에서 같은 stateful 로직 반복, (2) 외부 시스템 동기화 Effect — Hook 이름이 의도를 드러냄, (3) 구현 세부를 호출처로부터 숨기고 싶음, (4) 명확한 단일 도메인 목적",
+        "예: ShippingForm에 fetch + setData + cleanup이 두 번 반복 → useData(url)로 추출하면 호출처 코드가 'cities = useData(...)' 한 줄, 의도가 데이터 모양 그대로 드러남",
+        "추출하지 마라 (❌): (1) 한 컴포넌트에서만 쓰는 로직, (2) Hook을 호출하지 않는 함수 — 그냥 일반 함수로, (3) lifecycle wrapper(useMount, useEffectOnce, useUpdateEffect)",
+        "기준 한 줄: '도메인 이름이 붙는가?' useChatRoom/useData/useOnlineStatus는 도메인이지만, useMount는 도메인 없는 React 메커니즘 wrapper일 뿐"
+      ],
+      "lo_ids": ["LO-S8.4"],
+      "visual_hint": "체크/엑스 두 컬럼 표 — 왼쪽 ✅ 추출 신호 4개, 오른쪽 ❌ 회피 신호 3개",
+      "speaker_affect": "차분하게, 판단 기준 제공하듯"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "왜 useMount는 안티패턴인가? function useMount(fn) { useEffect(fn, []); } — 사용처는 useMount(() => { connect(roomId); })처럼 쓰는데, fn 안의 roomId가 reactive해도 deps는 [] 고정",
+        "deps 거짓말의 결과: roomId가 바뀌어도 재연결 안 됨, stale closure로 옛 roomId만 영원히 사용",
+        "더 나쁜 점: ESLint react-hooks/exhaustive-deps가 useMount의 fn을 분석할 수 없어서 경고도 못 띄움 — '캡슐화'가 아니라 '검사 회피'",
+        "useEffectOnce도 같은 함정. 'mount 시 한 번만'이라는 사고는 S3에서 배운 동기화 모델과 충돌 — Effect는 라이프사이클이 아님",
+        "교훈: lifecycle wrapper는 '도메인 없음 + linter 무력화 + stale closure 양산' 3종 세트라 추출 후보가 아니라 회피 후보"
+      ],
+      "lo_ids": ["LO-S8.4"],
+      "visual_hint": "useMount 정의 + 사용처 코드, 빨간 X로 deps에 가려진 roomId 표시 + 경고 말풍선 'linter blind spot'",
+      "speaker_affect": "강조, 살짝 경고 톤"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 170,
+      "key_points": [
+        "Composition 시나리오: 1초마다 카운트가 올라가는 useCounter를 만들고 싶다",
+        "1단계 — useInterval(callback, delay): const onTick = useEffectEvent(callback); useEffect(() => { const id = setInterval(onTick, delay); return () => clearInterval(id); }, [delay]);",
+        "왜 useEffectEvent로 callback을 wrap? 매 렌더마다 새 함수여도 interval을 다시 만들지 않기 위해 — 지난 class의 useChatRoom과 같은 패턴",
+        "2단계 — useCounter(delay): const [count, setCount] = useState(0); useInterval(() => setCount(c => c + 1), delay); return count;",
+        "useCounter는 useInterval을 호출하고, useInterval은 useEffect/useEffectEvent를 호출 — Hook이 Hook을 합치는 composition. 사용처는 const count = useCounter(1000); 한 줄",
+        "도메인 사다리: useEffect → useInterval(시간 메커니즘) → useCounter(도메인 카운터). 위로 갈수록 호출처가 단순해짐",
+        "Hook 안에서 다른 Hook 호출은 자유 — 단, 항상 top-level에서, 조건문/반복문 안에서는 안 됨"
+      ],
+      "lo_ids": ["LO-S8.5"],
+      "visual_hint": "3층 빌딩 다이어그램: 맨 아래 useEffect+useEffectEvent, 가운데 useInterval, 맨 위 useCounter. 각 층이 위층에 노출하는 인터페이스가 점점 짧아짐",
+      "speaker_affect": "친근하게, 위로 쌓아 올리듯"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "캡슐화의 보상 시연 — useOnlineStatus를 useState+useEffect 버전에서 useSyncExternalStore 버전으로 교체",
+        "Before: useState(true) + useEffect로 'online'/'offline' 이벤트 등록, cleanup으로 해제. 약 12줄",
+        "After: return useSyncExternalStore(subscribe, () => navigator.onLine, () => true); — 3줄. 동시성 안전, SSR snapshot도 제공",
+        "결정적 포인트: 호출처(StatusBar, SaveButton) 코드는 '한 글자도' 바뀌지 않음. const isOnline = useOnlineStatus(); 그대로",
+        "이게 Custom Hook의 진짜 가치 — 같은 도메인 의미를 유지하면서 React가 더 좋은 API를 내놓을 때 내부만 갈아끼울 수 있음",
+        "일반화: 오늘 useEffect로 만든 Hook이라도 내일 useSyncExternalStore/use(promise)/Server Components 친화 API로 교체 가능. 호출처를 잡지 않게 설계해두면 미래가 싸짐"
+      ],
+      "lo_ids": ["LO-S8.5"],
+      "visual_hint": "Before/After 두 코드 블록 + 그 위에 'callsite 변경: 0' 배지가 크게 붙음",
+      "speaker_affect": "강조, 감탄 섞어서"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "자문자답 1: 한 컴포넌트에서만 쓰는 fetch+state 로직 50줄, 추출해야 하나? → 일단 NO. 두 번째 사용처가 생길 때 추출. 너무 일찍 추상화하면 잘못된 모양으로 굳음",
+        "자문자답 2: 팀이 useUpdateEffect(첫 렌더 제외 effect)를 좋아한다. 도입할까? → 위험. 도메인 없음 + ref 트릭으로 '거짓 lifecycle'을 흉내냄. 진짜 필요한 시점은 보통 derived state나 key prop으로 풀림",
+        "자문자답 3: useCounter 안에서 useInterval을 부르는 건 위반 아닌가? → 아니다. Hook이 다른 Hook을 top-level에서 부르는 건 합법이고 권장됨",
+        "자문자답 4: useOnlineStatus를 useSyncExternalStore로 바꿀 때 호출처 테스트는 다시 짜야 하나? → 아니. 반환 타입이 같으니 호출처 동작은 동일. 내부 단위테스트만 갱신"
+      ],
+      "lo_ids": ["LO-S8.4", "LO-S8.5"],
+      "visual_hint": "Q&A 카드 4장, 답 가림/펼침",
+      "speaker_affect": "초대하듯, 멈춰서 답해보라고"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 40,
+      "key_points": [
+        "1) 추출 기준: 반복 + 도메인 의미. 단일 사용처/Hook 미호출/lifecycle wrapper는 회피",
+        "2) Composition: Hook이 Hook을 부르며 도메인 사다리를 쌓는다 (useEffect → useInterval → useCounter)",
+        "3) 캡슐화의 보상: 호출처 변경 0으로 useSyncExternalStore 같은 미래 API로 갈아끼울 수 있다"
+      ],
+      "lo_ids": ["LO-S8.4", "LO-S8.5"],
+      "visual_hint": "3줄 체크리스트 + 사다리 아이콘 + 미래 화살표 아이콘",
+      "speaker_affect": "정리, 자신감 있게"
+    }
+  ]
+}

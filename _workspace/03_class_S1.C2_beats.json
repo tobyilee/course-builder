@@ -1,0 +1,104 @@
+{
+  "class_id": "S1.C2",
+  "title": "Ref의 좋은 사용 사례 — timeout, 디바운싱, 최신 값",
+  "lo_ids": ["LO-S1.3"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "지난 시간에 '비-렌더 데이터는 ref'라는 규칙을 배웠다",
+        "그런데 막상 실전에서는 '이 데이터가 비-렌더인지' 헷갈리기 쉽다",
+        "오늘은 빈출 시나리오 셋(Stopwatch, 디바운싱, 비동기 콜백 최신 값)을 코드로 직접 작성하면서 손에 익힌다",
+        "각 시나리오마다 '왜 state가 아니라 ref인가'를 짚어본다"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "세 시나리오 아이콘 그리드: 시계(Stopwatch), 검색창(디바운싱), 메시지+시계(비동기 최신 값)",
+      "speaker_affect": "호기심 유발, 실전 모드 전환 톤"
+    },
+    {
+      "id": "b2",
+      "type": "example",
+      "duration_sec": 160,
+      "key_points": [
+        "Stopwatch는 두 종류 데이터를 가진다: 화면에 보이는 '경과 시간'과 화면에 안 보이는 'setInterval ID'",
+        "표시 데이터 → state: `[startTime, setStartTime]`, `[now, setNow]`",
+        "ID → ref: `const intervalRef = useRef(null)`",
+        "handleStart: setInterval 시작 직전 `clearInterval(intervalRef.current)`로 이전 인터벌 정리, 새 ID를 ref에 저장",
+        "handleStop: ref에 든 ID로 clearInterval — 그 외엔 ID를 다시 쓸 일이 없다 (화면에 안 보이니까)"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "examples": [
+        "Stopwatch (state: now/startTime, ref: intervalRef)"
+      ],
+      "visual_hint": "Stopwatch 컴포넌트 2분할 다이어그램 — 위쪽 '화면에 보이는 부분(now-startTime ms)' state 영역, 아래쪽 '숨겨진 부분(intervalRef.current)' ref 영역",
+      "speaker_affect": "차분하게 코드 한 줄씩 설명, 분리 포인트에 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 140,
+      "key_points": [
+        "디바운싱: 사용자가 빠르게 클릭/입력할 때 마지막 동작만 실행",
+        "여러 인스턴스(예: 여러 버튼)가 있다면 각자 자기 timeout만 cancel해야 한다",
+        "전역 `let timeoutID` 사용 시 — 한 인스턴스가 새 timeout을 시작하면 다른 인스턴스의 timeout이 덮어써져 의도와 다르게 cancel된다",
+        "`const timeoutRef = useRef(null)` — 각 컴포넌트 인스턴스마다 자기만의 `{ current }` 객체를 가짐",
+        "결과: 버튼 A가 디바운싱 중이어도 버튼 B 클릭은 영향 없음 (인스턴스별 격리)"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "examples": [
+        "DebouncedButton 여러 개 — useRef로 인스턴스별 timeout 격리"
+      ],
+      "visual_hint": "버튼 3개 그림 — 각 버튼 위에 자기 'timeoutRef' 박스가 따로 떠 있는 구도. 옆에 X 표시된 전역 변수 케이스(공유돼서 충돌)",
+      "speaker_affect": "친근하게, 인스턴스별 격리 개념 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "시나리오: 입력창에 글자를 치다가 'Send' 버튼을 누르면 3초 후 alert로 보여준다",
+        "그 사이 사용자가 텍스트를 더 수정해도 '최신' 값을 보여주고 싶다",
+        "state만 쓰면 setTimeout 콜백은 클로저에 갇힌 옛 snapshot을 본다 (stale)",
+        "패턴: state는 그대로 두고, `const textRef = useRef(text)`로 거울 ref를 만든다",
+        "handleChange에서 setText와 함께 `textRef.current = e.target.value`로 동기 유지 → setTimeout 콜백은 `textRef.current`를 읽어 최신 값 확보"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "examples": [
+        "Delayed-alert input (state + textRef sync)"
+      ],
+      "visual_hint": "타임라인 그림: t=0 'hi' 입력 → Send 클릭, t=1 'hi there' 추가 입력, t=3 alert. 두 라인(state snapshot은 'hi' / textRef.current는 'hi there') 대조",
+      "speaker_affect": "강조, '왜 둘을 같이 쓰는가' 짚는 톤"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "스스로 답해보기: 위 셋 모두 공통적으로 ref를 쓴 이유는 무엇인가?",
+        "힌트 1: 그 데이터가 바뀌었을 때 화면이 다시 그려질 필요가 있는가?",
+        "힌트 2: 그 데이터를 컴포넌트 인스턴스마다 따로 가져야 하는가?",
+        "힌트 3: setTimeout/setInterval ID는 그 자체로 의미가 있는가, 아니면 cancel용 핸들에 불과한가?",
+        "결론: '비-렌더 데이터 + 인스턴스별 보관 + 렌더 사이 보존' 셋이 만나면 ref가 정답"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "세 질문 카드 → 정답 카드로 펼쳐지는 슬라이드. 마지막에 'ref = 비-렌더 + 인스턴스별 + 보존' 공식 배지",
+      "speaker_affect": "친근하게, 직접 생각해보라고 권유"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 35,
+      "key_points": [
+        "Stopwatch — 표시 값은 state, 인터벌 ID는 ref (분리 패턴)",
+        "디바운싱 — 인스턴스별 격리는 ref만 가능, 전역 변수는 충돌",
+        "비동기 최신 값 — state와 ref를 함께 두고 동기 유지하면 콜백이 최신을 읽는다"
+      ],
+      "lo_ids": ["LO-S1.3"],
+      "visual_hint": "세 패턴 한 줄 카드 정렬 — 다음 class 예고 '그런데 이걸 잘못 쓰면?'",
+      "speaker_affect": "차분하게 마무리, 다음 class 안티패턴 예고"
+    }
+  ]
+}

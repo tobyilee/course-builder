@@ -1,0 +1,120 @@
+{
+  "class_id": "S4.C5",
+  "title": "외부 통합과 종합 결정 트리 — useSyncExternalStore · fetch race",
+  "lo_ids": ["LO-S4.5", "LO-S4.6"],
+  "target_duration_sec": 660,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "검색창에 'a' 'ab' 'abc'를 빠르게 입력했더니 'a'의 결과가 'abc' 자리에 표시되는 race condition",
+        "온라인 상태 표시기는 두 컴포넌트 사이에서 약간씩 어긋나 깜빡임",
+        "마지막 두 안티패턴 #11(외부 store 구독), #12(fetch race)와 종합 결정 트리로 섹션 닫기"
+      ],
+      "lo_ids": ["LO-S4.5"],
+      "visual_hint": "검색 결과 어긋남 + 두 위치 온라인 인디케이터 깜빡임 정지컷",
+      "speaker_affect": "호기심 유발, 살짝 위기감"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "안티패턴 #11: navigator.onLine처럼 React 외부 store를 수동 useEffect+addEventListener로 구독",
+        "문제: 두 컴포넌트가 각자 구독하면 tearing(불일치) 가능, SSR 초기값 처리 까다로움",
+        "정답: useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) — React가 일관성 보장",
+        "subscribe는 컴포넌트 외부에 정의해 한 번만 만들고, snapshot getter는 매번 호출되어 최신값 반영"
+      ],
+      "lo_ids": ["LO-S4.5"],
+      "visual_hint": "두 컴포넌트가 같은 store를 구독하는 다이어그램 + tearing X 표시",
+      "speaker_affect": "또렷이, 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 100,
+      "key_points": [
+        "Before: useEffect(() => { window.addEventListener('online', update); window.addEventListener('offline', update); return () => {...} }, []) + setIsOnline state",
+        "After: function subscribe(cb) { window.addEventListener('online', cb); window.addEventListener('offline', cb); return () => {...} } / function useOnlineStatus() { return useSyncExternalStore(subscribe, () => navigator.onLine, () => true) }",
+        "이점: 다른 컴포넌트가 같은 hook을 호출해도 tearing 없음, SSR 시 true 기본값"
+      ],
+      "lo_ids": ["LO-S4.5"],
+      "visual_hint": "Before/After 코드 + Hook 재사용 다이어그램",
+      "speaker_affect": "친근하게, 시연 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "안티패턴 #12: fetch in Effect — query/page가 빠르게 바뀌면 응답 순서가 어긋나 stale 결과 표시",
+        "1차 처방: cleanup ignore flag — let ignore = false; return () => { ignore = true; }로 결과를 무시",
+        "2차 처방: useData 같은 커스텀 훅으로 패턴을 캡슐화 — 컴포넌트는 const data = useData(url)만 호출",
+        "3차 처방: 프로덕션에서는 React Query/SWR/RSC 같은 데이터 레이어 사용 — 캐시·취소·중복요청 처리 자동"
+      ],
+      "lo_ids": ["LO-S4.5"],
+      "visual_hint": "응답 순서 어긋남 타임라인 + ignore 플래그가 cleanup에서 스위치 켜지는 비유",
+      "speaker_affect": "체계적으로, 강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "Before: useEffect(() => { fetchResults(query, page).then(setResults) }, [query, page])",
+        "After(ignore): useEffect(() => { let ignore = false; fetchResults(query, page).then(json => { if (!ignore) setResults(json) }); return () => { ignore = true } }, [query, page])",
+        "After(useData): function useData(url) { /* 위 패턴 캡슐화 */ } → const results = useData(`/api/?q=${query}&p=${page}`)",
+        "단계: ignore 추가 → cleanup 추가 → useData로 추출"
+      ],
+      "lo_ids": ["LO-S4.5"],
+      "visual_hint": "3단계 리팩터링 흐름 — Effect → Effect+ignore → useData",
+      "speaker_affect": "친근하게, 시연 톤"
+    },
+    {
+      "id": "b6",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "이제 결정 트리를 12 패턴 위에 한 장으로 합쳐서 본다",
+        "Q1 render 중 계산 가능? → 변수 한 줄 (#1)",
+        "Q2 비싼가? → useMemo (#2)",
+        "Q3 인터랙션 결과? → 핸들러 (#5~#10)",
+        "Q4 prop 변경 시 리셋? → key prop (#3) / state-during-render·derived (#4)",
+        "Q5 외부 store? → useSyncExternalStore (#11) / fetch는 Effect+ignore 또는 useData (#12)"
+      ],
+      "lo_ids": ["LO-S4.6"],
+      "visual_hint": "12 패턴 카드를 5개 분기 leaf로 흡수시키는 종합 결정 트리 1장",
+      "speaker_affect": "또렷이, 강조"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 75,
+      "key_points": [
+        "시나리오 3개를 결정 트리로 정당화하기",
+        "(1) 검색 입력에 따라 결과 갱신 — Q5 외부(API) → fetch + ignore 또는 useData",
+        "(2) 장바구니 합계 — Q1 render 중 계산, 비싸지 않으면 useMemo도 불필요",
+        "(3) 라우트 변경 시 분석 로그 — '표시되었기 때문' → Effect(mount-only) 또는 라우터 이벤트 구독; 클릭 트리거라면 핸들러",
+        "각 선택의 '왜 이 도구인가' 한 문장 답변"
+      ],
+      "lo_ids": ["LO-S4.6"],
+      "visual_hint": "3 시나리오 카드 + 결정 트리 위 경로 표시",
+      "speaker_affect": "도전 유도, 친근하게"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 20,
+      "key_points": [
+        "외부 store는 useSyncExternalStore — tearing 방지",
+        "fetch in Effect는 항상 ignore cleanup 또는 useData 캡슐화",
+        "12 패턴 → 5 질문 결정 트리 한 장으로 통합 — 다음 섹션부터는 정당한 Effect의 라이프사이클로"
+      ],
+      "lo_ids": ["LO-S4.5", "LO-S4.6"],
+      "visual_hint": "종합 결정 트리 미니어처 1장 — 섹션 마무리 슬라이드",
+      "speaker_affect": "마무리, 또렷이"
+    }
+  ]
+}

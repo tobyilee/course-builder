@@ -1,0 +1,153 @@
+{
+  "section_id": "S3",
+  "items": [
+    {
+      "id": "S3.Q1",
+      "type": "mcq_single",
+      "stem": "이 섹션은 useEffect를 'mount/update/unmount 라이프사이클 훅'이 아니라 '외부 시스템과의 동기화 도구'로 재정의했다. 이 재프레이밍을 가장 잘 설명하는 문장은?",
+      "choices": [
+        "Effect는 메시지를 한 번 보내는 이벤트와 같아서, 사용자의 클릭에 응답하는 명령형 작업에 적합하다.",
+        "Effect는 컴포넌트가 살아있는 동안 React state와 외부 세계(DOM·서버·브라우저 API)의 연결을 유지하기 위한 도구다.",
+        "Effect는 React가 렌더 직후 한 번만 실행하는 콜백으로, 이후에는 다시 실행되지 않는다.",
+        "Effect는 라이프사이클 훅의 다른 이름이며, componentDidMount/Update/Unmount가 합쳐진 단축 API다."
+      ],
+      "correct": ["B"],
+      "explanation": "S3.C1의 핵심 프레이밍이다. Effect의 의미는 '시점(언제)'이 아니라 '관계(무엇과 무엇을 일치시키는가)'에 있다.",
+      "distractor_rationales": {
+        "A": "메시지 한 번 보내기는 이벤트(handler)에 해당한다. Effect는 '연결 유지'다.",
+        "C": "deps에 따라 cleanup → 재실행이 반복될 수 있으므로 '한 번만'은 틀리다.",
+        "D": "이것이 바로 이 섹션이 버리라고 한 라이프사이클 멘탈모델이다."
+      },
+      "lo_ids": ["LO-S3.1"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q2",
+      "type": "mcq_single",
+      "stem": "다음 useEffect 의존성 배열 형태와 콜백 실행 시점을 올바르게 짝지은 것은?",
+      "choices": [
+        "deps 생략 → 마운트 1회 / [] → 매 렌더 / [a,b] → a,b 변경 시",
+        "deps 생략 → 매 렌더 / [] → 마운트 1회(+ unmount cleanup) / [a,b] → a 또는 b가 이전과 다를 때",
+        "deps 생략 → 매 렌더 / [] → 절대 실행 안 됨 / [a,b] → a와 b가 동시에 바뀔 때만",
+        "deps 생략 → 마운트 1회 / [] → 매 렌더 / [a,b] → a,b가 모두 truthy일 때"
+      ],
+      "correct": ["B"],
+      "explanation": "S3.C2 시연 그대로다. React는 deps 각 항목을 Object.is로 이전 렌더와 비교한다.",
+      "distractor_rationales": {
+        "A": "생략과 []의 의미가 정반대로 뒤바뀌었다.",
+        "C": "[]도 마운트 시 1회 실행되며, [a,b]는 둘 중 하나만 바뀌어도 재실행된다.",
+        "D": "deps는 boolean 조건이 아니라 변경 감지 키다."
+      },
+      "lo_ids": ["LO-S3.2"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q3",
+      "type": "mcq_single",
+      "stem": "다음 코드를 fetch race condition으로부터 안전하게 만들기 위해 빈 칸 (1)(2)에 들어갈 코드는?\n\n```js\nuseEffect(() => {\n  let ignore = false;\n  fetchResults(query, page).then(json => {\n    if (___(1)___) {\n      setResults(json);\n    }\n  });\n  return () => { ___(2)___ };\n}, [query, page]);\n```",
+      "choices": [
+        "(1) ignore === true   (2) ignore = false;",
+        "(1) !ignore           (2) ignore = true;",
+        "(1) !ignore           (2) ignore = false;",
+        "(1) ignore            (2) ignore = true;"
+      ],
+      "correct": ["B"],
+      "explanation": "ignore는 false로 시작하고, deps 변경/unmount 시 cleanup이 ignore = true로 바꾸면 늦게 도착한 이전 fetch의 응답이 setResults를 호출하지 못하게 막는다. 즉 setResults는 !ignore일 때만 적용한다.",
+      "distractor_rationales": {
+        "A": "(1)이 `ignore === true`면 무시되어야 할 응답에만 적용하는 셈이라 의미가 정반대다.",
+        "C": "cleanup에서 ignore를 false로 두면 플래그가 한 번도 켜지지 않아 race를 막지 못한다.",
+        "D": "(1)이 `ignore`면 무시 대상 응답을 채택하는 꼴이라 race 보호 방향이 거꾸로다."
+      },
+      "lo_ids": ["LO-S3.3"],
+      "bloom": "Apply",
+      "difficulty": 4
+    },
+    {
+      "id": "S3.Q4",
+      "type": "mcq_multi",
+      "stem": "cleanup 함수를 올바르게 작성한 Effect를 모두 고르시오. (정답 2개)",
+      "choices": [
+        "```js\nuseEffect(() => {\n  const conn = createConnection(roomId);\n  conn.connect();\n  return () => conn.disconnect();\n}, [roomId]);\n```",
+        "```js\nuseEffect(() => {\n  window.addEventListener('scroll', onScroll);\n}, []);\n```",
+        "```js\nuseEffect(() => {\n  const id = setInterval(tick, 1000);\n  return () => clearInterval(id);\n}, []);\n```",
+        "```js\nuseEffect(() => {\n  fetch(url).then(r => r.json()).then(setData);\n}, [url]);\n```",
+        "```js\nuseEffect(() => {\n  const conn = createConnection(roomId);\n  conn.connect();\n}, [roomId]);\n```"
+      ],
+      "correct": ["A", "C"],
+      "explanation": "A는 connect/disconnect 한 쌍, C는 setInterval/clearInterval 한 쌍이 갖춰져 있다. '연결 → 끊기'가 짝을 이뤄야 동기화가 닫힌다.",
+      "distractor_rationales": {
+        "B": "addEventListener가 있는데 removeEventListener가 없어 누수가 발생한다.",
+        "D": "url이 바뀌면 이전 fetch의 응답이 늦게 도착해 race condition이 생긴다 — ignore flag가 필요.",
+        "E": "connect만 하고 disconnect 없음 → roomId 변경 시 좀비 연결이 누적된다."
+      },
+      "lo_ids": ["LO-S3.3"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "S3.Q5",
+      "type": "true_false",
+      "stem": "참/거짓: 개발 모드에서 Strict Mode가 Effect를 두 번 실행해 chat connection이 두 번 연결되는 로그가 보이는 것은 React의 버그이며, 프로덕션에서도 동일한 문제가 발생한다.",
+      "choices": ["참", "거짓"],
+      "correct": ["B"],
+      "explanation": "거짓이다. Strict Mode의 dev 더블 마운트는 'cleanup이 정확한지 자동 검증'하는 의도된 동작으로, 프로덕션에서는 한 번만 실행된다. 두 번 연결처럼 보인다면 그것은 cleanup이 부실하다는 신호다.",
+      "distractor_rationales": {
+        "A": "dev 더블 마운트는 의도된 검증 장치이며 프로덕션에는 적용되지 않는다."
+      },
+      "lo_ids": ["LO-S3.4"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S3.Q6",
+      "type": "mcq_single",
+      "stem": "한 개발자가 dev에서 Effect가 두 번 실행되는 것이 보기 싫어 다음과 같이 ref guard로 막았다. 이 처방의 가장 큰 문제는?\n\n```js\nconst didMount = useRef(false);\nuseEffect(() => {\n  if (didMount.current) return;\n  didMount.current = true;\n  connection.connect();\n  return () => connection.disconnect();\n}, []);\n```",
+      "choices": [
+        "didMount.current 할당이 렌더 중에 일어나서 비결정적 렌더를 만든다.",
+        "useRef 대신 useState를 써야 한다 — ref는 재렌더를 트리거하지 않으므로 guard 용도로 부적합하다.",
+        "실제로 컴포넌트가 unmount(탭 전환·route 복귀)됐다가 다시 mount될 때, didMount가 이미 true라 재연결되지 않거나 cleanup이 어긋나 좀비 연결·누수가 남는다.",
+        "Strict Mode가 꺼진 프로덕션에서 connect가 아예 호출되지 않는다."
+      ],
+      "correct": ["C"],
+      "explanation": "S3.C3의 핵심이다. ref guard는 dev 로그의 증상만 가리고, 진짜 unmount/remount 시나리오에서 cleanup의 정확성을 검증할 기회를 잃게 만들어 실제 누수를 숨긴다. 옳은 처방은 cleanup을 견고하게 만드는 것.",
+      "distractor_rationales": {
+        "A": "ref 할당은 Effect 안에서 일어나고 있어 렌더 중 mutation은 아니다.",
+        "B": "Guard 자체에는 useRef가 적절하다 — 문제는 guard라는 접근법 자체다.",
+        "D": "Strict Mode와 무관하게 mount 시 connect는 한 번 실행된다."
+      },
+      "lo_ids": ["LO-S3.4"],
+      "bloom": "Analyze",
+      "difficulty": 4
+    },
+    {
+      "id": "S3.Q7",
+      "type": "short_answer",
+      "stem": "다음 Effect의 문제점을 두 가지 짚고, deps와 cleanup을 어떻게 고쳐야 하는지 1~2줄로 설명하시오.\n\n```js\nuseEffect(() => {\n  const conn = createConnection(serverUrl, roomId);\n  conn.connect();\n}, []);\n```",
+      "choices": [],
+      "correct": [],
+      "explanation": "모범 답안 요지: (1) deps에 [serverUrl, roomId]가 빠져 roomId/serverUrl이 바뀌어도 재동기화되지 않는다(stale 연결). (2) cleanup이 없어 unmount/재실행 시 conn.disconnect()가 호출되지 않아 좀비 연결·중복 구독이 누적된다. 수정: `return () => conn.disconnect();`를 추가하고 deps를 `[serverUrl, roomId]`로 바꾼다.",
+      "distractor_rationales": {},
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "bloom": "Apply",
+      "difficulty": 3,
+      "rubric": {
+        "full_credit": "두 문제(빠진 deps, 빠진 cleanup)를 모두 식별하고, deps에 [serverUrl, roomId] 추가 + return () => conn.disconnect() cleanup 추가를 제시.",
+        "partial_credit": "둘 중 하나만 정확히 식별하고 수정 제시.",
+        "no_credit": "라이프사이클 표현으로만 설명하거나, ref guard·전역 플래그 같은 안티패턴으로 해결을 제시."
+      }
+    }
+  ],
+  "bloom_distribution": {
+    "Understand": 3,
+    "Apply": 2,
+    "Analyze": 2
+  },
+  "lo_coverage": {
+    "LO-S3.1": ["S3.Q1"],
+    "LO-S3.2": ["S3.Q2", "S3.Q7"],
+    "LO-S3.3": ["S3.Q3", "S3.Q4", "S3.Q7"],
+    "LO-S3.4": ["S3.Q5", "S3.Q6"]
+  }
+}

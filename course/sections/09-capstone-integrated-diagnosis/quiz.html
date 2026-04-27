@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>종합 — 안티패턴 진단과 통합 케이스 스터디 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>종합 — 안티패턴 진단과 통합 케이스 스터디 · 퀴즈</h1>
+  <p class="meta">6 문항 · Bloom: Analyze:1, Apply:1, Evaluate:4</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>동료 PR에 다음 코드가 들어왔다.
+
+```jsx
+let timeoutId; // 모듈 전역
+function SearchBox() {
+  return &lt;input onChange={e =&gt; {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() =&gt; fetchResults(e.target.value), 300);
+  }} /&gt;;
+}
+```
+
+진단 클리닉 프로토콜(어떤 패턴 → 영향도 × 수정 난이도 → 어느 섹션 도구)에 따라 가장 정확한 분석은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> S4 derived state 안티패턴 — 영향도 낮음 / 난이도 낮음 — 렌더 중 계산으로 대체</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> S1 비-렌더 데이터 모듈 전역화 안티패턴 — 영향도 높음(인스턴스 간 타이머 충돌이 사용자 눈에 보이는 버그) / 난이도 낮음(useRef 한 번 도입) — useRef로 격리 + cleanup</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> S7 객체 prop 무한 재동기화 — 영향도 중간 / 난이도 중간 — 원시값으로 분해</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> S3 cleanup 누락 — 영향도 높음 / 난이도 중간 — Strict Mode 더블 마운트로 검증</span></label>
+  <div class="explain"><strong>정답: B</strong><br>timeoutId가 모듈 전역이라 같은 컴포넌트 두 인스턴스가 서로의 타이머를 덮어쓴다. 이는 비-렌더 데이터를 인스턴스별로 격리해야 하는 useRef의 정확한 사용처(S1.3, S1.5)이며, 한 줄~몇 줄 변경으로 끝나므로 영향도 높음/난이도 낮음 → 매트릭스 우상단 &#x27;오늘 바로&#x27;.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> derived state 문제가 아니다. 전역 변수로 비-렌더 데이터를 보관한 것이 핵심.</li><li><strong>C.</strong> 객체 prop 참조 문제가 아니라 모듈 전역 mutation이 원인.</li><li><strong>D.</strong> cleanup 누락도 부차적 이슈지만 근본 원인은 인스턴스 격리 실패. 타이머에 cleanup만 붙여도 전역이면 여전히 충돌.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_multi</span>
+  <h3>S9.C1 매트릭스에 다음 6개 케이스를 배치했다고 하자.
+
+- 케이스1: 전역 timeout (S1)
+- 케이스2: 렌더 중 ref.current 읽어 표시 (S1/S2)
+- 케이스3: derived state를 Effect로 (S4)
+- 케이스4: Effect chain으로 카운터 (S4)
+- 케이스5: 객체 prop으로 무한 재연결 (S7)
+- 케이스6: useMount lifecycle wrapper (S8)
+
+&#x27;리팩터링 우선순위는 영향도 우선, 난이도는 동률일 때만&#x27;이라는 원칙을 따를 때, **이번 스프린트에서 먼저 손대야 하는** 케이스 2개를 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q1" value="A"><span><strong>A.</strong> 케이스1 (전역 timeout) — 영향도 높음 / 난이도 낮음</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="B"><span><strong>B.</strong> 케이스2 (렌더 중 ref 읽기) — 영향도 낮음 / 난이도 중간</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="C"><span><strong>C.</strong> 케이스3 (derived Effect) — 영향도 낮음 / 난이도 낮음</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="D"><span><strong>D.</strong> 케이스4 (Effect chain) — 영향도 높음 / 난이도 중간</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="E"><span><strong>E.</strong> 케이스6 (useMount wrapper) — 영향도 낮음 / 난이도 중간</span></label>
+  <div class="explain"><strong>정답: A, D</strong><br>영향도 우선 원칙에 따라 &#x27;영향도 높음&#x27; 케이스(1, 4)가 먼저다. 케이스1은 우상단(영향도↑·난이도↓)이라 즉시 처리, 케이스4는 영향도↑·난이도 중간이라 같은 스프린트 내 두 번째 우선순위. 케이스3은 난이도가 낮아 손대기 쉽지만 &#x27;쉬운 것부터&#x27;의 함정이며 영향도가 낮으므로 자투리 시간에.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 영향도 낮음이라 우선순위에서 밀린다. 백로그.</li><li><strong>C.</strong> 난이도가 낮다고 먼저 하는 것은 &#x27;쉬운 것부터&#x27; 함정. 영향도가 낮음.</li><li><strong>E.</strong> 영향도 낮고 호출처 모두 바꿔야 해서 난이도도 만만치 않음. 백로그.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>검색 가능한 채팅방에서 검색 결과를 가져오는 코드를 작성한다. 다음 중 결정 트리(외부 시스템? 렌더 중 계산 가능? 인터랙션 결과?)와 race condition 방어를 모두 만족하는 구현은?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> ```jsx
+const results = useMemo(() =&gt; fetch(query).then(r =&gt; r.json()), [query]);
+```</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> ```jsx
+&lt;input onChange={async e =&gt; {
+  const r = await fetch(e.target.value);
+  setResults(await r.json());
+}} /&gt;
+```</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> ```jsx
+useEffect(() =&gt; {
+  let ignore = false;
+  fetch(query).then(r =&gt; r.json()).then(data =&gt; {
+    if (!ignore) setResults(data);
+  });
+  return () =&gt; { ignore = true; };
+}, [query]);
+```</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> ```jsx
+useEffect(() =&gt; {
+  fetch(query).then(r =&gt; r.json()).then(setResults);
+}, [query]);
+```</span></label>
+  <div class="explain"><strong>정답: C</strong><br>query는 &#x27;표시 중 동기화&#x27;(URL 진입·뒤로가기에서도 fetch가 필요하므로 인터랙션 결과 아님) → Effect가 정답. 빠른 타이핑 시 이전 fetch가 늦게 도착해 새 결과를 덮어쓰는 race를 ignore flag cleanup으로 방어한다(S3.3, S4.5).<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> useMemo는 동기 계산용. Promise를 반환하는 비동기 작업에 적합하지 않다.</li><li><strong>B.</strong> onChange에 fetch를 묶으면 URL 직접 진입·뒤로가기 시에는 fetch가 안 일어남. 인터랙션 결과로 잘못 분류.</li><li><strong>D.</strong> 결정 트리는 맞췄지만 ignore flag가 없어 race 발생 가능 — 빠른 타이핑 시 stale 결과로 덮어쓰임.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>통합 케이스의 &#x27;새 메시지 자동 스크롤&#x27; 블록에서 다음 두 가지가 동시에 등장한다 — `listRef` 와 `flushSync`. 한 동료가 PR에서 묻는다: &quot;왜 그냥 `setMessages` 후에 `listRef.current.scrollTo(...)` 하면 안 돼? 왜 둘 다 필요해?&quot; 가장 정확한 review 답변은?</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> ref만으로 충분하다. flushSync는 Strict Mode 더블 마운트 회피용이므로 빼도 된다.</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> ref는 React가 DOM 명령형 작업(scrollTo)을 대체할 수 없어서 필요하고, flushSync는 기본 batching 때문에 setMessages 직후 DOM이 아직 새 메시지를 반영하지 않은 상태(stale scrollHeight)이므로 동기 commit을 강제하기 위해 필요하다.</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> flushSync만 있으면 된다. ref 없이 document.querySelector로 리스트를 잡아 scrollTo 하면 된다.</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> 둘 다 불필요하다. useEffect로 messages를 deps에 두고 그 안에서 scroll하면 된다 — React가 commit 후 effect를 실행하므로 자동으로 새 DOM.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S2.3의 핵심 — state setter 직후 새 DOM을 즉시 읽어야 하는 시나리오에서 batching이 깨지지 않으면 scrollHeight가 stale. flushSync로 동기 업데이트 강제 → 그 직후 ref로 명령형 scrollTo. 두 도구는 역할이 다르다(ref=명령형 DOM 접근, flushSync=타이밍 강제).<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> flushSync는 batching 회피용이지 Strict Mode와 무관. 빼면 stale scrollHeight 버그 재발.</li><li><strong>C.</strong> React가 관리하는 노드를 querySelector로 잡아 직접 조작하면 동작은 하더라도 ref가 표준이며, 본질은 ref 유무가 아니라 batching 타이밍이라는 진단을 놓침.</li><li><strong>D.</strong> useEffect 패턴은 한 박자 늦은 스크롤(이미 다음 렌더의 입력 반영)이 되거나 추가 렌더를 유발. 즉시 동기 측정 시나리오에는 flushSync가 정답.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다크모드 토글이 채팅 재연결을 일으키는 다음 코드를 진단·처방하라.
+
+```jsx
+useEffect(() =&gt; {
+  const c = createConnection(serverUrl, roomId);
+  c.connect();
+  showToast(`Connected in ${theme} mode`);
+  return () =&gt; c.disconnect();
+}, [serverUrl, roomId, theme]);
+```
+
+**적절한** 처방을 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q4" value="A"><span><strong>A.</strong> ESLint exhaustive-deps를 suppress하고 deps에서 theme을 빼서 재연결을 막는다.</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="B"><span><strong>B.</strong> `const onConnected = useEffectEvent(() =&gt; showToast(`Connected in ${theme} mode`));` 로 추출하고 Effect 안에서 호출하며 deps는 [serverUrl, roomId]만 둔다.</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="C"><span><strong>C.</strong> useEffectEvent가 stable이 아닌 환경의 fallback으로, theme을 ref에 동기화하고 Effect 안에서 ref.current를 읽는다(보일러플레이트 비용은 인정).</span></label>
+  <label class="choice"><input type="checkbox" name="q4" value="D"><span><strong>D.</strong> theme도 그냥 deps에 두고 재연결을 받아들인다 — &#x27;정확한 deps&#x27;가 원칙이므로 사용자 경험은 부차적.</span></label>
+  <div class="explain"><strong>정답: B, C</strong><br>theme은 알림에만 쓰이는 non-reactive 의도지만 코드상으론 reactive — useEffectEvent로 그 부분만 추출하면 deps 오염 없이 최신 theme 사용(S6.2). 실험적 API가 아직 stable 아닐 때의 fallback은 ref 동기화 패턴(보일러플레이트 비용 인정). suppress는 S7.1이 명시적으로 금지하는 안티패턴이며, &#x27;재연결 받아들임&#x27;은 사용자 경험 손상이 명백한 상황에서 가독성보다 정확성이 이긴다는 트레이드오프 판단을 무시한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> linter suppress는 &#x27;deps가 아니라 코드를 바꾼다&#x27;(S7.1) 원칙 위반. 금지된 처방.</li><li><strong>D.</strong> 메시지 끊김은 명확한 사용자 경험 손상. 재연결을 받아들이는 것은 정당한 트레이드오프가 아니다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">short_answer</span>
+  <h3>최종 솔루션에서 `useChatRoom({ serverUrl, roomId, onMessage })` 커스텀 훅을 추출했다. 그런데 현재 앱에서 useChatRoom은 단 한 곳에서만 사용된다. 동료가 PR review에서 묻는다: &quot;단일 사용처인데 왜 추출했어? S8.4는 단일 사용처에 Custom Hook 자제하라고 했잖아.&quot;
+
+이 결정을 정당화하라. 답변에는 (1) 왜 추출했는지(2가지 이상의 가치), (2) 어떤 다른 선택지가 있었고 왜 탈락했는지, (3) 받아들인 트레이드오프를 모두 포함할 것.</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain"><strong>정답: 참조 답안 키워드: (1) 의도 캡슐화('채팅방 연결'이라는 도메인 명명) + 핸들러 최신화 패턴(useEffectEvent wrap, S8.3) 캡슐화 + 미래의 useSyncExternalStore로 내부 교체 가능(S8.5) + 테스트 가능성. (2) 탈락 — 인라인 Effect 유지: 컴포넌트 본문이 동기화 노이즈로 길어지고 의도 흐려짐 / useMount 같은 lifecycle wrapper로 추출: deps linter가 죽고 의도 잃음(S8.4). (3) 트레이드오프: 약간의 간접 지향(파일/호출 한 단계 더), 단일 사용처라 DRY 가치는 약함 — 그러나 의도 표현·핸들러 패턴 캡슐화·교체 가능성이 그 비용을 정당화.</strong><br>S8.4는 &#x27;lifecycle wrapper나 Hook 미호출 함수&#x27;를 자제하라는 것이지 모든 단일 사용처를 금지하지 않는다. 핵심 채점 포인트는 LO-S9.3의 본질 — &#x27;왜 이 도구인가, 다른 선택지는 무엇이었나, 어떤 트레이드오프를 받아들였나&#x27;를 모두 답하는 것.
+
+채점 rubric (4점 만점):
+- 1점: 추출한 가치를 2개 이상 제시 (의도 캡슐화 / 핸들러 패턴 / 교체 가능성 / 테스트 중 2개)
+- 1점: 다른 선택지(인라인 유지, lifecycle wrapper 등) 중 최소 1개를 비교하고 탈락 사유 제시
+- 1점: 받아들인 트레이드오프(간접 지향, 단일 사용처라 DRY 약함 등)를 명시
+- 1점: S8.4의 &#x27;단일 사용처 자제&#x27; 원칙이 lifecycle wrapper에 대한 것임을 구분하거나, 의도 캡슐화 가치가 DRY를 능가한다는 판단 근거 제시</div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S9.Q1", "type": "mcq_single", "stem": "동료 PR에 다음 코드가 들어왔다.\n\n```jsx\nlet timeoutId; // 모듈 전역\nfunction SearchBox() {\n  return <input onChange={e => {\n    clearTimeout(timeoutId);\n    timeoutId = setTimeout(() => fetchResults(e.target.value), 300);\n  }} />;\n}\n```\n\n진단 클리닉 프로토콜(어떤 패턴 → 영향도 × 수정 난이도 → 어느 섹션 도구)에 따라 가장 정확한 분석은?", "choices": ["S4 derived state 안티패턴 — 영향도 낮음 / 난이도 낮음 — 렌더 중 계산으로 대체", "S1 비-렌더 데이터 모듈 전역화 안티패턴 — 영향도 높음(인스턴스 간 타이머 충돌이 사용자 눈에 보이는 버그) / 난이도 낮음(useRef 한 번 도입) — useRef로 격리 + cleanup", "S7 객체 prop 무한 재동기화 — 영향도 중간 / 난이도 중간 — 원시값으로 분해", "S3 cleanup 누락 — 영향도 높음 / 난이도 중간 — Strict Mode 더블 마운트로 검증"], "correct": ["B"], "explanation": "timeoutId가 모듈 전역이라 같은 컴포넌트 두 인스턴스가 서로의 타이머를 덮어쓴다. 이는 비-렌더 데이터를 인스턴스별로 격리해야 하는 useRef의 정확한 사용처(S1.3, S1.5)이며, 한 줄~몇 줄 변경으로 끝나므로 영향도 높음/난이도 낮음 → 매트릭스 우상단 '오늘 바로'.", "distractor_rationales": {"A": "derived state 문제가 아니다. 전역 변수로 비-렌더 데이터를 보관한 것이 핵심.", "C": "객체 prop 참조 문제가 아니라 모듈 전역 mutation이 원인.", "D": "cleanup 누락도 부차적 이슈지만 근본 원인은 인스턴스 격리 실패. 타이머에 cleanup만 붙여도 전역이면 여전히 충돌."}, "lo_ids": ["LO-S9.1"], "bloom": "Analyze", "difficulty": 3}, {"id": "S9.Q2", "type": "mcq_multi", "stem": "S9.C1 매트릭스에 다음 6개 케이스를 배치했다고 하자.\n\n- 케이스1: 전역 timeout (S1)\n- 케이스2: 렌더 중 ref.current 읽어 표시 (S1/S2)\n- 케이스3: derived state를 Effect로 (S4)\n- 케이스4: Effect chain으로 카운터 (S4)\n- 케이스5: 객체 prop으로 무한 재연결 (S7)\n- 케이스6: useMount lifecycle wrapper (S8)\n\n'리팩터링 우선순위는 영향도 우선, 난이도는 동률일 때만'이라는 원칙을 따를 때, **이번 스프린트에서 먼저 손대야 하는** 케이스 2개를 모두 고르시오. (정답 2개)", "choices": ["케이스1 (전역 timeout) — 영향도 높음 / 난이도 낮음", "케이스2 (렌더 중 ref 읽기) — 영향도 낮음 / 난이도 중간", "케이스3 (derived Effect) — 영향도 낮음 / 난이도 낮음", "케이스4 (Effect chain) — 영향도 높음 / 난이도 중간", "케이스6 (useMount wrapper) — 영향도 낮음 / 난이도 중간"], "correct": ["A", "D"], "explanation": "영향도 우선 원칙에 따라 '영향도 높음' 케이스(1, 4)가 먼저다. 케이스1은 우상단(영향도↑·난이도↓)이라 즉시 처리, 케이스4는 영향도↑·난이도 중간이라 같은 스프린트 내 두 번째 우선순위. 케이스3은 난이도가 낮아 손대기 쉽지만 '쉬운 것부터'의 함정이며 영향도가 낮으므로 자투리 시간에.", "distractor_rationales": {"B": "영향도 낮음이라 우선순위에서 밀린다. 백로그.", "C": "난이도가 낮다고 먼저 하는 것은 '쉬운 것부터' 함정. 영향도가 낮음.", "E": "영향도 낮고 호출처 모두 바꿔야 해서 난이도도 만만치 않음. 백로그."}, "lo_ids": ["LO-S9.1"], "bloom": "Evaluate", "difficulty": 4}, {"id": "S9.Q3", "type": "mcq_single", "stem": "검색 가능한 채팅방에서 검색 결과를 가져오는 코드를 작성한다. 다음 중 결정 트리(외부 시스템? 렌더 중 계산 가능? 인터랙션 결과?)와 race condition 방어를 모두 만족하는 구현은?", "choices": ["```jsx\nconst results = useMemo(() => fetch(query).then(r => r.json()), [query]);\n```", "```jsx\n<input onChange={async e => {\n  const r = await fetch(e.target.value);\n  setResults(await r.json());\n}} />\n```", "```jsx\nuseEffect(() => {\n  let ignore = false;\n  fetch(query).then(r => r.json()).then(data => {\n    if (!ignore) setResults(data);\n  });\n  return () => { ignore = true; };\n}, [query]);\n```", "```jsx\nuseEffect(() => {\n  fetch(query).then(r => r.json()).then(setResults);\n}, [query]);\n```"], "correct": ["C"], "explanation": "query는 '표시 중 동기화'(URL 진입·뒤로가기에서도 fetch가 필요하므로 인터랙션 결과 아님) → Effect가 정답. 빠른 타이핑 시 이전 fetch가 늦게 도착해 새 결과를 덮어쓰는 race를 ignore flag cleanup으로 방어한다(S3.3, S4.5).", "distractor_rationales": {"A": "useMemo는 동기 계산용. Promise를 반환하는 비동기 작업에 적합하지 않다.", "B": "onChange에 fetch를 묶으면 URL 직접 진입·뒤로가기 시에는 fetch가 안 일어남. 인터랙션 결과로 잘못 분류.", "D": "결정 트리는 맞췄지만 ignore flag가 없어 race 발생 가능 — 빠른 타이핑 시 stale 결과로 덮어쓰임."}, "lo_ids": ["LO-S9.2"], "bloom": "Apply", "difficulty": 3}, {"id": "S9.Q4", "type": "mcq_single", "stem": "통합 케이스의 '새 메시지 자동 스크롤' 블록에서 다음 두 가지가 동시에 등장한다 — `listRef` 와 `flushSync`. 한 동료가 PR에서 묻는다: \"왜 그냥 `setMessages` 후에 `listRef.current.scrollTo(...)` 하면 안 돼? 왜 둘 다 필요해?\" 가장 정확한 review 답변은?", "choices": ["ref만으로 충분하다. flushSync는 Strict Mode 더블 마운트 회피용이므로 빼도 된다.", "ref는 React가 DOM 명령형 작업(scrollTo)을 대체할 수 없어서 필요하고, flushSync는 기본 batching 때문에 setMessages 직후 DOM이 아직 새 메시지를 반영하지 않은 상태(stale scrollHeight)이므로 동기 commit을 강제하기 위해 필요하다.", "flushSync만 있으면 된다. ref 없이 document.querySelector로 리스트를 잡아 scrollTo 하면 된다.", "둘 다 불필요하다. useEffect로 messages를 deps에 두고 그 안에서 scroll하면 된다 — React가 commit 후 effect를 실행하므로 자동으로 새 DOM."], "correct": ["B"], "explanation": "S2.3의 핵심 — state setter 직후 새 DOM을 즉시 읽어야 하는 시나리오에서 batching이 깨지지 않으면 scrollHeight가 stale. flushSync로 동기 업데이트 강제 → 그 직후 ref로 명령형 scrollTo. 두 도구는 역할이 다르다(ref=명령형 DOM 접근, flushSync=타이밍 강제).", "distractor_rationales": {"A": "flushSync는 batching 회피용이지 Strict Mode와 무관. 빼면 stale scrollHeight 버그 재발.", "C": "React가 관리하는 노드를 querySelector로 잡아 직접 조작하면 동작은 하더라도 ref가 표준이며, 본질은 ref 유무가 아니라 batching 타이밍이라는 진단을 놓침.", "D": "useEffect 패턴은 한 박자 늦은 스크롤(이미 다음 렌더의 입력 반영)이 되거나 추가 렌더를 유발. 즉시 동기 측정 시나리오에는 flushSync가 정답."}, "lo_ids": ["LO-S9.2", "LO-S9.3"], "bloom": "Evaluate", "difficulty": 4}, {"id": "S9.Q5", "type": "mcq_multi", "stem": "다크모드 토글이 채팅 재연결을 일으키는 다음 코드를 진단·처방하라.\n\n```jsx\nuseEffect(() => {\n  const c = createConnection(serverUrl, roomId);\n  c.connect();\n  showToast(`Connected in ${theme} mode`);\n  return () => c.disconnect();\n}, [serverUrl, roomId, theme]);\n```\n\n**적절한** 처방을 모두 고르시오. (정답 2개)", "choices": ["ESLint exhaustive-deps를 suppress하고 deps에서 theme을 빼서 재연결을 막는다.", "`const onConnected = useEffectEvent(() => showToast(`Connected in ${theme} mode`));` 로 추출하고 Effect 안에서 호출하며 deps는 [serverUrl, roomId]만 둔다.", "useEffectEvent가 stable이 아닌 환경의 fallback으로, theme을 ref에 동기화하고 Effect 안에서 ref.current를 읽는다(보일러플레이트 비용은 인정).", "theme도 그냥 deps에 두고 재연결을 받아들인다 — '정확한 deps'가 원칙이므로 사용자 경험은 부차적."], "correct": ["B", "C"], "explanation": "theme은 알림에만 쓰이는 non-reactive 의도지만 코드상으론 reactive — useEffectEvent로 그 부분만 추출하면 deps 오염 없이 최신 theme 사용(S6.2). 실험적 API가 아직 stable 아닐 때의 fallback은 ref 동기화 패턴(보일러플레이트 비용 인정). suppress는 S7.1이 명시적으로 금지하는 안티패턴이며, '재연결 받아들임'은 사용자 경험 손상이 명백한 상황에서 가독성보다 정확성이 이긴다는 트레이드오프 판단을 무시한다.", "distractor_rationales": {"A": "linter suppress는 'deps가 아니라 코드를 바꾼다'(S7.1) 원칙 위반. 금지된 처방.", "D": "메시지 끊김은 명확한 사용자 경험 손상. 재연결을 받아들이는 것은 정당한 트레이드오프가 아니다."}, "lo_ids": ["LO-S9.2", "LO-S9.3"], "bloom": "Evaluate", "difficulty": 4}, {"id": "S9.Q6", "type": "short_answer", "stem": "최종 솔루션에서 `useChatRoom({ serverUrl, roomId, onMessage })` 커스텀 훅을 추출했다. 그런데 현재 앱에서 useChatRoom은 단 한 곳에서만 사용된다. 동료가 PR review에서 묻는다: \"단일 사용처인데 왜 추출했어? S8.4는 단일 사용처에 Custom Hook 자제하라고 했잖아.\"\n\n이 결정을 정당화하라. 답변에는 (1) 왜 추출했는지(2가지 이상의 가치), (2) 어떤 다른 선택지가 있었고 왜 탈락했는지, (3) 받아들인 트레이드오프를 모두 포함할 것.", "correct": ["참조 답안 키워드: (1) 의도 캡슐화('채팅방 연결'이라는 도메인 명명) + 핸들러 최신화 패턴(useEffectEvent wrap, S8.3) 캡슐화 + 미래의 useSyncExternalStore로 내부 교체 가능(S8.5) + 테스트 가능성. (2) 탈락 — 인라인 Effect 유지: 컴포넌트 본문이 동기화 노이즈로 길어지고 의도 흐려짐 / useMount 같은 lifecycle wrapper로 추출: deps linter가 죽고 의도 잃음(S8.4). (3) 트레이드오프: 약간의 간접 지향(파일/호출 한 단계 더), 단일 사용처라 DRY 가치는 약함 — 그러나 의도 표현·핸들러 패턴 캡슐화·교체 가능성이 그 비용을 정당화."], "explanation": "S8.4는 'lifecycle wrapper나 Hook 미호출 함수'를 자제하라는 것이지 모든 단일 사용처를 금지하지 않는다. 핵심 채점 포인트는 LO-S9.3의 본질 — '왜 이 도구인가, 다른 선택지는 무엇이었나, 어떤 트레이드오프를 받아들였나'를 모두 답하는 것.\n\n채점 rubric (4점 만점):\n- 1점: 추출한 가치를 2개 이상 제시 (의도 캡슐화 / 핸들러 패턴 / 교체 가능성 / 테스트 중 2개)\n- 1점: 다른 선택지(인라인 유지, lifecycle wrapper 등) 중 최소 1개를 비교하고 탈락 사유 제시\n- 1점: 받아들인 트레이드오프(간접 지향, 단일 사용처라 DRY 약함 등)를 명시\n- 1점: S8.4의 '단일 사용처 자제' 원칙이 lifecycle wrapper에 대한 것임을 구분하거나, 의도 캡슐화 가치가 DRY를 능가한다는 판단 근거 제시", "distractor_rationales": {}, "lo_ids": ["LO-S9.3"], "bloom": "Evaluate", "difficulty": 5}];
+const NEXT_HREF = null;
+const NEXT_TITLE = null;
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

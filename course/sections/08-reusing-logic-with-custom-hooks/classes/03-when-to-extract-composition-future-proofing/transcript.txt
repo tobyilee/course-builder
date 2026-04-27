@@ -1,0 +1,214 @@
+[slide 1]
+자, 마지막 클래스입니다.
+[pause:300]
+Custom Hook을 만들 줄 알게 된 분들에게 꼭 필요한 단계예요.
+[pause:400]
+이쯤 되면 다 빼고 싶다는 충동이 생깁니다.
+[pause:300]
+그런데 그 충동은 잠깐 멈춰야 합니다.
+[pause:500]
+오늘은 두 질문에 답합니다.
+[pause:400]
+첫째, 언제 추출하고 언제 말아야 하는가.
+[pause:300]
+둘째, 좋은 훅은 어떻게 더 좋은 훅으로 합쳐지고 미래 API로 갈아끼워지는가.
+[pause:500]
+중간에 안티패턴 셋도 짚을 거예요.
+[pause:300]
+유즈마운트, 유즈이펙트원스 같은 lifecycle wrapper들이요.
+[pause:400]
+인기는 많지만 실제로는 deps 거짓말을 캡슐화한 함정입니다.
+[pause:500]
+마지막에 useSyncExternalStore로 갈아끼우는 시연으로, 캡슐화의 진짜 보상을 보여드립니다.
+[pause:600]
+
+[slide 2]
+먼저 추출과 회피의 기준을 한눈에 봅시다.
+[pause:400]
+추출하라는 신호 네 가지입니다.
+[pause:500]
+첫째, 여러 컴포넌트에서 같은 stateful 로직이 반복될 때.
+[pause:400]
+둘째, 외부 시스템과 동기화하는 Effect로, 훅 이름이 의도를 드러낼 수 있을 때.
+[pause:400]
+셋째, 구현 세부를 호출처로부터 숨기고 싶을 때.
+[pause:400]
+넷째, 명확한 단일 도메인 목적이 있을 때.
+[pause:500]
+예를 들어, ShippingForm 안에 fetch와 setData, cleanup이 두 번 반복돼 있다고 해봅시다.
+[pause:400]
+이걸 유즈데이터로 추출하면 호출처는 cities에 유즈데이터 호출 결과를 받는 한 줄로 끝나요.
+[pause:400]
+의도가 데이터 모양 그대로 드러납니다.
+[pause:500]
+반대로 추출하지 말아야 하는 신호도 있습니다.
+[pause:400]
+첫째, 한 컴포넌트에서만 쓰는 로직.
+[pause:400]
+둘째, 훅을 호출하지 않는 함수. 그냥 일반 함수로 두세요.
+[pause:400]
+셋째, 유즈마운트, 유즈이펙트원스, 유즈업데이트이펙트 같은 lifecycle wrapper.
+[pause:500]
+기준 한 줄로 정리하면, 도메인 이름이 붙는가입니다.
+[pause:400]
+유즈챗룸, 유즈데이터, 유즈온라인스테이터스는 도메인이 있죠.
+[pause:300]
+유즈마운트는 도메인 없는, React 메커니즘 wrapper일 뿐이에요.
+[pause:600]
+
+[slide 3]
+유즈마운트가 왜 안티패턴인지 자세히 봅시다.
+[pause:400]
+정의는 이래요. 유즈마운트가 fn을 받아서 유즈이펙트의 fn과 빈 배열로 호출합니다.
+[pause:500]
+사용처에서는 유즈마운트에 화살표 함수를 넘기면서 안에서 connect roomId를 호출해요.
+[pause:400]
+문제는 fn 안의 roomId가 reactive한데도, deps는 영원히 빈 배열로 고정된다는 겁니다.
+[pause:500]
+deps 거짓말의 결과가 뭘까요.
+[pause:400]
+roomId가 바뀌어도 재연결이 일어나지 않습니다.
+[pause:300]
+stale closure 때문에 옛 roomId만 영원히 사용하게 돼요.
+[pause:500]
+더 나쁜 게 있어요.
+[pause:400]
+ESLint react-hooks의 exhaustive-deps가 유즈마운트의 fn 내부를 분석할 수 없습니다.
+[pause:400]
+경고도 못 띄워요. 캡슐화가 아니라 검사 회피죠.
+[pause:500]
+유즈이펙트원스도 같은 함정입니다.
+[pause:400]
+mount 시 한 번만이라는 사고는 S3에서 배운 동기화 모델과 충돌해요.
+[pause:300]
+Effect는 라이프사이클이 아닙니다.
+[pause:500]
+교훈은 이거예요.
+[pause:400]
+lifecycle wrapper는 도메인 없음, linter 무력화, stale closure 양산.
+[pause:300]
+이 3종 세트라서 추출 후보가 아니라 회피 후보입니다.
+[pause:600]
+
+[slide 4]
+이제 composition을 봅시다. 훅이 훅을 부르는 구조요.
+[pause:400]
+시나리오는 이래요. 1초마다 카운트가 올라가는 유즈카운터를 만들고 싶습니다.
+[pause:500]
+1단계, 유즈인터벌부터 만들어요.
+[pause:400]
+인자로 callback과 delay를 받습니다.
+[pause:400]
+첫 줄에서 onTick에 useEffectEvent로 callback을 wrap합니다.
+[pause:400]
+유즈이펙트 안에서 setInterval에 onTick과 delay를 넘겨 id를 만들고요.
+[pause:300]
+cleanup에서 clearInterval을 부릅니다. deps는 delay 하나예요.
+[pause:500]
+왜 callback을 useEffectEvent로 wrap했을까요.
+[pause:400]
+매 렌더마다 새 함수가 들어와도 interval을 다시 만들지 않기 위해서입니다.
+[pause:400]
+지난 클래스의 유즈챗룸과 같은 패턴이에요.
+[pause:500]
+2단계, 유즈카운터를 만듭니다.
+[pause:400]
+delay를 인자로 받아요.
+[pause:400]
+유즈스테이트로 count를 0부터 시작합니다.
+[pause:400]
+유즈인터벌을 호출하면서 callback으로 setCount의 updater 형태를 넘겨요. c에 1을 더하는 식으로요.
+[pause:400]
+delay도 같이 넘기고, return으로 count를 돌려줍니다.
+[pause:500]
+보세요. 유즈카운터가 유즈인터벌을 호출하고, 유즈인터벌은 유즈이펙트와 useEffectEvent를 호출합니다.
+[pause:400]
+훅이 훅을 합치는 composition입니다.
+[pause:400]
+사용처는 const count에 유즈카운터 1000을 호출한 결과를 받는 한 줄이에요.
+[pause:500]
+도메인 사다리가 보이시죠.
+[pause:400]
+유즈이펙트, 그 위에 유즈인터벌, 그 위에 유즈카운터.
+[pause:300]
+위로 갈수록 호출처가 단순해집니다.
+[pause:500]
+참고로 훅 안에서 다른 훅을 호출하는 건 자유입니다.
+[pause:400]
+단, 항상 top-level에서요. 조건문이나 반복문 안에서는 안 됩니다.
+[pause:600]
+
+[slide 5]
+이번엔 캡슐화의 보상을 시연해 봅시다.
+[pause:400]
+유즈온라인스테이터스를 useState와 useEffect 버전에서, useSyncExternalStore 버전으로 교체합니다.
+[pause:500]
+Before 코드는 유즈스테이트 true와 유즈이펙트로 online, offline 이벤트를 등록하고 cleanup으로 해제하는 형태예요.
+[pause:300]
+약 12줄 정도 됩니다.
+[pause:500]
+After는 어떻게 바뀌나요.
+[pause:400]
+return 안에서 useSyncExternalStore를 호출합니다.
+[pause:300]
+인자로 subscribe 함수, 그리고 navigator.onLine을 반환하는 getSnapshot, 마지막으로 SSR용 true 반환 함수를 넘기죠.
+[pause:400]
+3줄로 줄어듭니다. 게다가 동시성 안전이고, SSR snapshot도 제공해요.
+[pause:500]
+여기서 결정적인 포인트입니다.
+[pause:400]
+호출처인 스테이터스바와 세이브버튼 코드는 한 글자도 바뀌지 않습니다.
+[pause:400]
+const isOnline에 유즈온라인스테이터스 호출 결과를 받는 그 한 줄, 그대로예요.
+[pause:500]
+이게 Custom Hook의 진짜 가치입니다.
+[pause:400]
+같은 도메인 의미를 유지하면서, React가 더 좋은 API를 내놓을 때 내부만 갈아끼울 수 있어요.
+[pause:500]
+일반화하면 이래요.
+[pause:400]
+오늘 useEffect로 만든 훅이라도, 내일 useSyncExternalStore나 use(promise), Server Components 친화 API로 교체할 수 있습니다.
+[pause:400]
+호출처를 잡지 않게 설계해두면 미래가 싸집니다.
+[pause:600]
+
+[slide 6]
+직접 답해볼 시간입니다.
+[pause:400]
+첫째, 한 컴포넌트에서만 쓰는 fetch와 state 로직 50줄, 추출해야 할까요.
+[pause:500]
+일단 NO입니다. 두 번째 사용처가 생길 때 추출하세요.
+[pause:300]
+너무 일찍 추상화하면 잘못된 모양으로 굳습니다.
+[pause:500]
+둘째, 팀이 유즈업데이트이펙트, 그러니까 첫 렌더 제외 effect를 좋아합니다. 도입할까요.
+[pause:500]
+위험합니다. 도메인 없음, 게다가 ref 트릭으로 거짓 lifecycle을 흉내내요.
+[pause:400]
+진짜 필요한 시점은 보통 derived state나 key prop으로 풀립니다.
+[pause:500]
+셋째, 유즈카운터 안에서 유즈인터벌을 부르는 건 규칙 위반 아닌가요.
+[pause:500]
+아닙니다. 훅이 다른 훅을 top-level에서 부르는 건 합법이고 권장됩니다.
+[pause:500]
+넷째, 유즈온라인스테이터스를 useSyncExternalStore로 바꿀 때 호출처 테스트는 다시 짜야 할까요.
+[pause:500]
+아니요. 반환 타입이 같으니 호출처 동작은 동일합니다.
+[pause:300]
+내부 단위테스트만 갱신하면 돼요.
+[pause:600]
+
+[slide 7]
+오늘의 세 줄 정리입니다.
+[pause:400]
+첫째, 추출 기준은 반복과 도메인 의미입니다.
+[pause:300]
+단일 사용처, 훅 미호출, lifecycle wrapper는 회피하세요.
+[pause:500]
+둘째, composition은 훅이 훅을 부르며 도메인 사다리를 쌓는 겁니다.
+[pause:300]
+유즈이펙트, 유즈인터벌, 유즈카운터 순으로요.
+[pause:500]
+셋째, 캡슐화의 보상은 호출처 변경 0으로 useSyncExternalStore 같은 미래 API로 갈아끼울 수 있다는 점입니다.
+[pause:500]
+이걸로 Custom Hook 섹션을 마무리합니다. 다음 섹션에서 종합 케이스로 다시 만나요.

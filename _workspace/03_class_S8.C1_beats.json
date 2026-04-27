@@ -1,0 +1,94 @@
+{
+  "class_id": "S8.C1",
+  "title": "Custom Hook의 규칙 — use 접두사와 '로직만 공유' 원칙",
+  "lo_ids": ["LO-S8.1"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "두 컴포넌트(StatusBar, SaveButton)에서 똑같이 'online인지 감지' 로직이 useState + useEffect + addEventListener('online'/'offline')으로 복붙되어 있는 코드 보여주기",
+        "복붙된 5~7줄을 한 줄 useOnlineStatus()로 바꾸고 싶다는 욕구 자극",
+        "그런데 'lifting state up'을 배운 학습자는 헷갈림 — Hook으로 빼면 두 컴포넌트가 같은 state를 공유하나?",
+        "오늘의 미션: Custom Hook이 공유하는 것과 공유하지 않는 것을 정확히 가르기"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "왼쪽: 두 컴포넌트에 동일한 useEffect 블록이 빨갛게 하이라이트된 코드 / 오른쪽: useOnlineStatus() 한 줄로 줄어든 After 코드 — 대조 다이어그램",
+      "speaker_affect": "호기심 유발, 살짝 장난스럽게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "Custom Hook 정의: React 내장 Hook(useState/useEffect/useContext...)을 호출하는 '함수' — 클래스도 컴포넌트도 아님",
+        "이름 규칙: 반드시 'use' + 대문자로 시작 (useOnlineStatus, useChatRoom). camelCase의 use는 linter가 'Hook 호출 가능' 신호로 해석",
+        "왜 강제? (1) ESLint react-hooks 규칙이 use* 함수 안에서만 다른 Hook 호출을 허용, (2) 호출 위치 제약(top-level only) 검사를 켬, (3) 읽는 사람에게 '얘 안에 state/effect 있을 수 있음'을 알림",
+        "역명제: Hook을 호출하지 않는 함수에 use를 붙이면 안 됨 — 'useSorted(items) { return items.slice().sort(); }'는 그냥 sortItems여야 함",
+        "정리: use는 '내가 Hook을 부른다'는 약속이지 '나는 특별한 함수다'가 아님"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "체크/엑스 아이콘이 붙은 코드 두 줄 비교: useAuth() { return useContext(...); } 는 OK, useSorted(items) { return [...].sort(); } 는 NG",
+      "speaker_affect": "차분하게, 규칙 설명 톤"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "핵심 원칙: Custom Hook은 'stateful 로직'을 공유한다 — 'state 자체'는 공유하지 않는다",
+        "같은 useOnlineStatus()를 두 컴포넌트가 호출하면 useState(true) 호출도 두 번 → state slot 두 개 생성. 각 호출 사이트는 완전히 독립된 인스턴스",
+        "비유: 같은 청사진(blueprint)으로 두 채의 집을 짓는 것 — 도면(로직)은 공유, 집(state)은 별개",
+        "managing-state 코스에서 배운 lifting과 비교: 두 컴포넌트가 '같은 값'을 보려면 lifting + props/context가 정답이지, Hook 추출은 그 해법이 아님",
+        "Custom Hook은 외부 값(navigator.onLine 같은 진짜 외부 시스템)에 동기화될 뿐, 두 인스턴스의 isOnline state는 각자 setIsOnline으로 따로 갱신됨"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "한 useOnlineStatus 박스에서 두 화살표가 두 컴포넌트로 뻗어 각각 독립된 [isOnline 상자]를 만드는 다이어그램. 가운데에 'window 이벤트(외부)'가 두 박스 모두에 점선으로 연결",
+      "speaker_affect": "강조, 천천히"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "useOnlineStatus 코드 walkthrough: useState(true) → useEffect(()=>{ on/off 핸들러 등록, return cleanup }, []) → return isOnline",
+        "컴포넌트 입장: const isOnline = useOnlineStatus(); 한 줄로 끝. window 이벤트 등록도 cleanup도 안 보임",
+        "두 컴포넌트(StatusBar, SaveButton) 동시 사용 데모 — 네트워크 끊으면 둘 다 false로 바뀌지만, 내부적으로 useState slot이 두 개임을 React DevTools로 확인",
+        "만약 진짜로 한 state를 공유하고 싶다면? 부모로 끌어올려서 props로 내려보내거나 Context를 써야 함 — Hook 추출과는 다른 도구",
+        "포인트 재확인: '같은 외부 값에 동기화'와 'state 공유'는 다르다"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "useOnlineStatus 함수 코드(왼쪽) + 두 컴포넌트의 React DevTools 트리에서 각자 hooks 슬롯이 따로 보이는 스크린샷 스타일 일러스트(오른쪽)",
+      "speaker_affect": "친근하게 코드 읽어주듯"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "자문자답 시나리오: '두 컴포넌트가 똑같은 카운터를 보여주려고 useCounter()를 만들었는데 각자 따로 셈. 왜?'",
+        "정답 사고 흐름: Custom Hook은 호출마다 독립 state — useCounter도 마찬가지. 같은 카운트를 공유하려면 부모에서 useCounter 한 번 호출 후 props로 내려야 함",
+        "추가 자문: 'useSorted(items) { return items.slice().sort(); }' — 이 함수에 use를 붙여도 되는가?",
+        "정답 사고: Hook을 호출하지 않으니 NG. sortItems로 이름 바꾸고 일반 함수로"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "문제 카드 두 장 + 답을 가린 점선 박스 — 멈추고 직접 답해보라는 의도",
+      "speaker_affect": "초대하듯, 멈추고 생각하게"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 40,
+      "key_points": [
+        "1) use 접두사는 'Hook을 호출한다'는 신호 — 호출 안 하면 일반 함수로",
+        "2) Custom Hook은 stateful 로직을 공유, state 자체는 공유 X — 호출마다 독립 인스턴스",
+        "3) state 공유가 필요하면 lifting/Context — Hook 추출과는 다른 도구"
+      ],
+      "lo_ids": ["LO-S8.1"],
+      "visual_hint": "3줄 체크리스트 카드, 핵심어(use 접두사 / 로직 공유 / lifting)에 컬러 강조",
+      "speaker_affect": "정리, 간결하게"
+    }
+  ]
+}

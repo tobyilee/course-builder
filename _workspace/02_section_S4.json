@@ -1,0 +1,50 @@
+{
+  "section_id": "S4",
+  "classes": [
+    {
+      "id": "S4.C1",
+      "slug": "01-diagnosis-frame-and-decision-tree",
+      "title": "Effect 안 써도 되는 경우 — 진단 프레임과 결정 트리",
+      "lo_ids": ["LO-S4.1"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "이 섹션의 큰 그림을 잡는다. 'Effect는 외부 시스템 동기화 escape hatch이고, 외부 시스템이 없으면 Effect도 필요 없다'는 핵심 원칙에서 출발해, 12가지 안티패턴을 5개 그룹(derived state · state 리셋 · 인터랙션 vs 표시 · 체인/초기화/통지 · 외부 통합)으로 묶는 진단 지도를 그린다. 'render 중 계산 가능? → 비싼 계산? → 사용자 인터랙션? → 표시 결과? → 외부 store?' 결정 트리를 미리 보여주고 이후 클래스들이 각 가지를 채우도록 설계한다."
+    },
+    {
+      "id": "S4.C2",
+      "slug": "02-derived-state-and-memo",
+      "title": "Derived state — render 중 계산과 useMemo",
+      "lo_ids": ["LO-S4.2"],
+      "duration_min": 12,
+      "depends_on": ["S4.C1"],
+      "summary": "안티패턴 #1(props/state 기반 state 갱신)과 #2(비싼 계산 캐싱)를 다룬다. fullName을 useState+useEffect로 동기화하던 코드를 render 중 단순 계산으로 바꾸고, getFilteredTodos 같은 비싼 계산만 useMemo로 감싸는 기준(비싼 계산 + 의존성 안정 + 참조 일관성 필요)을 정한다. React Compiler가 자동 메모이즈하는 경우 useMemo가 불필요해진다는 트렌드까지 짚어 'Effect로 옮기지 말고 render 중에 계산하라'는 1차 원칙을 세운다."
+    },
+    {
+      "id": "S4.C3",
+      "slug": "03-resetting-and-adjusting-state",
+      "title": "State 리셋과 조정 — key prop과 state-during-render",
+      "lo_ids": ["LO-S4.3"],
+      "duration_min": 10,
+      "depends_on": ["S4.C2"],
+      "summary": "안티패턴 #3(prop 변경 시 전체 state 리셋)과 #4(일부 state 조정)를 가른다. userId가 바뀔 때 setComment('')를 Effect로 부르던 코드는 `<Profile key={userId} />`로 컴포넌트 인스턴스 자체를 갈아끼우고, items가 바뀔 때 selection만 비워야 하는 부분 조정은 'state-during-render'(렌더 중 setPrevItems + setSelection) 또는 더 이상적으로 derived value(items.find)로 바꾼다. '전체 리셋이면 key, 부분 조정이면 derived 우선·최후의 수단으로 state-during-render'라는 결정 규칙을 정리한다."
+    },
+    {
+      "id": "S4.C4",
+      "slug": "04-handlers-vs-effects",
+      "title": "인터랙션 vs 표시 — 핸들러로 옮겨야 할 6가지",
+      "lo_ids": ["LO-S4.4"],
+      "duration_min": 12,
+      "depends_on": ["S4.C1"],
+      "summary": "안티패턴 #5~#10을 한 호흡으로 정리한다. '왜 이 코드가 실행돼야 하나?'라는 질문으로 핸들러와 Effect를 가른다. 핸들러 간 로직 공유(#5)는 함수 추출, POST 요청(#6)은 폼 제출이면 핸들러·분석 로깅이면 Effect, 계산 체인(#7)은 캐스케이딩 재렌더 대신 한 핸들러에 모으기, 앱 초기화(#8)는 didInit guard나 모듈 레벨, 부모 통지(#9)·부모로 데이터 전달(#10)은 같은 핸들러에서 부모 콜백을 함께 호출하거나 fully controlled로 끌어올린다. 모두 '표시되었기 때문이 아니라 사용자가 클릭했기 때문에' 패턴으로 환원된다."
+    },
+    {
+      "id": "S4.C5",
+      "slug": "05-external-store-fetch-and-tree",
+      "title": "외부 통합과 종합 결정 트리 — useSyncExternalStore · fetch race",
+      "lo_ids": ["LO-S4.5", "LO-S4.6"],
+      "duration_min": 11,
+      "depends_on": ["S4.C2", "S4.C3", "S4.C4"],
+      "summary": "남은 두 가지 — #11 외부 store 구독(navigator.onLine)을 수동 subscribe Effect 대신 useSyncExternalStore로 바꾸기, #12 fetch race condition을 ignore 플래그 cleanup 또는 useData 커스텀 훅으로 캡슐화하기 — 를 다룬다. 마지막으로 12가지 사례를 한 장의 결정 트리(render 중 계산 / useMemo / 핸들러 / Effect / key / useSyncExternalStore)로 합치고, 새 시나리오(검색 입력, 장바구니 합계, 라우트 변경 분석 로그)에 어떤 도구를 고를지 정당화하는 연습으로 섹션을 닫는다."
+    }
+  ]
+}

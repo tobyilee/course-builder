@@ -1,0 +1,102 @@
+{
+  "topic": "React Escape Hatches 심화 — Refs · Effects · Custom Hooks",
+  "audience": "TypeScript/JavaScript와 React UI 컴포넌트 개발에 능숙한 중급 개발자. 직전 'Managing State' 코스(useState, lifting, key, useReducer, context, reducer+context)를 마쳤지만 Refs · Effects · Custom Hooks 영역에서 멘탈모델과 의사결정 깊이가 부족함.",
+  "depth": "deep",
+  "language": "ko",
+  "tone": "friendly",
+  "prerequisites": [
+    "React 함수 컴포넌트와 JSX 작성 경험",
+    "useState / useReducer 사용 경험 (managing-state 코스 LO)",
+    "Lifting state up, key prop, Context API 이해 (managing-state 코스 LO)",
+    "JavaScript closure, 비동기(setTimeout/Promise), DOM API 기본",
+    "TypeScript 기본 문법 (예제 일부에 타입 어노테이션 등장)"
+  ],
+  "total_duration_min": 360,
+  "bloom_coverage_plan": ["Understand", "Apply", "Analyze", "Evaluate", "Create"],
+  "caveats": [
+    "useEffectEvent는 React 실험적 API이며 학습 시점에 따라 stable 채택 여부가 다를 수 있음 — 강의에서는 react.dev 기준 패턴으로 다룸.",
+    "React 19에서는 ref가 prop처럼 동작하므로 forwardRef 패턴은 마이그레이션 맥락으로 함께 다룸."
+  ],
+  "sections": [
+    {
+      "id": "S0",
+      "slug": "00-orientation-escape-hatch-mental-model",
+      "title": "오리엔테이션 — Escape Hatch 멘탈모델",
+      "summary": "React의 기본 흐름(선언형/순수 렌더/단방향 props)에서 '벗어날 때' 쓰는 도구들이라는 챕터 전체의 프레이밍을 잡는다. '왜 이 도구들은 기본이 아닌가', '언제 쓰는 게 정당한가'를 결정 트리로 정리한다.",
+      "duration_min": 20,
+      "depends_on": []
+    },
+    {
+      "id": "S1",
+      "slug": "01-referencing-values-with-refs",
+      "title": "Ref로 값 참조하기 — 재렌더 없이 기억하기",
+      "summary": "useRef의 기본 동작과 state와의 차이를 이해하고, timeout/interval ID, 디바운싱, 비동기 콜백의 최신 값 같은 비-렌더 데이터에 ref를 적용한다. 렌더 중 ref.current 읽기/쓰기 안티패턴을 짚는다.",
+      "duration_min": 30,
+      "depends_on": ["S0"]
+    },
+    {
+      "id": "S2",
+      "slug": "02-manipulating-dom-with-refs",
+      "title": "Ref로 DOM 조작하기 — focus, scroll, 그리고 통제된 노출",
+      "summary": "ref={...}로 DOM 노드에 접근해 focus/scroll/measure/play 같이 React가 대체하지 못하는 작업을 수행하는 패턴, flushSync로 state→DOM 타이밍을 맞추는 법, forwardRef → React 19 ref-as-prop, useImperativeHandle로 노출 API를 좁히는 설계를 다룬다.",
+      "duration_min": 35,
+      "depends_on": ["S1"]
+    },
+    {
+      "id": "S3",
+      "slug": "03-synchronizing-with-effects",
+      "title": "Effect로 동기화하기 — 라이프사이클이 아닌 동기화 모델",
+      "summary": "useEffect를 'mount/update/unmount 훅'이 아닌 '외부 시스템과의 동기화'로 재정의한다. 의존성 배열, cleanup 패턴(connect/subscribe/animation/race), Strict Mode 더블 호출의 의도와 ref로 회피하지 말아야 하는 이유를 다룬다.",
+      "duration_min": 40,
+      "depends_on": ["S0"]
+    },
+    {
+      "id": "S4",
+      "slug": "04-you-might-not-need-an-effect",
+      "title": "Effect 안 써도 되는 경우 — 12가지 안티패턴 진단",
+      "summary": "이 코스에서 가장 중요한 섹션. Derived state, useMemo, key prop, state-during-render, 핸들러 추출, chains, 앱 초기화, 부모 통지, useSyncExternalStore, fetch race condition까지 안티패턴 12종을 Before/After로 학습하고 결정 트리로 종합한다.",
+      "duration_min": 55,
+      "depends_on": ["S3"]
+    },
+    {
+      "id": "S5",
+      "slug": "05-lifecycle-of-reactive-effects",
+      "title": "반응형 Effect의 라이프사이클",
+      "summary": "Effect를 '동기화 시작/중지' 사이클로 재해석한다. 매 렌더가 자체 closure를 갖는 모델, reactive vs non-reactive 값 판정, ESLint exhaustive-deps의 정당성, 그리고 무관한 동기화는 Effect를 분리해야 하는 이유를 채팅방 재연결 예제로 따라간다.",
+      "duration_min": 40,
+      "depends_on": ["S3"]
+    },
+    {
+      "id": "S6",
+      "slug": "06-separating-events-from-effects",
+      "title": "Event와 Effect 분리하기 — useEffectEvent",
+      "summary": "'왜 이 코드가 실행돼야 하나?' 라는 질문으로 Event handler와 Effect를 가른다. useEffectEvent로 Effect 내부의 non-reactive 부분을 추출해 불필요한 재동기화(예: theme 토글마다 채팅 재연결)를 제거하고, 제한 사항(Effect 외부 노출 금지)도 명확히 한다.",
+      "duration_min": 35,
+      "depends_on": ["S5"]
+    },
+    {
+      "id": "S7",
+      "slug": "07-removing-effect-dependencies",
+      "title": "Effect 의존성 줄이기 — 6가지 전략",
+      "summary": "linter suppress 금지 원칙 하에서, 정적값 외부화 / 객체·함수 Effect 안 생성 / updater / useEffectEvent / Effect 분리 / 객체 prop을 원시값으로 분해 — 6가지 전략을 실전 케이스(타이머, 애니메이션, 채팅 options)에 적용한다.",
+      "duration_min": 45,
+      "depends_on": ["S5", "S6"]
+    },
+    {
+      "id": "S8",
+      "slug": "08-reusing-logic-with-custom-hooks",
+      "title": "Custom Hook으로 로직 재사용하기",
+      "summary": "use 접두사 규칙, 'state는 공유 안 함 — 로직만 공유' 원칙을 useOnlineStatus / useFormInput / useChatRoom / useData로 학습한다. 핸들러를 useEffectEvent로 wrap하는 패턴, composition, 그리고 추출하지 말아야 하는 경우(단일 사용처, lifecycle wrapper)를 가른다.",
+      "duration_min": 35,
+      "depends_on": ["S6", "S7"]
+    },
+    {
+      "id": "S9",
+      "slug": "09-capstone-integrated-diagnosis",
+      "title": "종합 — 안티패턴 진단과 통합 케이스 스터디",
+      "summary": "Refs · Effects · Custom Hooks가 모두 등장하는 작은 앱(검색 가능한 채팅방 + 자동 스크롤 + 온라인 상태 표시)을 안티패턴 코드에서 출발해 단계적으로 리팩터링한다. 각 결정에 대해 '왜 이 escape hatch인가, 다른 선택지는 무엇이었나'를 평가한다.",
+      "duration_min": 25,
+      "depends_on": ["S1", "S2", "S4", "S7", "S8"]
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+[slide 1]
+이번 클래스는 유즈이펙트이벤트로 논 리액티브 부분을 잘라내는 패턴입니다.
+[pause:400]
+키워드는 두 가지, theme과 roomId예요.
+[pause:400]
+알림은 항상 최신 theme로, 그런데 재연결은 roomId에만 반응하게.
+[pause:500]
+이걸 어떻게 가르는지 배워봅시다.
+[pause:600]
+
+[slide 2]
+황당한 시나리오부터 시작할게요.
+[pause:400]
+다크 테마, 라이트 테마를 토글했을 뿐인데, 채팅이 끊깁니다.
+[pause:500]
+"디스커넥티드, 리커넥팅" 토스트가 반복돼요.
+[pause:400]
+사용자도 의아하고, 사실 개발자도 처음엔 의아해요.
+[pause:500]
+원인이 뭐냐면요, theme이 useEffect의 deps에 들어가 있는 거예요.
+[pause:400]
+그래서 토글할 때마다 디스커넥트, 리커넥트를 반복합니다.
+[pause:500]
+오늘 처방 한 줄 미리 예고할게요.
+[pause:300]
+유즈이펙트이벤트로 논 리액티브 부분만 잘라낸다, 이거예요.
+[pause:600]
+
+[slide 3]
+Before 코드를 같이 진단해 봅시다.
+[pause:400]
+useEffect 안에 createConnection을 만들고요.
+[pause:400]
+'커넥티드' 이벤트가 오면 showNotification을 호출합니다.
+[pause:400]
+showNotification에 'Connected!' 문자열과 theme을 같이 넘겨요.
+[pause:500]
+deps는 roomId, theme 두 개입니다.
+[pause:400]
+이게 익조스티브 deps 룰을 따른 결과예요.
+[pause:500]
+"올바른 deps"는 맞아요. 룰은 통과합니다.
+[pause:400]
+그런데 "올바른 동작"은 아니에요.
+[pause:500]
+근본 원인은 이렇게 정리돼요.
+[pause:300]
+알림은 theme을 읽어야 하지만요.
+[pause:400]
+그 때문에 재연결될 이유는 없거든요.
+[pause:500]
+즉, 한 이펙트 안에 리액티브한 부분과 논 리액티브한 부분이 섞여 있는 거예요.
+[pause:600]
+
+[slide 4]
+그래서 등장하는 도구가 유즈이펙트이벤트입니다.
+[pause:400]
+임포트는 react.dev 기준으로, react에서 useEffectEvent를 가져와요.
+[pause:500]
+특성을 네 가지만 기억합시다.
+[pause:400]
+첫째, 이벤트 핸들러처럼 논 리액티브예요.
+[pause:400]
+둘째, 호출 시 항상 최신 props와 state를 봅니다.
+[pause:400]
+셋째, 이펙트 안에서만 호출할 수 있어요.
+[pause:400]
+넷째, deps에 올리지 않습니다. 린터도 요구하지 않아요.
+[pause:500]
+멘탈 모델은 이렇게 잡으세요.
+[pause:300]
+"이펙트 안에 끼워 넣는 작은 이벤트 핸들러"입니다.
+[pause:500]
+한 가지 중요한 주의사항이 있어요.
+[pause:400]
+유즈이펙트이벤트는 실험적 API예요. experimental.
+[pause:400]
+이 강의는 react.dev 기준 패턴으로 다룹니다.
+[pause:600]
+
+[slide 5]
+이번엔 After 코드를 봅시다.
+[pause:400]
+onConnected라는 변수에 useEffectEvent를 할당해요.
+[pause:400]
+안에선 showNotification을 'Connected!'와 theme으로 호출합니다.
+[pause:400]
+이 안의 theme은 항상 최신 값이에요.
+[pause:500]
+useEffect 본체에선 c의 'connected' 이벤트에서 onConnected를 그냥 호출합니다.
+[pause:500]
+deps를 보세요.
+[pause:300]
+roomId만 있고요, theme은 빠졌어요.
+[pause:500]
+동작을 시연해보면요, 테마를 토글해도 연결이 유지됩니다.
+[pause:400]
+roomId를 바꾸면, 그때만 재연결돼요.
+[pause:500]
+핵심 통찰을 한 줄로 잡으면요.
+[pause:300]
+"theme을 읽는다"와 "theme에 반응한다"는 다른 거예요.
+[pause:400]
+유즈이펙트이벤트가 바로 그 경계를 만들어 줍니다.
+[pause:600]
+
+[slide 6]
+두 번째 시나리오로 가 봅시다.
+[pause:400]
+Page 컴포넌트가 url 방문 시 logVisit을 호출하고 싶어요.
+[pause:500]
+logVisit은 인자를 두 개 받아요.
+[pause:300]
+첫 번째는 url, 두 번째는 numberOfItems입니다.
+[pause:400]
+numberOfItems는 ShoppingCartContext에서 오는 카트 길이고요.
+[pause:500]
+원하는 동작이 명확합니다.
+[pause:300]
+url이 바뀌면 재발화하고요.
+[pause:400]
+카트가 바뀌어도 재발화는 안 합니다.
+[pause:500]
+패턴을 그대로 적용해 봅시다.
+[pause:400]
+onVisit을 useEffectEvent로 만드는데, visitedUrl을 인자로 받아요.
+[pause:400]
+안에서 logVisit을 visitedUrl과 numberOfItems로 호출합니다.
+[pause:500]
+useEffect 본체에선 onVisit을 url과 함께 호출하고요.
+[pause:400]
+deps는 url 하나뿐이에요.
+[pause:500]
+원칙으로 정리하면요.
+[pause:300]
+리액티브 값은 인자로 넘긴다.
+[pause:400]
+논 리액티브 값은 이펙트 이벤트 본체에서 직접 읽는다.
+[pause:600]
+
+[slide 7]
+자문자답을 해 봅시다.
+[pause:400]
+theme과 roomId 이펙트에서, 만약 roomId도 알림 메시지에 넣고 싶다면 어떻게 할까요?
+[pause:500]
+사고 순서를 따라가 봅시다.
+[pause:400]
+먼저, "재발화 조건이 뭔가?"를 정합니다.
+[pause:500]
+roomId는 재연결 트리거여야 해요. 그러니까 리액티브입니다.
+[pause:400]
+그러면 인자로 넘겨야 해요.
+[pause:500]
+theme은 여전히 논 리액티브고요.
+[pause:400]
+그러니까 이펙트 이벤트 본체에서 직접 읽습니다.
+[pause:500]
+실습 권유드릴게요.
+[pause:300]
+react.dev 예제 페이지에서 직접 토글해보세요.
+[pause:400]
+손으로 따라가면 훨씬 빨리 잡힙니다.
+[pause:600]
+
+[slide 8]
+세 원칙으로 마무리합니다.
+[pause:400]
+첫째, 유즈이펙트이벤트는 이펙트 안에 끼우는 논 리액티브 핸들러예요.
+[pause:400]
+둘째, 논 리액티브는 추출하고, 리액티브만 deps에 둡니다.
+[pause:400]
+셋째, 리액티브 값은 인자로, 논 리액티브 값은 본체에서 직접 읽기.
+[pause:500]
+주의 한 번 더 강조할게요.
+[pause:300]
+실험적 API입니다.
+[pause:400]
+다음 시간엔 이 도구의 제약과 안티패턴을 다뤄볼 거예요.
+[pause:400]
+다음 시간에 만나요.

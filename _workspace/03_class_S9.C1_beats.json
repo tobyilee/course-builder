@@ -1,0 +1,116 @@
+{
+  "class_id": "S9.C1",
+  "title": "안티패턴 진단 클리닉 — 코드 6개, 어디가 잘못됐나",
+  "lo_ids": ["LO-S9.1"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "여러분은 방금 동료 PR 6개를 받았습니다 — 다 돌아갑니다, 그런데 어딘가 찝찝합니다",
+        "S1~S8에서 본 escape hatch 오용이 한 줄에 한 번씩 숨어있는 6개 스니펫",
+        "오늘 훈련: 스니펫 보고 30초 안에 '어느 안티패턴인지 + 어느 섹션 도구로 고치는지' 답하기",
+        "마지막엔 영향도 × 수정 난이도 매트릭스로 PR 우선순위까지 매깁니다"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "6개 작은 코드 스니펫 카드를 진료실 차트 형태로 펼친 그림 + '진단 클리닉' 타이틀",
+      "speaker_affect": "호기심 유발, 가볍게 도발적인 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 60,
+      "key_points": [
+        "진단 프로토콜 3단계 — (1) 어떤 패턴인가, (2) 영향도(버그/성능/유지보수), (3) 어느 섹션 도구로 고치나",
+        "영향도 축: 사용자 눈에 보이는 버그 > 성능 누수 > 코드 냄새",
+        "수정 난이도 축: 한 줄 변경 > 같은 컴포넌트 리팩터 > API 경계 변경",
+        "이 두 축으로 매트릭스를 그리면 '먼저 고칠 PR'이 자동으로 정해진다"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "2x2 매트릭스 (X: 수정 난이도, Y: 영향도) 빈 격자 + 6개 빈 카드 대기",
+      "speaker_affect": "차분하게, 체크리스트 읽듯"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 90,
+      "key_points": [
+        "케이스 1: 전역 `let timeoutId`로 디바운스 관리 — 같은 컴포넌트 두 인스턴스가 서로의 타이머를 덮어씀",
+        "진단: S1 안티패턴(useRef로 인스턴스별 격리해야 할 비-렌더 데이터를 모듈 전역에 둠)",
+        "처방: useRef로 timeout ID 보관 + cleanup",
+        "영향도: 높음(실제 버그) / 난이도: 낮음(한 줄) → 매트릭스 우상단",
+        "케이스 2: 렌더 본문에서 `inputRef.current?.value`를 읽어 표시 — 첫 렌더에 null, 이후엔 stale",
+        "진단: S1/S2 안티패턴(렌더 중 ref 읽기 — render→commit→effect 타이밍 위반)",
+        "처방: 값을 state로 끌어올리거나 onChange 핸들러에서 읽기"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "케이스 1·2 Before 코드 좌측 / 진단 라벨 + 처방 코드 우측의 split view, 매트릭스 우상단에 케이스 1 핀 꽂기",
+      "speaker_affect": "진료 차트 읽듯 또박또박"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "케이스 3: `useEffect(() => setFullName(first + ' ' + last), [first, last])` — derived state를 Effect로",
+        "진단: S4 안티패턴 #1(렌더 중 계산으로 충분, Effect는 외부 시스템용)",
+        "처방: `const fullName = first + ' ' + last` (한 줄) — 영향도 중간(추가 렌더), 난이도 낮음",
+        "케이스 4: Effect chain — `setA` → effect → `setB` → effect → `setC`로 카운터 증가",
+        "진단: S4 안티패턴 #4(캐스케이딩 재렌더, 한 인터랙션이 3번 렌더)",
+        "처방: 단일 이벤트 핸들러로 합치기 — 영향도 높음(성능+추적성), 난이도 중(로직 재배치)"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "케이스 3·4 Before/After 비교 + 케이스 4는 렌더 캐스케이드 화살표 다이어그램",
+      "speaker_affect": "강조, '이건 Effect 아니에요' 톤"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "케이스 5: `<ChatRoom options={{ serverUrl, roomId }} />` — 부모 렌더마다 새 객체, 자식 Effect는 매번 재연결",
+        "진단: S7 안티패턴(객체 prop으로 인한 무한 재동기화)",
+        "처방: options를 원시값(serverUrl, roomId)으로 분해해서 prop으로 — 난이도 중(API 경계 변경)",
+        "케이스 6: `function useMount(fn) { useEffect(fn, []) }` 같은 lifecycle wrapper",
+        "진단: S8 안티패턴(Custom Hook은 동기화 의도를 표현해야지, lifecycle을 추상화하면 deps linter가 죽음)",
+        "처방: useMount 제거 → 호출처에서 useEffect 직접 사용 + 의도(어떤 동기화인지) 명명",
+        "영향도 중간(가독성/안전성), 난이도 중(호출처 모두 바꿔야)"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "케이스 5의 객체 참조 변화 시각화(부모 렌더마다 새 box) + 케이스 6 useMount wrapper의 deps 정보 손실 다이어그램",
+      "speaker_affect": "차분하게, '자주 보이는 함정이에요' 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 165,
+      "key_points": [
+        "이제 6개 케이스를 매트릭스에 모두 배치해보세요 — 잠깐 멈추고 본인이 직접 핀을 꽂는다고 상상",
+        "예시 배치: 케이스 1(전역 timeout) — 영향도 높음/난이도 낮음 → 우상단 = '오늘 바로'",
+        "케이스 4(Effect chain) — 영향도 높음/난이도 중간 → 다음 스프린트",
+        "케이스 3(derived state) — 영향도 낮음/난이도 낮음 → 자투리 시간",
+        "케이스 5(객체 prop) — 영향도 중간/난이도 중간 → 다음 스프린트",
+        "케이스 2·6 — 영향도 낮음/난이도 중간 → 백로그",
+        "리팩터링 우선순위 = 영향도가 먼저, 난이도는 동률일 때만 — '쉬운 것부터'의 함정 피하기"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "2x2 매트릭스에 6개 케이스 카드가 모두 배치된 완성도 + 우상단 → 좌하단으로 흐르는 우선순위 화살표",
+      "speaker_affect": "코칭 톤, '잠깐 멈춰보세요'"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 40,
+      "key_points": [
+        "진단 프로토콜은 3단계 — 어떤 패턴, 영향도×난이도, 어느 섹션 도구",
+        "오늘 6개 패턴: 전역 timeout(S1), 렌더 중 ref(S1/S2), derived Effect(S4), Effect chain(S4), 객체 prop(S7), useMount(S8)",
+        "리팩터링 우선순위는 영향도 우선 — '쉬운 것부터'가 아니라 '아픈 것부터'"
+      ],
+      "lo_ids": ["LO-S9.1"],
+      "visual_hint": "6개 패턴 → 6개 섹션 매핑 차트 + 매트릭스 축약본",
+      "speaker_affect": "정리하는 톤, 다음 클래스 예고로 살짝 기대감"
+    }
+  ]
+}

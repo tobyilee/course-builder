@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ref={...}로 DOM 만지기 — focus·scroll·measure·play</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.55}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  header{padding:12px 20px;border-bottom:1px solid #1f2430;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:600}
+  .meta{color:#8b95a7;font-size:13px}
+  button.menu-toggle{background:transparent;border:1px solid #2a3345;color:#e8eaed;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer}
+  button.menu-toggle:hover{background:#222a3a}
+  /* Progress bar */
+  #progress{padding:10px 20px;background:#12151c;border-bottom:1px solid #1f2430;display:flex;gap:14px;align-items:center;font-size:13px;color:#8b95a7}
+  #progress .bar{flex:1;height:4px;background:#1f2430;border-radius:2px;overflow:hidden}
+  #progress .bar .fill{height:100%;background:linear-gradient(90deg,#2d6cdf,#5ea0ff);border-radius:2px;transition:width .3s ease}
+  #progress .label{white-space:nowrap}
+  #progress strong{color:#e8eaed;font-weight:600}
+  /* Sidebar */
+  aside#toc{background:#12151c;border-right:1px solid #1f2430;padding:16px 14px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0}
+  aside#toc h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#8b95a7;margin:14px 0 6px 0;font-weight:500}
+  aside#toc h3:first-child{margin-top:0}
+  aside#toc ul{list-style:none;padding:0;margin:0 0 12px 0}
+  aside#toc li{padding:6px 8px;border-radius:6px;margin-bottom:2px;font-size:13px}
+  aside#toc a{color:#c4cad6;text-decoration:none;display:block}
+  aside#toc a:hover{color:#fff}
+  aside#toc li:hover{background:#1a1f29}
+  aside#toc li.current{background:#1a2e4a;border-left:3px solid #2d6cdf}
+  aside#toc li.current a{color:#fff;font-weight:600}
+  aside#toc li.quiz a{color:#3a8a4f}
+  main{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;padding:16px;max-width:1700px;margin:0 auto;align-items:start}
+  @media(max-width:1280px){main{grid-template-columns:1fr 320px} aside#toc{display:none} aside#toc.open{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.4);max-height:100vh}}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  #stage{background:#181c26;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  #slide-wrap{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #slide{max-width:100%;max-height:100%;display:block}
+  #controls{display:flex;gap:8px;align-items:center;padding:6px 2px}
+  button{background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}
+  button:hover{background:#2a3547}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.play{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}
+  button.play:hover{background:#3578e5}
+  button.speed{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}
+  #pos{color:#8b95a7;font-size:13px;margin-left:auto}
+  audio{width:100%}
+  aside#transcript{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}
+  aside#transcript h2{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  #tx-body p{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}
+  #tx-body p.active{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}
+  #thumbs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}
+  .thumb{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}
+  .thumb.current{border-color:#2d6cdf}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb span{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}
+  #end-panel{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}
+  #end-panel.active{display:block;animation:slideIn .4s ease-out}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #end-panel h2{margin:0 0 4px 0;font-size:18px;color:#fff}
+  #end-panel .sub{color:#8fb3e8;margin-bottom:12px;font-size:13px}
+  .end-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}
+  .btn-cta.primary{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}
+  .btn-cta.primary:hover{background:#3578e5;transform:translateY(-1px)}
+  .btn-cta.secondary{background:#222a3a;color:#e8eaed;border:1px solid #2a3345}
+  .btn-cta.secondary:hover{background:#2a3547}
+  .btn-cta .label{font-size:12px;opacity:.75;font-weight:400;display:block;margin-bottom:1px}
+  .btn-cta .title{display:block}
+  footer{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}
+  footer a{margin:0 10px}
+  /* Resume banner */
+  #resume-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}
+  #resume-banner.show{display:flex}
+  #resume-banner .text{font-size:13px;color:#c4cad6}
+  #resume-banner .text strong{color:#fff}
+  #resume-banner button{padding:6px 12px;font-size:13px;margin:0}
+  #resume-banner button.primary{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <button class="menu-toggle" id="menu-toggle" title="목차 열기/닫기">☰</button>
+  <a href="../../../index.html">← 홈</a>
+  <h1>ref={...}로 DOM 만지기 — focus·scroll·measure·play</h1>
+  <span class="meta">LOs: LO-S2.1, LO-S2.2 · 7장 · 4.1분</span>
+</header>
+
+<div id="progress">
+  <span class="label"><strong>Class 6</strong> / 31</span>
+  <div class="bar"><div class="fill" id="course-fill" style="width:19.4%"></div></div>
+  <span class="label">슬라이드 <strong id="slide-num">1</strong> / 7</span>
+  <div class="bar"><div class="fill" id="slide-fill"></div></div>
+</div>
+
+<main>
+  <aside id="toc">
+    <h3>오리엔테이션 — Escape Hatch 멘탈모델</h3>
+    <ul>
+      <li class=""><a href="../../../00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/player.html">왜 &#x27;Escape Hatch&#x27;인가 — React의 기본 흐름과 마지막 수단</a></li>
+      <li class=""><a href="../../../00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/player.html">결정 트리 — 지금 이 코드, Escape Hatch가 정말 필요한가?</a></li>
+      <li class="quiz"><a href="../../../00-orientation-escape-hatch-mental-model/quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+    <h3>Ref로 값 참조하기 — 재렌더 없이 기억하기</h3>
+    <ul>
+      <li class=""><a href="../../../01-referencing-values-with-refs/classes/01-useref-basics-vs-state/player.html">useRef 기본과 state와의 차이</a></li>
+      <li class=""><a href="../../../01-referencing-values-with-refs/classes/02-ref-good-use-cases/player.html">Ref의 좋은 사용 사례 — timeout, 디바운싱, 최신 값</a></li>
+      <li class=""><a href="../../../01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/player.html">Ref 안티패턴과 전역 변수 → ref 리팩터링</a></li>
+      <li class="quiz"><a href="../../../01-referencing-values-with-refs/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Ref로 DOM 조작하기 — focus, scroll, 그리고 통제된 노출</h3>
+    <ul>
+      <li class="current"><a href="../01-ref-to-dom-basics/player.html">ref={...}로 DOM 만지기 — focus·scroll·measure·play</a></li>
+      <li class=""><a href="../02-flushsync-and-dont-touch-react-dom/player.html">flushSync로 타이밍 맞추기 + React가 관리하는 DOM은 손대지 않기</a></li>
+      <li class=""><a href="../03-forwardref-to-ref-as-prop-and-imperative-handle/player.html">자식에게 ref 넘기기 — forwardRef → React 19 ref prop, 그리고 useImperativeHandle</a></li>
+      <li class="quiz"><a href="../../quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Effect로 동기화하기 — 라이프사이클이 아닌 동기화 모델</h3>
+    <ul>
+      <li class=""><a href="../../../03-synchronizing-with-effects/classes/01-effect-as-synchronization/player.html">Effect는 라이프사이클이 아니라 동기화다</a></li>
+      <li class=""><a href="../../../03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/player.html">useEffect 시그니처, 의존성 배열, cleanup 패턴</a></li>
+      <li class=""><a href="../../../03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/player.html">Strict Mode 더블 호출의 의도와 ref-회피 안티패턴</a></li>
+      <li class="quiz"><a href="../../../03-synchronizing-with-effects/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Effect 안 써도 되는 경우 — 12가지 안티패턴 진단</h3>
+    <ul>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/player.html">Effect 안 써도 되는 경우 — 진단 프레임과 결정 트리</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/player.html">Derived state — render 중 계산과 useMemo</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/player.html">State 리셋과 조정 — key prop과 state-during-render</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/player.html">인터랙션 vs 표시 — 핸들러로 옮겨야 할 6가지</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/player.html">외부 통합과 종합 결정 트리 — useSyncExternalStore · fetch race</a></li>
+      <li class="quiz"><a href="../../../04-you-might-not-need-an-effect/quiz.html">📝 섹션 퀴즈 (9문항)</a></li>
+    </ul>
+    <h3>반응형 Effect의 라이프사이클</h3>
+    <ul>
+      <li class=""><a href="../../../05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/player.html">컴포넌트 라이프사이클 vs Effect 라이프사이클 — 매 렌더가 자기 closure</a></li>
+      <li class=""><a href="../../../05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/player.html">Reactive vs Non-reactive 값 — Object.is로 판정되는 재실행 흐름</a></li>
+      <li class=""><a href="../../../05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/player.html">exhaustive-deps 해결 3가지 옵션과 Effect 분리 원칙</a></li>
+      <li class="quiz"><a href="../../../05-lifecycle-of-reactive-effects/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Event와 Effect 분리하기 — useEffectEvent</h3>
+    <ul>
+      <li class=""><a href="../../../06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/player.html">Event냐 Effect냐 — &#x27;왜 실행돼야 하나?&#x27;로 가르기</a></li>
+      <li class=""><a href="../../../06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/player.html">useEffectEvent로 non-reactive 추출 — theme/roomId 패턴</a></li>
+      <li class=""><a href="../../../06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/player.html">Effect Event의 제약과 안티패턴 — 외부에 노출 금지</a></li>
+      <li class="quiz"><a href="../../../06-separating-events-from-effects/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Effect 의존성 줄이기 — 6가지 전략</h3>
+    <ul>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/player.html">deps는 코드의 거울 — linter suppress 절대 금지 원칙</a></li>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/player.html">전략 1-3 — 정적값 외부화 · 객체/함수 안에서 생성 · updater</a></li>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/player.html">전략 4-6 — useEffectEvent · Effect 분리 · 객체 prop 분해</a></li>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/player.html">실전 케이스 스터디 — 6 전략 조합 선택과 트레이드오프 평가</a></li>
+      <li class="quiz"><a href="../../../07-removing-effect-dependencies/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Custom Hook으로 로직 재사용하기</h3>
+    <ul>
+      <li class=""><a href="../../../08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/player.html">Custom Hook의 규칙 — use 접두사와 &#x27;로직만 공유&#x27; 원칙</a></li>
+      <li class=""><a href="../../../08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/player.html">실전 추출 — useFormInput, useChatRoom과 useEffectEvent wrap</a></li>
+      <li class=""><a href="../../../08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/player.html">추출할 것인가 말 것인가 — composition과 미래 대비</a></li>
+      <li class="quiz"><a href="../../../08-reusing-logic-with-custom-hooks/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>종합 — 안티패턴 진단과 통합 케이스 스터디</h3>
+    <ul>
+      <li class=""><a href="../../../09-capstone-integrated-diagnosis/classes/01-antipattern-diagnosis-clinic/player.html">안티패턴 진단 클리닉 — 코드 6개, 어디가 잘못됐나</a></li>
+      <li class=""><a href="../../../09-capstone-integrated-diagnosis/classes/02-integrated-case-study-and-review/player.html">통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지</a></li>
+      <li class="quiz"><a href="../../../09-capstone-integrated-diagnosis/quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+  </aside>
+  <div id="stage">
+    <div id="slide-wrap"><img id="slide" alt="slide"/></div>
+    <div id="controls">
+      <button id="prev">◀ 이전</button>
+      <button id="play" class="play">▶ 재생</button>
+      <button id="next">다음 ▶</button>
+      <button id="speed" class="speed" title="재생 속도">1×</button>
+      <span id="pos">1 / 7</span>
+    </div>
+    <audio id="audio" preload="auto"></audio>
+    <section id="end-panel">
+      <h2>🎉 수업을 완료했어요!</h2>
+      <p class="sub">다음으로 이동하거나 배운 내용을 점검해보세요.</p>
+      <div class="end-actions"><a class="btn-cta primary" href="../02-flushsync-and-dont-touch-react-dom/player.html"><span><span class="label">다음 수업</span><span class="title">▶ flushSync로 타이밍 맞추기 + React가 관리하는 DOM은 손대지 않기</span></span></a>
+    <a class="btn-cta secondary" href="../../quiz.html"><span><span class="label">먼저 점검</span><span class="title">📝 섹션 퀴즈</span></span></a></div>
+    </section>
+  </div>
+  <aside id="transcript">
+    <h2>발화 스크립트</h2>
+    <div id="tx-body"></div>
+  </aside>
+</main>
+
+<section id="thumbs"></section>
+
+<div id="resume-banner" role="dialog" aria-live="polite">
+  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">이어 듣기</button>
+  <button id="resume-no">처음부터</button>
+</div>
+
+<footer>
+  <a href="../../quiz.html">📝 섹션 퀴즈 풀기</a>
+  <a href="../../../index.html">목차로</a>
+</footer>
+
+<script>
+const SLIDES = [{"png": "slides_png/slide.001.png", "mp3": "audio/slide_01.mp3", "transcript": ["ref={...}로 DOM 만지기, 시작하겠습니다.", "이번 시간에는 focus, scroll, measure, play 같은 작업들을 다룹니다.", "선언형으로는 표현이 안 되는, 명령형 DOM 작업들이죠."], "transcriptTimes": [{"start": 0.0, "end": 3.282}, {"start": 3.282, "end": 9.143}, {"start": 9.143, "end": 12.777}]}, {"png": "slides_png/slide.002.png", "mp3": "audio/slide_02.mp3", "transcript": ["한 가지 상황을 떠올려 볼게요.", "검색창이 화면에 뜨자마자, 거기에 자동으로 커서가 들어가면 좋겠다.", "그런데 React만으로는 이게 안 됩니다.", "리스트에 새 항목을 추가하고 거기까지 부드럽게 스크롤하기, 비디오를 재생하거나 일시정지하기, 요소의 크기를 측정하기.", "이런 작업은 전부 브라우저의 명령형 DOM API가 필요합니다.", "React는 이런 순간을 위해 escape hatch를 하나 남겨뒀어요.", "바로 ref={...} 패턴입니다."], "transcriptTimes": [{"start": 0.0, "end": 2.331}, {"start": 2.331, "end": 7.406}, {"start": 7.406, "end": 10.56}, {"start": 10.56, "end": 19.474}, {"start": 19.474, "end": 24.274}, {"start": 24.274, "end": 29.759}, {"start": 29.759, "end": 32.365}]}, {"png": "slides_png/slide.003.png", "mp3": "audio/slide_03.mp3", "transcript": ["기본 패턴부터 보겠습니다.", "useRef를 import하고, useRef(null)로 ref 객체를 하나 만듭니다.", "그리고 JSX에서 input 태그에 ref={inputRef}로 달아주면 끝이에요.", "그러면 React가 commit phase에서 inputRef.current에 실제 input DOM 노드를 채워줍니다.", "한 가지 ref는 한 가지 노드를 가리킨다, 이게 기본입니다.", "동적인 리스트에 ref를 일대일로 붙이고 싶다면, Map이나 콜백 ref 같은 별도 패턴이 필요해요.", "오늘은 일단 단일 노드 케이스에 집중하겠습니다."], "transcriptTimes": [{"start": 0.0, "end": 1.596}, {"start": 1.596, "end": 7.067}, {"start": 7.067, "end": 12.309}, {"start": 12.309, "end": 19.946}, {"start": 19.946, "end": 23.821}, {"start": 23.821, "end": 30.204}, {"start": 30.204, "end": 33.167}]}, {"png": "slides_png/slide.004.png", "mp3": "audio/slide_04.mp3", "transcript": ["이제 가장 중요한 타이밍 이야기입니다.", "render phase, 그러니까 컴포넌트 함수가 호출되는 그 시점에는 ref.current가 아직 null이에요.", "React는 그저 함수를 한 번 호출했을 뿐, 아직 DOM을 만들지도 않았거든요.", "그러다가 commit phase에 와서야 React가 실제 DOM을 만들고, 그제서야 ref.current에 노드를 주입합니다.", "업데이트 시에도 마찬가지예요.", "React는 노드를 바꾸기 직전에 ref를 일단 null로 초기화하고, 새 노드로 교체한 다음 다시 설정합니다.", "그래서 ref를 안전하게 읽을 수 있는 위치는 두 군데뿐입니다.", "이벤트 핸들러 안, 그리고 Effect 안.", "이 타이밍 모델을 머리에 박아두면, 왜 렌더 본문에서 ref를 만지면 안 되는지가 자연스럽게 설명됩니다."], "transcriptTimes": [{"start": 0.0, "end": 2.459}, {"start": 2.459, "end": 9.954}, {"start": 9.954, "end": 15.223}, {"start": 15.223, "end": 23.537}, {"start": 23.537, "end": 25.411}, {"start": 25.411, "end": 32.671}, {"start": 32.671, "end": 36.77}, {"start": 36.77, "end": 39.58}, {"start": 39.58, "end": 46.372}]}, {"png": "slides_png/slide.005.png", "mp3": "audio/slide_05.mp3", "transcript": ["실제 예제 세 개를 보겠습니다.", "첫 번째, 버튼 클릭으로 input에 포커스 주기.", "onClick 안에서 inputRef.current.focus()를 호출하면 됩니다.", "두 번째, 카드를 부드럽게 화면 안으로 가져오기.", "cardRef.current.scrollIntoView를 호출하고, behavior는 smooth, block은 nearest로 옵션을 넘깁니다.", "세 번째, 상태에 따라 비디오 제어하기.", "isPlaying이 true면 videoRef.current.play를, false면 pause를 호출합니다.", "이건 useEffect 안에서, isPlaying을 dependency로 넣어 처리해요.", "세 예제의 공통점이 보이시죠?", "전부 이벤트 핸들러나 Effect 안에서 ref.current에 접근한다는 것.", "선언형 state와 명령형 호출이, 안전한 위치에서 만나는 패턴입니다."], "transcriptTimes": [{"start": 0.0, "end": 1.892}, {"start": 1.892, "end": 5.009}, {"start": 5.009, "end": 10.241}, {"start": 10.241, "end": 13.247}, {"start": 13.247, "end": 22.264}, {"start": 22.264, "end": 24.713}, {"start": 24.713, "end": 31.503}, {"start": 31.503, "end": 36.958}, {"start": 36.958, "end": 38.739}, {"start": 38.739, "end": 43.637}, {"start": 43.637, "end": 47.978}]}, {"png": "slides_png/slide.006.png", "mp3": "audio/slide_06.mp3", "transcript": ["이제 자기점검 시간이에요.", "이런 코드가 있다고 해봅시다.", "함수 컴포넌트 본문에서 console.log로 ref.current를 찍는 거예요.", "이게 왜 null로 나올까요?", "정답은, render 중에 호출됐기 때문입니다.", "그럼 어떻게 고치죠?", "useEffect 안으로 옮기거나, 이벤트 핸들러 안으로 옮기면 됩니다.", "확장 질문 하나 더.", "컴포넌트가 처음 마운트될 때 자동으로 input에 포커스를 주려면 코드를 어디에 둬야 할까요?", "빈 배열을 dependency로 갖는 useEffect 안입니다.", "스스로에게 한 줄로 답해보세요.", "\"내가 ref를 읽는 위치는 commit 이후인가?\""], "transcriptTimes": [{"start": 0.0, "end": 1.783}, {"start": 1.783, "end": 3.82}, {"start": 3.82, "end": 9.677}, {"start": 9.677, "end": 11.714}, {"start": 11.714, "end": 15.025}, {"start": 15.025, "end": 16.426}, {"start": 16.426, "end": 21.519}, {"start": 21.519, "end": 22.92}, {"start": 22.92, "end": 29.541}, {"start": 29.541, "end": 34.125}, {"start": 34.125, "end": 36.289}, {"start": 36.289, "end": 39.982}]}, {"png": "slides_png/slide.007.png", "mp3": "audio/slide_07.mp3", "transcript": ["정리하겠습니다.", "useRef와 ref={...}로 React가 관리하는 DOM 노드를 잡아서, focus, scroll, play, measure 같은 명령형 작업을 수행한다.", "타이밍은, render에는 null, commit 이후에 채워짐.", "그래서 핸들러나 Effect 안에서만 읽는다.", "ref는 React가 직접 못 하는 일을 위한 escape hatch라는 점, 기억해 주세요.", "다음 시간에는 setState 직후에 새로 만들어진 DOM을 즉시 측정해야 할 때 쓰는 flushSync, 그리고 직접 DOM 조작이 왜 위험한지를 다룹니다."], "transcriptTimes": [{"start": 0.0, "end": 0.884}, {"start": 0.884, "end": 10.721}, {"start": 10.721, "end": 14.7}, {"start": 14.7, "end": 17.463}, {"start": 17.463, "end": 23.211}, {"start": 23.211, "end": 32.937}]}];
+let current = 0;
+const img = document.getElementById('slide');
+const audio = document.getElementById('audio');
+const txBody = document.getElementById('tx-body');
+const pos = document.getElementById('pos');
+const thumbs = document.getElementById('thumbs');
+const btnPrev = document.getElementById('prev');
+const btnPlay = document.getElementById('play');
+const btnNext = document.getElementById('next');
+
+SLIDES.forEach((s, i) => {
+  const t = document.createElement('div');
+  t.className = 'thumb';
+  t.dataset.i = i;
+  t.innerHTML = '<img src="' + s.png + '"/><span>' + (i+1) + '</span>';
+  t.onclick = () => loadSlide(i, true);
+  thumbs.appendChild(t);
+});
+
+function loadSlide(i, autoplay, resumeTime) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, i));
+  const s = SLIDES[current];
+  img.src = s.png;
+  audio.src = s.mp3;
+  if (resumeTime && resumeTime > 1) {
+    audio.addEventListener('loadedmetadata', () => {
+      const dur = audio.duration;
+      if (isFinite(dur)) audio.currentTime = Math.min(resumeTime, Math.max(0, dur - 1));
+    }, { once: true });
+  }
+  pos.textContent = (current + 1) + ' / ' + SLIDES.length;
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === SLIDES.length - 1;
+
+  txBody.innerHTML = '';
+  const times = s.transcriptTimes || [];
+  s.transcript.forEach((line, idx) => {
+    const p = document.createElement('p');
+    p.textContent = line;
+    const t = times[idx];
+    if (t && typeof t.start === 'number' && typeof t.end === 'number') {
+      p.dataset.start = t.start;
+      p.dataset.end = t.end;
+    }
+    txBody.appendChild(p);
+  });
+
+  document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('current', idx === current));
+  const cur = document.querySelector('.thumb.current');
+  if (cur) cur.scrollIntoView({block:'nearest', inline:'center'});
+
+  maybeShowEnd();
+  saveState();
+
+  if (autoplay) audio.play().catch(() => {});
+}
+
+// localStorage resume — key = page path so each class gets its own slot
+const STORAGE_KEY = 'course-builder:' + location.pathname;
+const STATE_MAX_AGE_MS = 30 * 86400 * 1000;
+let lastSaveTs = 0;
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      slide: current,
+      time: audio.currentTime || 0,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadResumeState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > STATE_MAX_AGE_MS) return null;
+    if (typeof s.slide !== 'number' || s.slide < 0 || s.slide >= SLIDES.length) return null;
+    // Don't bother prompting if they barely started
+    if (s.slide === 0 && (s.time || 0) < 3) return null;
+    return s;
+  } catch(e) { return null; }
+}
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+function fmtTime(t) {
+  const sec = Math.max(0, Math.floor(t || 0));
+  return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}
+
+let lastActiveLine = null;
+audio.addEventListener('timeupdate', () => {
+  const now = Date.now();
+  if (now - lastSaveTs > 3000) { saveState(); lastSaveTs = now; }
+  // Highlight the transcript line whose [start, end) range contains currentTime.
+  // Line timings come from char-proportional splitting of the slide's MP3 duration.
+  const t = audio.currentTime;
+  const lines = txBody.children;
+  let newActive = null;
+  for (let i = 0; i < lines.length; i++) {
+    const el = lines[i];
+    const s = parseFloat(el.dataset.start);
+    const e = parseFloat(el.dataset.end);
+    if (!isNaN(s) && !isNaN(e) && t >= s && t < e) { newActive = el; break; }
+  }
+  if (newActive !== lastActiveLine) {
+    if (lastActiveLine) lastActiveLine.classList.remove('active');
+    if (newActive) {
+      newActive.classList.add('active');
+      newActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    lastActiveLine = newActive;
+  }
+});
+
+// Playback speed — single cycle button, global across classes
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const SPEED_KEY = 'course-builder:playback-speed';
+const btnSpeed = document.getElementById('speed');
+
+function loadSpeed() {
+  try {
+    const v = parseFloat(localStorage.getItem(SPEED_KEY));
+    if (SPEEDS.includes(v)) return v;
+  } catch(e) {}
+  return 1;
+}
+function applySpeed(v) {
+  audio.playbackRate = v;
+  if ('preservesPitch' in audio) audio.preservesPitch = true;
+  // Display: 1× (no decimal) / 1.25× / 1.5× etc.
+  btnSpeed.textContent = (Number.isInteger(v) ? v : v.toString()) + '×';
+  btnSpeed.classList.toggle('speed-fast', v > 1);
+  btnSpeed.classList.toggle('speed-slow', v < 1);
+}
+let currentSpeed = loadSpeed();
+applySpeed(currentSpeed);
+btnSpeed.onclick = () => {
+  const idx = SPEEDS.indexOf(currentSpeed);
+  currentSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+  applySpeed(currentSpeed);
+  try { localStorage.setItem(SPEED_KEY, String(currentSpeed)); } catch(e) {}
+};
+audio.addEventListener('loadedmetadata', () => { audio.playbackRate = currentSpeed; });
+
+const endPanel = document.getElementById('end-panel');
+const slideFill = document.getElementById('slide-fill');
+const slideNumEl = document.getElementById('slide-num');
+const toc = document.getElementById('toc');
+const menuToggle = document.getElementById('menu-toggle');
+menuToggle.addEventListener('click', () => toc.classList.toggle('open'));
+
+function maybeShowEnd() {
+  if (current === SLIDES.length - 1) {
+    endPanel.classList.add('active');
+  } else {
+    endPanel.classList.remove('active');
+  }
+  // Update progress bar
+  const pct = ((current + 1) / SLIDES.length) * 100;
+  slideFill.style.width = pct + '%';
+  slideNumEl.textContent = current + 1;
+}
+
+btnPrev.onclick = () => loadSlide(current - 1, true);
+btnNext.onclick = () => loadSlide(current + 1, true);
+btnPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
+
+audio.addEventListener('play', () => btnPlay.textContent = '⏸ 일시정지');
+audio.addEventListener('pause', () => btnPlay.textContent = '▶ 재생');
+audio.addEventListener('ended', () => {
+  if (current < SLIDES.length - 1) {
+    loadSlide(current + 1, true);
+  } else {
+    maybeShowEnd();
+    endPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); btnPlay.click(); }
+  else if (e.key === 'ArrowRight') btnNext.click();
+  else if (e.key === 'ArrowLeft') btnPrev.click();
+});
+
+// Initial load — show resume banner if prior state exists, otherwise start at slide 0
+const resumeState = loadResumeState();
+loadSlide(0, false);
+if (resumeState) {
+  document.getElementById('resume-pos').textContent =
+    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+  const banner = document.getElementById('resume-banner');
+  banner.classList.add('show');
+  document.getElementById('resume-yes').onclick = () => {
+    banner.classList.remove('show');
+    loadSlide(resumeState.slide, true, resumeState.time);
+  };
+  document.getElementById('resume-no').onclick = () => {
+    banner.classList.remove('show');
+    clearState();
+  };
+}
+</script>
+</body>
+</html>

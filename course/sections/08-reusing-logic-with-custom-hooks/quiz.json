@@ -1,0 +1,155 @@
+{
+  "section_id": "S8",
+  "items": [
+    {
+      "id": "S8.Q1",
+      "type": "mcq_single",
+      "stem": "다음 중 `use` 접두사 명명 규칙을 **올바르게** 적용한 함수는?",
+      "choices": [
+        "A. `function useSorted(items) { return items.slice().sort(); }` — Hook을 호출하지 않지만 일관성을 위해 use를 붙임",
+        "B. `function useAuth() { return useContext(AuthContext); }` — 내부에서 useContext를 호출",
+        "C. `function getUserStatus() { const [s] = useState(true); return s; }` — useState를 호출하지만 일반 함수처럼 보이게 get으로 시작",
+        "D. `function UseProfile() { return useState(null); }` — PascalCase로 작성해 컴포넌트와 통일"
+      ],
+      "correct": ["B"],
+      "explanation": "`use` 접두사는 '내부에서 Hook을 호출한다'는 계약 신호다. (B)는 useContext를 호출하므로 `use*`가 정당하다. linter가 Rules of Hooks를 검사할 수 있게 만드는 것이 이 규칙의 핵심이다.",
+      "distractor_rationales": {
+        "A": "Hook을 호출하지 않는 순수 함수에 use를 붙이면 안 된다. linter가 잘못된 위치 제약을 강제하고 협업자에게 잘못된 신호를 준다. 그냥 `sortItems`로 둬야 한다.",
+        "C": "useState를 호출하는 함수는 반드시 `use*`로 시작해야 한다. `getUserStatus`처럼 두면 linter가 Hook 규칙 검사를 끄게 되어 위반을 놓친다.",
+        "D": "PascalCase는 컴포넌트 컨벤션이다. Hook은 camelCase + `use` 접두사여야 linter가 Hook으로 인식한다."
+      },
+      "lo_ids": ["LO-S8.1"],
+      "bloom": "Analyze",
+      "difficulty": 2
+    },
+    {
+      "id": "S8.Q2",
+      "type": "mcq_single",
+      "stem": "두 컴포넌트 `StatusBar`와 `SaveButton`이 각각 `const isOnline = useOnlineStatus();`를 호출했다. 네트워크가 연결된 상태에서 `StatusBar`만 `setIsOnline(false)`로 강제 변경한다고 가정하면 어떤 일이 벌어지는가? (Hook 내부에 setter 노출이 있다고 가정)",
+      "choices": [
+        "A. 두 컴포넌트의 isOnline이 모두 false가 된다 — 같은 Hook을 호출했으므로 state가 공유됨",
+        "B. StatusBar만 false가 되고 SaveButton의 isOnline은 영향받지 않는다 — 호출마다 독립된 useState slot",
+        "C. 런타임 에러가 발생한다 — Custom Hook은 setter를 노출할 수 없음",
+        "D. SaveButton만 false가 된다 — Hook이 마지막 호출자에게 state를 위임"
+      ],
+      "correct": ["B"],
+      "explanation": "Custom Hook은 'stateful 로직'을 공유할 뿐 'state 인스턴스'는 공유하지 않는다. `useOnlineStatus()`를 두 번 호출하면 내부의 `useState(true)`도 두 번 실행되어 독립된 slot이 생긴다. 두 컴포넌트가 동시에 같은 값을 보이는 것은 같은 외부 시스템(window 이벤트)에 동기화되기 때문이지 state를 공유해서가 아니다.",
+      "distractor_rationales": {
+        "A": "가장 흔한 오해다. lifting state up과 Custom Hook 추출을 혼동한 것 — 진짜로 state를 공유하려면 부모로 끌어올리거나 Context를 써야 한다.",
+        "C": "Hook이 setter를 노출하는 것은 자유다(useFormInput의 onChange처럼). 본 문항의 핵심과 무관한 분산.",
+        "D": "Hook이 호출 순서로 state를 위임하는 메커니즘은 존재하지 않는다."
+      },
+      "lo_ids": ["LO-S8.1"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "S8.Q3",
+      "type": "mcq_single",
+      "stem": "`useFormInput(initial)`을 작성한다. 사용처에서 `<input {...firstName} />` 스프레드로 한 줄에 꽂고 싶다. 다음 중 가장 적절한 구현은?",
+      "choices": [
+        "A. `function useFormInput(initial) { const [v, setV] = useState(initial); return [v, setV]; }`",
+        "B. `function formInput(initial) { const [v, setV] = useState(initial); return { value: v, onChange: e => setV(e.target.value) }; }`",
+        "C. `function useFormInput(initial) { const [v, setV] = useState(initial); return { value: v, onChange: e => setV(e.target.value) }; }`",
+        "D. `function useFormInput(initial) { let v = initial; return { value: v, onChange: e => { v = e.target.value; } }; }`"
+      ],
+      "correct": ["C"],
+      "explanation": "(C)가 정답. `use` 접두사 + `useState` 호출 + `<input>`이 기대하는 prop 모양({value, onChange})을 객체로 반환해 스프레드를 가능하게 한다. 두 번 호출하면 각자 독립된 state slot이 생겨 input들이 서로 영향 없이 동작한다.",
+      "distractor_rationales": {
+        "A": "배열 반환은 useState 자체와 같아서 스프레드(`{...firstName}`)로 input prop에 꽂을 수 없다. 도메인 의미도 흐려진다.",
+        "B": "useState를 호출하는데 `use` 접두사가 없다 — Rules of Hooks linter 검사가 꺼져 잘못된 위치 호출을 잡지 못한다.",
+        "D": "일반 변수 `let v`는 React의 렌더 모델 밖이라 setter가 재렌더를 트리거하지 않고 화면이 갱신되지 않는다."
+      },
+      "lo_ids": ["LO-S8.2"],
+      "bloom": "Apply",
+      "difficulty": 2
+    },
+    {
+      "id": "S8.Q4",
+      "type": "mcq_multi",
+      "stem": "다음 `useChatRoom` 구현이 'roomId/serverUrl이 바뀔 때만 재연결, onReceiveMessage가 매 렌더 새 함수여도 재연결되지 않게' 동작하려면 **반드시** 갖춰야 할 조건은? (정답 2개)",
+      "choices": [
+        "A. `onReceiveMessage`를 `useEffectEvent`로 wrap한 `onMessage`를 Effect 본체에서 호출",
+        "B. `useEffect`의 deps 배열에 `[serverUrl, roomId]`만 넣고 `onMessage`/`onReceiveMessage`는 넣지 않음",
+        "C. `onReceiveMessage`를 `useCallback`으로 감싸 deps 배열에 함께 넣음",
+        "D. `useChatRoom` 호출 측에서 `onReceiveMessage`를 `useMemo`로 메모이즈",
+        "E. Effect 안에서 `onReceiveMessage`를 직접 호출하고 deps는 비워둠"
+      ],
+      "correct": ["A", "B"],
+      "explanation": "정답은 (A)와 (B). 핸들러는 reactive하지 않다는 의도를 `useEffectEvent`로 표현하고(A), reactive 값만 deps에 넣는다(B). 이 둘이 동시에 성립해야 deps 오염 없이 핸들러 최신화가 달성된다.",
+      "distractor_rationales": {
+        "C": "useCallback은 deps가 같을 때만 같은 참조를 보장한다. 핸들러가 의존하는 state(예: 최신 theme)가 바뀌면 참조가 또 바뀌어 deps 오염이 재발한다 — 의도가 다르다.",
+        "D": "호출처가 메모이즈를 책임지면 캡슐화가 깨진다. Hook 내부에서 useEffectEvent로 흡수해 호출처는 평범한 콜백을 넘기게 해야 한다.",
+        "E": "deps에서 빼면 ESLint 경고 + stale closure로 옛날 핸들러를 호출할 위험. wrap 없이 단순히 빼는 것은 잘못된 해법이다."
+      },
+      "lo_ids": ["LO-S8.3"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "S8.Q5",
+      "type": "mcq_single",
+      "stem": "팀에서 `function useMount(fn) { useEffect(fn, []); }`를 도입하자는 제안이 나왔다. 다음 중 이 제안을 **거절해야 하는** 가장 강력한 이유는?",
+      "choices": [
+        "A. 함수 이름이 너무 짧아서 자동완성에서 충돌한다",
+        "B. `fn` 안에서 reactive 값(예: roomId)을 참조해도 deps가 [] 고정이라 ESLint exhaustive-deps가 분석하지 못해 stale closure를 양산하고, '도메인 없는 lifecycle wrapper'라 동기화 의도도 드러나지 않는다",
+        "C. useEffect가 React 19에서 deprecated될 예정이라 useMount는 곧 동작하지 않는다",
+        "D. useMount는 React.memo와 함께 쓰면 무한 루프를 일으킨다"
+      ],
+      "correct": ["B"],
+      "explanation": "(B)가 정답. useMount는 '도메인 없음 + linter 무력화 + stale closure 양산' 3종 세트다. fn이 참조하는 roomId 같은 reactive 값을 linter가 useMount의 fn 내부까지 들여다보지 못하므로 거짓 lifecycle을 흉내내며 검사 회피만 만든다. Effect는 라이프사이클이 아니라 '동기화'이며 Hook 이름은 '무엇과 동기화하는지'가 드러나야 한다.",
+      "distractor_rationales": {
+        "A": "이름 충돌은 사소한 표면 이슈이지 거절의 본질적 근거가 아니다.",
+        "C": "사실이 아니다. useEffect는 deprecated되지 않았다.",
+        "D": "사실이 아니다. React.memo와 무한 루프는 별개의 메커니즘이다."
+      },
+      "lo_ids": ["LO-S8.4"],
+      "bloom": "Evaluate",
+      "difficulty": 3
+    },
+    {
+      "id": "S8.Q6",
+      "type": "mcq_single",
+      "stem": "다음 네 시나리오 중 **Custom Hook으로 추출하는 것이 정당한** 경우는?",
+      "choices": [
+        "A. 한 컴포넌트에서만 쓰이는 5줄 짜리 fetch + setState Effect — 재사용 가능해 보여 일단 빼두기",
+        "B. `function useSorted(items) { return [...items].sort(); }` — 도메인 의미를 부여하기 위해",
+        "C. 두 페이지(ShippingForm, BillingForm)에서 동일하게 반복되는 fetch + cleanup 패턴을 `useData(url)`로 추출",
+        "D. `useEffect(fn, [])` 패턴을 `useEffectOnce(fn)`으로 추출해 모든 mount-only 로직을 일관화"
+      ],
+      "correct": ["C"],
+      "explanation": "(C)가 정답. 추출 기준은 '실제 두 곳 이상에서 동일 패턴 반복 + 도메인 의미가 이름에 드러남'이다. `useData(url)`은 두 사용처에서 반복되고 '데이터 모양'이라는 도메인을 명확히 표현한다.",
+      "distractor_rationales": {
+        "A": "단일 사용처에서 너무 일찍 추상화하면 잘못된 모양으로 굳는다. 두 번째 사용처가 생길 때 추출해도 늦지 않다.",
+        "B": "Hook을 호출하지 않는 순수 함수에 use 접두사를 붙이면 안 된다. 그냥 `sortItems`로 일반 함수.",
+        "D": "useEffectOnce/useMount 같은 lifecycle wrapper는 도메인 없음 + linter 무력화 + stale closure 양산의 안티패턴이다."
+      },
+      "lo_ids": ["LO-S8.4"],
+      "bloom": "Evaluate",
+      "difficulty": 2
+    },
+    {
+      "id": "S8.Q7",
+      "type": "short_answer",
+      "stem": "1초마다 카운트가 올라가는 `useCounter(delay)` Hook을 `useInterval`과 composition으로 설계하라. (1) `useInterval(callback, delay)` 시그니처와 본체, (2) `useCounter(delay)` 본체를 작성하고, (3) 향후 React가 더 좋은 timer 동기화 API를 내놓을 때 'callsite 변경 0'으로 교체 가능한 이유 한 줄을 덧붙여라.",
+      "correct": [],
+      "explanation": "rubric 기반 자기채점. 모범 답안: `function useInterval(callback, delay) { const onTick = useEffectEvent(callback); useEffect(() => { const id = setInterval(onTick, delay); return () => clearInterval(id); }, [delay]); }` / `function useCounter(delay) { const [count, setCount] = useState(0); useInterval(() => setCount(c => c + 1), delay); return count; }` / 캡슐화 이유: 호출처는 `const count = useCounter(1000);` 한 줄이라 useInterval 내부 구현(예: useSyncExternalStore 등)이 바뀌어도 인터페이스(인자 delay, 반환 count)가 같으므로 호출처 코드 한 글자도 바뀌지 않는다.",
+      "rubric": [
+        "[2점] useInterval이 callback을 useEffectEvent로 wrap하고 deps에 [delay]만 넣어 매 렌더 setInterval 재생성을 방지함",
+        "[2점] useCounter가 useState로 count를 갖고 useInterval(() => setCount(c => c + 1), delay)로 updater 패턴 사용 (count를 deps로 노출하지 않음)",
+        "[1점] Hook이 다른 Hook을 top-level에서 호출하는 composition 구조가 명확",
+        "[1점] '호출처 인터페이스(인자/반환)가 동일하므로 내부 구현만 useSyncExternalStore 등으로 교체해도 callsite 변경 0' 이라는 캡슐화 보상을 명시"
+      ],
+      "distractor_rationales": {},
+      "lo_ids": ["LO-S8.5"],
+      "bloom": "Create",
+      "difficulty": 4
+    }
+  ],
+  "bloom_distribution": {
+    "Apply": 2,
+    "Analyze": 2,
+    "Evaluate": 2,
+    "Create": 1
+  }
+}

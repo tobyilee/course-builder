@@ -1,0 +1,101 @@
+{
+  "class_id": "S5.C1",
+  "title": "컴포넌트 라이프사이클 vs Effect 라이프사이클 — 매 렌더가 자기 closure",
+  "lo_ids": ["LO-S5.1"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "ChatRoom 컴포넌트가 마운트된 상태에서 사용자가 'general' → 'travel' 방을 바꿨을 때 무슨 일이 벌어질까?",
+        "컴포넌트는 한 번 마운트된 채로 살아있는데, 연결은 두 번, 세 번 끊고 다시 맺어진다",
+        "Effect를 'mount/unmount 훅'으로 보면 이 장면이 설명되지 않는다"
+      ],
+      "lo_ids": ["LO-S5.1"],
+      "visual_hint": "왼쪽: 컴포넌트 한 줄짜리 timeline(mount...unmount). 오른쪽: 그 안에서 connect/disconnect/connect/disconnect를 반복하는 Effect timeline 대비",
+      "speaker_affect": "호기심 유발, 약간의 미스터리톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "컴포넌트 라이프사이클은 mount → update → unmount의 일생",
+        "Effect 라이프사이클은 그 안에서 '동기화 시작 ↔ 동기화 중지'를 반복하는 독립 사이클",
+        "Effect의 본질 질문 두 개: '어떻게 동기화를 시작하지?' '어떻게 중지하지?'",
+        "이 관점이면 의존성 배열, cleanup, 더블 호출이 한 줄에 꿰인다"
+      ],
+      "lo_ids": ["LO-S5.1"],
+      "visual_hint": "두 개의 라이프사이클을 위아래로 나란히 그린 다이어그램. 컴포넌트 한 줄 vs Effect 사이클이 여러 번 반복",
+      "speaker_affect": "차분하게, 모델 전환을 명시"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "함수 컴포넌트는 렌더마다 처음부터 다시 호출된다",
+        "그 호출에서 만들어진 모든 변수/함수는 그 렌더 시점의 props/state를 캡처한 closure",
+        "Effect 본문에 적힌 roomId는 '그 렌더의 roomId 스냅샷'이지 '살아있는 변수'가 아니다",
+        "그래서 매 렌더는 자기만의 Effect를 갖는다고 말할 수 있다"
+      ],
+      "lo_ids": ["LO-S5.1"],
+      "visual_hint": "렌더 1, 렌더 2, 렌더 3을 카드 3장으로 나열. 각 카드 안에 그 시점의 roomId 값과 Effect 함수가 들어있는 그림",
+      "speaker_affect": "강조, 천천히"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 240,
+      "key_points": [
+        "ChatRoom({ roomId }) 컴포넌트: serverUrl 상수 + useEffect로 createConnection → connect, cleanup으로 disconnect, deps=[roomId]",
+        "초기 렌더(roomId='general'): Effect 본체 실행 → general에 connect",
+        "사용자가 'travel' 선택 → 새 렌더 → 이전 렌더의 cleanup이 'general' disconnect → 새 Effect가 'travel' connect",
+        "컴포넌트는 그동안 한 번도 unmount되지 않았다 — 살아있는 채로 동기화만 갈아탄 것",
+        "console.log를 cleanup과 본체에 박아두면 connect → disconnect → connect 시퀀스가 그대로 찍힌다"
+      ],
+      "lo_ids": ["LO-S5.1"],
+      "examples": [
+        "const serverUrl = 'https://localhost:1234';",
+        "function ChatRoom({ roomId }) {",
+        "  useEffect(() => {",
+        "    const c = createConnection(serverUrl, roomId);",
+        "    c.connect();",
+        "    return () => c.disconnect();",
+        "  }, [roomId]);",
+        "}"
+      ],
+      "visual_hint": "코드 블록 + 우측에 시간축 타임라인: render('general') → connect general → render('travel') → disconnect general → connect travel",
+      "speaker_affect": "친근하게 단계별 설명"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "자문자답: ChatRoom이 마운트된 채로 roomId를 'general' → 'travel' → 'music'으로 두 번 바꿨다면, connect는 몇 번, disconnect는 몇 번 호출됐을까?",
+        "정답: connect 3번, disconnect 2번 (마지막은 unmount 때 호출)",
+        "두 번째 자문: 만약 Effect가 정말 'mount 훅'이었다면 이 횟수가 어떻게 달라졌을까?",
+        "이 질문에 답할 수 있다면 라이프사이클 모델이 머리에 잡힌 것"
+      ],
+      "lo_ids": ["LO-S5.1"],
+      "visual_hint": "퀴즈 카드 스타일. 위쪽에 타임라인(general→travel→music), 아래에 빈칸 connect=__, disconnect=__",
+      "speaker_affect": "학습자에게 직접 묻듯, 잠깐의 여백을 둠"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 45,
+      "key_points": [
+        "컴포넌트는 mount/update/unmount, Effect는 그 안에서 동기화 시작/중지를 반복한다",
+        "Effect를 볼 땐 '어떻게 시작? 어떻게 중지?' 두 질문만 던진다",
+        "매 렌더는 그 시점의 props/state를 캡처한 자체 closure이며, 그래서 자체 Effect를 가진다"
+      ],
+      "lo_ids": ["LO-S5.1"],
+      "visual_hint": "3줄 요약 카드, 각 줄 앞에 체크마크",
+      "speaker_affect": "정리, 단호하게"
+    }
+  ]
+}

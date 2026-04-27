@@ -1,0 +1,117 @@
+{
+  "class_id": "S4.C2",
+  "title": "Derived state — render 중 계산과 useMemo",
+  "lo_ids": ["LO-S4.2"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "흔한 안티패턴: firstName/lastName이 바뀔 때마다 setFullName을 부르는 Effect",
+        "이 코드가 만드는 추가 렌더 한 번을 타임라인으로 보여주기",
+        "'한 줄로 끝낼 수 있는데 왜 두 번 렌더하는가' 질문 던지기"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "렌더 타임라인 — 빨간 코드는 2번 렌더, 초록 코드는 1번 렌더 비교",
+      "speaker_affect": "호기심 유발, 살짝 놀라움"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "안티패턴 #1: props/state로부터 파생되는 값을 Effect+state로 보관",
+        "정정 원칙: render 중에 단순 계산으로 변수를 만들면 자동으로 일관성 유지",
+        "Effect로 옮길 때 발생하는 두 단계 — '렌더 → Effect → setState → 재렌더'의 비용",
+        "render는 순수 함수여야 한다는 React 멘탈모델과 자연스럽게 연결됨"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "왼쪽 코드: useState+useEffect 5줄 / 오른쪽 코드: const fullName = ... 1줄",
+      "speaker_affect": "차분하게, 핵심 전달"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "Before: const [fullName, setFullName] = useState(''); useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName])",
+        "After: const fullName = firstName + ' ' + lastName",
+        "단계별 리팩터링 — useState 제거 → useEffect 제거 → const 한 줄로",
+        "테스트: firstName 변경 시 추가 렌더 0회, JSX는 정상 동기화"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "Before/After 코드 + 화살표로 줄어드는 라인 카운트 강조",
+      "speaker_affect": "친근하게, 안내자 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 140,
+      "key_points": [
+        "안티패턴 #2: 비싼 계산을 Effect로 캐싱하려는 시도",
+        "정정 원칙: 비싼 계산도 render 중에 — 단, useMemo로 메모이즈",
+        "useMemo 적용 3조건: (1) 계산이 진짜 비싸다(수백 ms 이상) (2) 의존성이 안정적 (3) 참조 일관성이 필요한 하위 트리가 있다",
+        "비싸지 않은 계산은 메모이즈하지 말 것 — 코드만 복잡해지고 이득 없음",
+        "측정 방법: console.time / React Profiler로 렌더 비용 확인 후 결정"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "useMemo 의사결정 체크리스트 3개 항목 + 측정 도구 아이콘",
+      "speaker_affect": "또렷이, 강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "getFilteredTodos(todos, filter) 시나리오 — 1만 개 todo 필터링",
+        "Before: useEffect(() => setVisibleTodos(getFilteredTodos(todos, filter)), [todos, filter])",
+        "After: const visibleTodos = useMemo(() => getFilteredTodos(todos, filter), [todos, filter])",
+        "console.time으로 차이 측정 — Before는 매번 + 추가 렌더, After는 deps 변경 시에만"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "큰 todos 배열 아이콘 + Before/After 측정값 막대그래프",
+      "speaker_affect": "친근하게, 시연 톤"
+    },
+    {
+      "id": "b6",
+      "type": "teach",
+      "duration_sec": 70,
+      "key_points": [
+        "React Compiler 트렌드 — 자동 메모이즈가 도입되면 useMemo가 불필요해질 수 있음",
+        "지금은 '비싼 계산만 useMemo' 원칙이 그대로 유효",
+        "어쨌든 1차 원칙은 동일: 'Effect로 옮기지 말고 render 중에 계산하라'"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "React Compiler 로고 + '자동 메모이즈' 텍스트 + 원칙 박스",
+      "speaker_affect": "정보 전달, 차분하게"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 70,
+      "key_points": [
+        "자문자답 1: 장바구니 합계 = items.reduce(...) — Effect? useMemo? 한 줄 계산?",
+        "정답 가이드: items가 100개 이하면 한 줄 계산, 1만 개라면 useMemo 검토",
+        "자문자답 2: 검색어 글자 수 = query.length — 의심의 여지 없이 한 줄 계산"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "두 시나리오 카드 — 작은 합계 vs 1만개 합계",
+      "speaker_affect": "도전 유도, 친근하게"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 20,
+      "key_points": [
+        "props/state 파생값은 render 중 계산",
+        "비싸면 useMemo, 비싸지 않으면 그냥 계산",
+        "Effect+state로 옮기지 말 것 — 추가 렌더 + 동기화 부담"
+      ],
+      "lo_ids": ["LO-S4.2"],
+      "visual_hint": "결정 트리 Q1·Q2 가지 강조 1장",
+      "speaker_affect": "마무리, 또렷이"
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "class_id": "S9.C2",
+  "title": "통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지",
+  "lo_ids": ["LO-S9.2", "LO-S9.3"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "한 화면에 다 들어있는 작은 앱: 검색창 + 채팅방 연결 + 자동 스크롤 + 다크모드 토글",
+        "이게 왜 통합인가 — 검색=fetch race, 채팅=재연결, 스크롤=ref+flushSync, 토글=useEffectEvent, 그리고 useChatRoom으로 마무리",
+        "오늘은 결정 트리(S0~S8)를 코드 한 줄 한 줄에 적용하면서 빌드 → review 모드로 정당화",
+        "끝나면 '왜 ref인가, 왜 Effect인가, 왜 useEffectEvent인가'를 PR 코멘트 톤으로 답할 수 있게 됨"
+      ],
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "visual_hint": "최종 앱 UI 목업 — 검색창, 채팅 메시지 리스트, 우상단 다크모드 토글, 좌상단 'connected' 배지",
+      "speaker_affect": "기대감, '드디어 합쳐봅니다' 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 70,
+      "key_points": [
+        "빌드 순서는 결정 트리 순 — 외부 시스템부터(S3 Effect), 그 다음 동기화 격리(S5/S7), 명령형 DOM(S2 ref), 마지막에 추출(S8 Custom Hook)",
+        "5개 블록: (1) useData로 검색 결과 fetch, (2) ChatRoom 연결, (3) 새 메시지 자동 스크롤, (4) 다크모드 토글이 재연결 안 되게, (5) useChatRoom으로 추출",
+        "각 블록마다 빌드 후 즉시 review — 다른 도구는 왜 탈락했는지 한 줄 정당화",
+        "전제: S0~S8 다 봤으니 코드는 빠르게, 결정 정당화에 시간 씀"
+      ],
+      "lo_ids": ["LO-S9.2"],
+      "visual_hint": "5개 블록을 세로로 쌓은 빌드 로드맵 + 각 블록 옆에 참조 섹션 라벨(S3, S5, S2, S6, S8)",
+      "speaker_affect": "차분하게, 로드맵 펼치듯"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "블록 1 — 검색창 with debounced fetch + race-safe cleanup",
+        "`useEffect(() => { let ignore = false; fetch(query).then(r => { if (!ignore) setResults(r) }); return () => { ignore = true } }, [query])`",
+        "왜 Effect? — 외부 시스템(서버)와의 동기화, 인터랙션 결과 아님",
+        "왜 ignore flag? — 빠른 타이핑 시 이전 fetch가 늦게 도착해 새 결과를 덮어쓸 수 있음(S3 race)",
+        "탈락한 선택지: useMemo(비동기 안 됨), event handler(query는 표시 중 동기화)",
+        "review 코멘트: '이건 useData 커스텀 훅으로 빼면 더 깔끔하지만, 우선 인라인으로 패턴 보이고 나중 추출' (S8.5 composition 복선)"
+      ],
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "visual_hint": "검색창 코드 + 타임라인 다이어그램(query A 발사 → query B 발사 → A 늦게 도착하지만 ignore=true로 폐기)",
+      "speaker_affect": "또박또박, race condition 부분에서 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "블록 2 — ChatRoom 연결, roomId 변경 시 재연결",
+        "`useEffect(() => { const c = createConnection(serverUrl, roomId); c.connect(); return () => c.disconnect() }, [serverUrl, roomId])`",
+        "왜 cleanup? — Strict Mode 더블 마운트로도 검증, 실제로 roomId 바뀔 때마다 깔끔히 끊고 다시(S3/S5)",
+        "왜 deps에 roomId? — reactive 값(S5.2), Object.is 비교로 변하면 cleanup → 재실행",
+        "탈락: ref guard로 더블 호출 회피? — unmount 누수, 처방 아님(S3.4)",
+        "블록 3 — 새 메시지 도착 시 자동 스크롤",
+        "`flushSync(() => setMessages(...))` 후 `listRef.current.scrollTo(...)` — state 업데이트 직후 새 DOM 즉시 측정/스크롤(S2.3)",
+        "왜 ref? — DOM 명령형 작업, React가 대체 못 함. 왜 flushSync? — 기본 batching에선 setMessages 후 DOM 아직 업데이트 전"
+      ],
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "visual_hint": "좌측 ChatRoom Effect 코드 + roomId 변화 시 cleanup→재실행 시퀀스 / 우측 flushSync 타이밍 비교(없을 때 stale scrollHeight vs 있을 때 정상)",
+      "speaker_affect": "강조, '여기가 S2 핵심' 톤"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "블록 4 — 다크모드 토글, 하지만 토글마다 채팅 재연결되면 곤란",
+        "naive 코드: `useEffect(() => { connect(roomId); showToast(`Connected in ${theme}`); ... }, [roomId, theme])` → theme도 deps라 토글마다 재연결",
+        "진단: theme은 알림에만 쓰이고 연결 자체와 무관(non-reactive 의도)",
+        "처방: useEffectEvent로 알림 부분 추출 — `const onConnected = useEffectEvent(() => showToast(theme))` → Effect deps는 [roomId]만",
+        "왜 useEffectEvent? — 최신 theme 읽되 reactive 추적은 안 함(S6.2)",
+        "탈락: theme을 ref에 동기화? — 가능하지만 보일러플레이트, useEffectEvent가 의도 명시적",
+        "탈락: linter suppress? — 금지 원칙(S7.1)",
+        "review 코멘트: '실험적 API라 stable 아니면 ref+layoutEffect 패턴이 fallback' (course caveat 반영)"
+      ],
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "visual_hint": "Before(theme 토글 → 채팅 끊김 애니메이션) vs After(theme 토글 → 토스트만, 연결 유지)",
+      "speaker_affect": "강조, '이게 useEffectEvent 진가' 톤"
+    },
+    {
+      "id": "b6",
+      "type": "example",
+      "duration_sec": 120,
+      "key_points": [
+        "블록 5 — useChatRoom으로 추출, 그리고 useData도 같이",
+        "`function useChatRoom({ serverUrl, roomId, onMessage }) { const onMsg = useEffectEvent(onMessage); useEffect(() => { ... }, [serverUrl, roomId]) }`",
+        "reactive 값은 인자로(roomId, serverUrl), 핸들러는 useEffectEvent로 wrap — deps 오염 없이 최신화(S8.3)",
+        "useData는 generic — `useData<T>(url)` 형태로 추출, ignore flag 패턴 캡슐화",
+        "왜 추출? — 도메인 의미('채팅방 연결', '데이터 fetch')를 호출처에서 노이즈 없이 표현, 향후 useSyncExternalStore로 내부 교체 가능(S8.5)",
+        "탈락: useMount/useEffectOnce 같은 wrapper 추가? — 의도 잃고 deps linter 죽음(S8.4)",
+        "탈락: 단일 사용처라 추출 보류? — 검색+채팅 두 곳에서 fetch 패턴, useData는 추출 정당, useChatRoom은 단일이지만 의도 캡슐화 가치 큼 → 추출"
+      ],
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "visual_hint": "Before(컴포넌트 안에 모든 Effect 인라인) → After(useChatRoom + useData 추출 후 컴포넌트 본문이 선언적으로 짧아진 모습) split",
+      "speaker_affect": "마무리 정리 톤, '여기서 코스가 한 바퀴 돕니다'"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 130,
+      "key_points": [
+        "review 모드 — 동료가 PR을 보고 묻습니다, 한 줄로 답해보세요",
+        "Q1: '검색 결과를 useState로 두고 onChange에서 fetch하면 안 돼?' → A: query는 표시 중 동기화(URL/뒤로가기/페이지 진입 시에도 fetch 필요), 인터랙션 결과 아님",
+        "Q2: 'flushSync 없이 그냥 setMessages 후 scrollTo 하면?' → A: batching 때문에 DOM이 아직 새 메시지 반영 전, scrollHeight가 stale",
+        "Q3: 'theme도 deps에 넣고 reconnect 받아들이면?' → A: 사용자 경험 손상(메시지 끊김), 가독성 vs 정확성에서 정확성이 이김",
+        "Q4: 'useChatRoom 단일 사용처인데 왜 뺐어?' → A: 의도 캡슐화 + 테스트 가능성 + 미래의 useSyncExternalStore 교체 여지(트레이드오프: 약간의 간접 지향)",
+        "각 답변에서 '다른 선택지 → 왜 탈락'을 꼭 포함 — 이게 LO-S9.3의 본질"
+      ],
+      "lo_ids": ["LO-S9.3"],
+      "visual_hint": "PR review 인터페이스 목업 — 4개 코멘트 말풍선이 코드 라인 옆에 붙은 형태",
+      "speaker_affect": "친근하게, '동료처럼 답해보세요' 톤"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 65,
+      "key_points": [
+        "오늘 만든 앱: 검색(useData/race) + 채팅(useChatRoom/재연결) + 자동스크롤(ref+flushSync) + 다크모드(useEffectEvent)",
+        "결정 트리는 코드 모든 줄에 적용 — '왜 이 도구인가, 다른 건 왜 탈락인가, 어떤 트레이드오프인가'",
+        "코스 전체를 관통한 원칙: Escape Hatch는 마지막 수단, 그러나 필요할 땐 정확히 — 이걸로 코스 마무리"
+      ],
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "visual_hint": "최종 앱 + 코스 전체 섹션 트리(S0→S9)에 통합 케이스가 어떻게 모든 가지를 건드렸는지 highlight",
+      "speaker_affect": "따뜻하게, 코스 졸업 톤"
+    }
+  ]
+}

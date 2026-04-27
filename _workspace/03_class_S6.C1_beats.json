@@ -1,0 +1,95 @@
+{
+  "class_id": "S6.C1",
+  "title": "Event냐 Effect냐 — '왜 실행돼야 하나?'로 가르기",
+  "lo_ids": ["LO-S6.1"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "같은 sendMessage / showNotification 코드를 어디에 둘지 헷갈렸던 경험 환기",
+        "채팅앱: 'Send 버튼 클릭' vs '방에 들어와 있는 동안 연결 유지' 두 장면 대비",
+        "코드 한 줄을 옮겼을 뿐인데 동작이 완전히 달라지는 사례 예고",
+        "오늘의 핵심 질문: '이 코드는 왜 실행돼야 하는가?'"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "왼쪽 'Send 클릭' 아이콘과 오른쪽 'WiFi 연결 유지' 아이콘을 화살표로 대비",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 120,
+      "key_points": [
+        "Event handler 정의: 특정 사용자 액션(클릭/submit)에 응답해 실행",
+        "Effect 정의: 컴포넌트가 화면에 표시되는 동안 외부 시스템과 동기화",
+        "트리거의 본질 차이 — 인터랙션 vs 표시 상태",
+        "결정 질문 한 줄: '사용자가 그 액션을 했기 때문인가, 컴포넌트가 화면에 있기 때문인가?'"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "결정 질문을 중앙에 두고 두 갈래(handler / Effect)로 분기되는 다이어그램",
+      "speaker_affect": "차분하게, 또박또박"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "Non-reactive: handler는 같은 인터랙션이 다시 일어나야 다시 실행됨",
+        "Reactive: Effect는 deps에 명시된 값이 바뀌면 자동 재실행됨",
+        "비교표(트리거 / 반응성 / reactive 값 읽기 시 동작) 한 화면 정리",
+        "'반응한다(react)'의 의미: 값이 변하면 코드가 알아서 다시 돈다",
+        "위치(handler vs Effect)가 같은 변수의 반응성을 결정한다는 통찰"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "3열 비교표 — 행: 트리거/반응성/reactive 값 읽기, 열: Event Handler / Effect",
+      "speaker_affect": "강조, 또박또박"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "ChatRoom 코드: handleSendClick은 'Send 클릭'에서만 sendMessage 호출",
+        "useEffect는 createConnection + connect, cleanup으로 disconnect — roomId 변하면 재연결",
+        "동일하게 message 변수를 읽어도 handler에서는 non-reactive(클릭 순간 값), Effect에서는 reactive(deps 필요)",
+        "'send 버튼' = handler / '연결 유지' = Effect 비유로 직관 굳히기",
+        "코드 위치만 바꿔도 의미가 완전히 달라지는 시연"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "ChatRoom 코드 스니펫 — handleSendClick과 useEffect를 색상으로 구분, 'Send 클릭'/'연결 유지' 라벨",
+      "speaker_affect": "친근하게, 시범 보이는 톤"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 105,
+      "key_points": [
+        "미니 자문자답: '검색창에 글자 입력 시 자동완성 fetch' — handler? Effect?",
+        "결정 질문 적용: 사용자가 타이핑(인터랙션)했기 때문인가, 컴포넌트가 떠 있기 때문인가?",
+        "정답 풀이: query가 바뀌면 자동으로 동기화 — 표시 상태 기반 → Effect",
+        "변형 질문: 'Submit 버튼으로 form 전송' — 이건 명백히 handler",
+        "스스로 결정 질문을 적용해보는 습관 들이기"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "퀴즈 카드 두 장(자동완성 / form submit) 좌우 배치, 결정 질문이 위에",
+      "speaker_affect": "초대하는 톤, 부드럽게"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "Event handler = 인터랙션 응답 (non-reactive)",
+        "Effect = 표시 중 동기화 (reactive)",
+        "결정 질문 한 줄: '왜 실행돼야 하나?' — 인터랙션이면 handler, 표시면 Effect",
+        "다음 시간 예고: 같은 Effect 안에 reactive와 non-reactive가 섞일 때의 해법(useEffectEvent)"
+      ],
+      "lo_ids": ["LO-S6.1"],
+      "visual_hint": "핵심 3카드 + '다음 시간' 티저",
+      "speaker_affect": "정리하는 톤, 단단하게"
+    }
+  ]
+}

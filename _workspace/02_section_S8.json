@@ -1,0 +1,32 @@
+{
+  "section_id": "S8",
+  "classes": [
+    {
+      "id": "S8.C1",
+      "slug": "01-custom-hook-rules-and-shared-logic",
+      "title": "Custom Hook의 규칙 — use 접두사와 '로직만 공유' 원칙",
+      "lo_ids": ["LO-S8.1"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "Custom Hook이 무엇이고 왜 필요한지부터 잡는다. 'use' 접두사 명명 규칙(Hook 호출 시에만 사용)과, Custom Hook은 'stateful 로직만 공유하고 state 인스턴스 자체는 공유하지 않는다'는 핵심 원칙을 useOnlineStatus 예제로 시연한다. 두 컴포넌트가 같은 Hook을 호출해도 각자 독립된 state를 갖는다는 점을 mental model로 못 박는다."
+    },
+    {
+      "id": "S8.C2",
+      "slug": "02-extracting-real-hooks-useFormInput-useChatRoom",
+      "title": "실전 추출 — useFormInput, useChatRoom과 useEffectEvent wrap",
+      "lo_ids": ["LO-S8.2", "LO-S8.3"],
+      "duration_min": 13,
+      "depends_on": ["S8.C1"],
+      "summary": "도메인 의미 있는 Custom Hook을 직접 만들어 본다. useFormInput으로 반복되는 input + onChange 패턴을 추출하고, useChatRoom으로 connect/disconnect Effect를 캡슐화한다. 이때 onReceiveMessage 같은 핸들러를 useEffectEvent로 wrap해서 reactive 값(roomId, serverUrl)만 deps에 남기고, 핸들러 변경 때문에 재연결되지 않도록 만드는 패턴을 코드 레벨로 구현한다."
+    },
+    {
+      "id": "S8.C3",
+      "slug": "03-when-to-extract-composition-future-proofing",
+      "title": "추출할 것인가 말 것인가 — composition과 미래 대비",
+      "lo_ids": ["LO-S8.4", "LO-S8.5"],
+      "duration_min": 12,
+      "depends_on": ["S8.C2"],
+      "summary": "모든 로직을 Hook으로 빼지 말라는 균형점을 잡는다. useMount/useEffectOnce 같은 lifecycle wrapper가 왜 안티패턴인지(의존성 거짓말, 도메인 의미 부재), 단일 사용처에서 굳이 추출하지 말아야 하는 기준을 평가한다. 이어서 useCounter + useInterval처럼 Custom Hook을 composition으로 더 도메인스러운 Hook을 합성하는 방법, 그리고 useSyncExternalStore 같은 새 API가 등장해도 사용처 코드는 그대로 두고 Hook 내부만 교체할 수 있는 캡슐화 가치를 결산한다."
+    }
+  ]
+}

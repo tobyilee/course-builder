@@ -1,0 +1,91 @@
+{
+  "class_id": "S7.C4",
+  "title": "실전 케이스 스터디 — 6 전략 조합 선택과 트레이드오프 평가",
+  "lo_ids": ["LO-S7.5"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "오늘의 환자: '재연결이 너무 많은 ChatRoom'",
+        "deps에 messages/options/onMessage가 다 들어가 있고, 부모도 매 렌더 새 객체를 넘김",
+        "어느 전략 조합이 최적일까? 그리고 그 선택의 비용은?"
+      ],
+      "lo_ids": ["LO-S7.5"],
+      "visual_hint": "병원 차트 패러디. ChatRoom 코드 스니펫 위에 'symptoms' 박스(매 메시지마다 재연결, 부모 렌더마다 재연결, isMuted 토글마다 재연결)",
+      "speaker_affect": "유쾌하게, 진단의 시간"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "평가 절차: ① 증상 → 원인 식별 ② 후보 전략 매핑 ③ 조합의 트레이드오프 평가 ④ 결정",
+        "트레이드오프 축 3개: 가독성(코드를 읽는 사람의 비용), 캡슐화(자식이 자율적인지 부모에 의존하는지), 마이그레이션 비용(기존 호출부 영향)",
+        "황금률: 항상 '코드를 바꿔 deps를 정직하게' — 다만 어느 코드를 바꿀지는 트레이드오프 결정"
+      ],
+      "lo_ids": ["LO-S7.5"],
+      "visual_hint": "결정 프레임워크 4단계 다이어그램 + 트레이드오프 3축 레이더 차트 미리보기",
+      "speaker_affect": "코칭 톤, '평가의 언어를 익혀봅시다'"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "ChatRoom Before: function ChatRoom({ options, isMuted }) { useEffect(() => { c.on('message', m => { setMessages([...messages, m]); if (!isMuted) playSound(); }); ... }, [options, messages, isMuted]) }",
+        "증상 진단: (1) options 객체 prop → 부모 렌더마다 재연결 (2) messages → 메시지 올 때마다 재연결 (3) isMuted → 토글마다 재연결",
+        "전략 매핑: (1) 전략 6 — options를 roomId/serverUrl 원시값 prop으로 분해 (2) 전략 3 — setMessages(prev => ...) updater (3) 전략 4 — useEffectEvent로 isMuted 체크 추출",
+        "After deps=[roomId, serverUrl] — 진짜 재연결이 필요한 시점에만 재연결",
+        "이 케이스는 단일 전략으로 안 풀리는 전형 — 조합이 답"
+      ],
+      "lo_ids": ["LO-S7.5"],
+      "visual_hint": "Before/After 풀 코드 비교. Before deps 라인 빨간색, After deps 라인 초록색. 옆에 적용된 전략 3, 4, 6 배지",
+      "speaker_affect": "케이스 진단, 또박또박 추적하는 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "트레이드오프 비교: 전략 6(원시값 분해)은 부모 호출부도 바꿔야 함 → 마이그레이션 비용 ↑, 가독성/캡슐화 ↑",
+        "대안: 전략 2만 적용해 Effect 안에서 options 생성 → 부모 안 건드리지만 자식이 'options 객체'라는 추상화를 잃음",
+        "전략 4(useEffectEvent)는 캡슐화 깔끔하지만 실험적 API라는 위험 — 안정 API만 쓰는 팀이라면 보류",
+        "전략 3(updater)는 거의 항상 비용 0의 win — 최우선 후보",
+        "선택 기준: '재연결이 의미상 필요한 시점이 정확히 언제인가'를 먼저 정의하고 deps가 그것과 일치하게 만든다"
+      ],
+      "lo_ids": ["LO-S7.5"],
+      "visual_hint": "트레이드오프 표: 행=전략 3/4/6, 열=가독성/캡슐화/마이그레이션 비용. 셀에 ★ 점수와 한 줄 코멘트",
+      "speaker_affect": "신중하게, 실무 시니어의 톤"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "시나리오 자문자답: '<Form onSubmit={(d) => save(d)} initialValues={{...}} />를 받는 Form 컴포넌트가 부모 렌더마다 reset 됨'",
+        "어느 전략 조합? — initialValues 객체 prop은 전략 6(원시값 분해 어려우면) 또는 전략 2(Effect 안에서 처리), onSubmit은 전략 4(useEffectEvent로 wrap)",
+        "트레이드오프: 호출부가 많다면 전략 4 + 2 조합으로 자식 내부 흡수, 호출부가 적다면 전략 6으로 평탄화하는 게 더 정직",
+        "정답은 '하나'가 아님 — 합리적 근거가 핵심"
+      ],
+      "lo_ids": ["LO-S7.5"],
+      "visual_hint": "워크시트 카드: 시나리오 + 빈 결정 칸 3개(원인/전략/트레이드오프 근거)",
+      "speaker_affect": "함께 추론하기, 친근하게"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "문제 → 해결 매핑표(섹션 종합): deps 너무 많음→①② / 무한 루프→③ / 읽기만→④ / 매 렌더 재생성→②⑥ / 여러 동기화 묶임→⑤ / suppress 유혹→절대 금지·위 6개 사용",
+        "선택의 언어: 가독성·캡슐화·마이그레이션 비용 3축으로 정당화",
+        "다음 섹션 S8 Custom Hook — 이 6 전략을 도메인 의미로 묶어 useChatRoom 같은 재사용 단위로 승격합니다"
+      ],
+      "lo_ids": ["LO-S7.5"],
+      "visual_hint": "최종 Recap 표(2열 6행) + 우하단 'Next: S8 Custom Hook' 화살표",
+      "speaker_affect": "마무리, 다음 섹션으로의 다리를 놓듯 따뜻하게"
+    }
+  ]
+}

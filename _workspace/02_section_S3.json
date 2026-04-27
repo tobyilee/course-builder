@@ -1,0 +1,32 @@
+{
+  "section_id": "S3",
+  "classes": [
+    {
+      "id": "S3.C1",
+      "slug": "01-effect-as-synchronization",
+      "title": "Effect는 라이프사이클이 아니라 동기화다",
+      "lo_ids": ["LO-S3.1"],
+      "duration_min": 12,
+      "depends_on": [],
+      "summary": "useEffect를 'mount/update/unmount 훅'으로 배웠던 멘탈모델을 버리고, '컴포넌트가 살아있는 동안 외부 시스템과의 연결을 유지하는 동기화'라는 정의로 재구성한다. 메시지 한 번 보내기(이벤트) vs 연결 유지하기(Effect) 비유로 차이를 잡고, 비디오 player의 isPlaying ↔ DOM video.play()/pause() 동기화 예제로 'React state와 외부 세계를 일치시키는 도구'라는 핵심 프레이밍을 친근하게 소개한다."
+    },
+    {
+      "id": "S3.C2",
+      "slug": "02-useeffect-signature-deps-cleanup",
+      "title": "useEffect 시그니처, 의존성 배열, cleanup 패턴",
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "duration_min": 14,
+      "depends_on": ["S3.C1"],
+      "summary": "useEffect(setup, deps)의 세 가지 의존성 형태(생략 / [] / [a,b])가 각각 '매 렌더 / 마운트 1회 / 값이 바뀔 때'로 어떻게 매핑되는지 코드로 시연한다. 그다음 cleanup 함수의 '이전 동기화를 멈춘다'라는 의미를 chat connection 예제(connect/disconnect), addEventListener/removeEventListener, fetch race(ignore flag)로 적용해, '연결 → 끊기'가 한 쌍이 되어야 메모리 누수와 중복 구독이 사라진다는 패턴을 손에 익힌다."
+    },
+    {
+      "id": "S3.C3",
+      "slug": "03-strict-mode-double-invoke-and-ref-antipattern",
+      "title": "Strict Mode 더블 호출의 의도와 ref-회피 안티패턴",
+      "lo_ids": ["LO-S3.4"],
+      "duration_min": 14,
+      "depends_on": ["S3.C2"],
+      "summary": "개발 모드에서 Effect가 두 번 실행되어 보이는 현상을 '버그'가 아니라 'cleanup이 정확한지 검증해주는 자동 테스트'로 재해석한다. chat connection이 두 번 연결되는 로그를 보고 ref guard(didMount.current)로 막으려는 흔한 시도가 왜 실제 unmount/remount(탭 전환, route 복귀) 시 누수와 좀비 연결을 남기는 잘못된 처방인지 분석하고, 옳은 처방은 cleanup을 견고하게 만드는 것임을 정리한다."
+    }
+  ]
+}

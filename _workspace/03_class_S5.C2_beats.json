@@ -1,0 +1,147 @@
+{
+  "class_id": "S5.C2",
+  "title": "Reactive vs Non-reactive 값 — Object.is로 판정되는 재실행 흐름",
+  "lo_ids": ["LO-S5.2", "LO-S5.3"],
+  "target_duration_sec": 840,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "deps 배열에 뭘 넣어야 할지 매번 헷갈렸다면, 그건 'reactive가 뭔지'가 흐릿하기 때문",
+        "ChatRoom의 roomId는 deps에 넣어야 하는데, 같은 함수에서 쓰는 serverUrl은 안 넣어도 된다 — 왜?",
+        "이 한 줄 차이가 전체 동기화 흐름을 결정한다"
+      ],
+      "lo_ids": ["LO-S5.2"],
+      "visual_hint": "deps 배열 [roomId, ?] 옆에 물음표 강조. roomId / serverUrl 두 식별자 카드",
+      "speaker_affect": "호기심 유발, 학습자의 흔한 혼동을 짚음"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "Reactive 값: 렌더 중 계산되어 렌더마다 달라질 수 있는 값 → props, state, context, body에서 derived",
+        "Non-reactive 값: 컴포넌트 밖에 선언되어 절대 안 바뀌는 값 → 모듈 상수, 글로벌 URL",
+        "특수 케이스: ref.current는 의도적으로 mutable이라 React가 추적하지 않으므로 non-reactive로 취급",
+        "외부 mutable global(location.pathname 등)도 non-reactive — 필요하면 useSyncExternalStore",
+        "판정 기준: '컴포넌트가 다시 렌더되면 이 값이 다른 값일 수 있나?'에 Yes면 reactive"
+      ],
+      "lo_ids": ["LO-S5.2"],
+      "visual_hint": "2열 표: Reactive(props, state, context, derived) / Non-reactive(모듈 상수, ref.current, 외부 mutable). 각 행에 '의존성 필요?' 컬럼",
+      "speaker_affect": "차분하게 분류, 표를 한 줄씩 읽듯이"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 135,
+      "key_points": [
+        "ChatRoom({ roomId }) 안에서 serverUrl(모듈 상수)과 roomId(prop)를 동시에 사용한다",
+        "deps에는 roomId만 들어간다 — serverUrl은 절대 안 변하므로 React에게 '이걸 추적해줘' 라고 말할 필요가 없다",
+        "만약 serverUrl을 useState로 옮기면? 그 순간 reactive가 되어 deps에 [roomId, serverUrl] 둘 다 필요",
+        "코드를 한 줄 바꾸는 것만으로 '무엇이 reactive인가'가 달라진다는 점이 핵심"
+      ],
+      "lo_ids": ["LO-S5.2"],
+      "examples": [
+        "// ✅ serverUrl은 컴포넌트 밖 상수 → non-reactive",
+        "const serverUrl = 'https://localhost:1234';",
+        "function ChatRoom({ roomId }) {",
+        "  useEffect(() => {",
+        "    const c = createConnection(serverUrl, roomId);",
+        "    c.connect();",
+        "    return () => c.disconnect();",
+        "  }, [roomId]); // serverUrl 생략 OK",
+        "}",
+        "",
+        "// 🔁 state로 만들면 reactive 됨",
+        "const [serverUrl, setServerUrl] = useState('https://...');",
+        "useEffect(() => { ... }, [roomId, serverUrl]); // 둘 다 필수"
+      ],
+      "visual_hint": "두 코드 스니펫을 좌우 비교. 왼쪽 deps=[roomId], 오른쪽 deps=[roomId, serverUrl]. 화살표로 'state로 옮기면 deps에 추가'",
+      "speaker_affect": "친근하게 비교, 핵심 차이 강조"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 180,
+      "key_points": [
+        "React는 매 렌더마다 deps 배열을 보관한다 — 첫 렌더에는 ['general'], 다음 렌더에는 ['travel']",
+        "두 배열의 같은 위치 원소를 Object.is로 한 칸씩 비교한다",
+        "Object.is('general', 'travel') === false → 변경됐다고 판단 → 이전 cleanup → 새 Effect 본체",
+        "전부 true → 아무 일 없음 (재동기화 X)",
+        "원시값은 값 비교, 객체/함수는 참조 비교 — 그래서 '매 렌더 새 객체'는 무한 재동기화의 원인이 된다"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "visual_hint": "두 박스 ['general'] vs ['travel'] 사이에 Object.is 비교 결과 false. 아래로 cleanup → re-run 화살표",
+      "speaker_affect": "강조, 단계 하나하나 끊어서"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 105,
+      "key_points": [
+        "재실행 흐름을 한 컷씩: 1) 사용자 'travel' 클릭 → 부모가 setRoomId('travel') → 리렌더",
+        "2) ChatRoom 함수가 다시 호출되며 새 closure 생성, useEffect의 deps=['travel']",
+        "3) React가 이전 deps ['general']과 Object.is 비교 → 다름",
+        "4) 이전 렌더의 cleanup 실행 → 'general' disconnect",
+        "5) 새 Effect 본체 실행 → 'travel' connect",
+        "6) 결과: UI에서 선택한 방과 연결이 항상 일치"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "examples": [
+        "// 첫 렌더 (roomId='general')",
+        "useEffect(() => { ... }, ['general']);",
+        "",
+        "// 다음 렌더 (roomId='travel')",
+        "useEffect(() => { ... }, ['travel']);",
+        "",
+        "// React 내부:",
+        "// Object.is('general', 'travel') → false",
+        "// → cleanup 'general' → run Effect with 'travel'"
+      ],
+      "visual_hint": "6단계 플로우차트. 사용자 클릭 → setRoomId → 리렌더 → Object.is → cleanup → 재실행. 마지막에 체크마크",
+      "speaker_affect": "친근하게 시간순으로"
+    },
+    {
+      "id": "b6",
+      "type": "teach",
+      "duration_sec": 90,
+      "key_points": [
+        "빈 deps `[]`의 진짜 의미: '이 Effect는 어떤 reactive 값도 안 읽으므로 재동기화가 필요 없다'",
+        "흔한 오해: '한 번만 실행하라는 뜻' — NO. '재동기화 조건이 없다'는 주장",
+        "그래서 안에서 props나 state를 읽고 있으면 linter가 즉시 잡는다 — 거짓말이니까",
+        "정당한 [] 케이스: roomId / serverUrl 둘 다 컴포넌트 밖 const거나, 정말로 외부 reactive 값을 안 읽는 Effect"
+      ],
+      "lo_ids": ["LO-S5.3"],
+      "visual_hint": "[] 옆에 말풍선 '재동기화 안 함' (O), '한 번만 실행' (X로 가위표)",
+      "speaker_affect": "단호하게 오해 정정"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 60,
+      "key_points": [
+        "자문자답: ChatRoom 안에서 const greeting = `Welcome to ${roomId}` 변수를 만들어 Effect에서 쓰면 deps에 뭘 넣어야 할까?",
+        "정답: greeting 자체는 안 넣어도 된다. 그것이 의존하는 reactive 값(roomId)을 넣으면 충분",
+        "보너스: greeting을 deps에 넣어도 무해하나, 매 렌더 새 문자열이지만 값이 같으면 Object.is가 true → 재동기화 안 일어남"
+      ],
+      "lo_ids": ["LO-S5.2", "LO-S5.3"],
+      "visual_hint": "퀴즈 카드 — `const greeting = ...${roomId}...; useEffect(() => use(greeting), [???])`",
+      "speaker_affect": "학습자에게 묻듯, 가볍게"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 45,
+      "key_points": [
+        "Reactive = 렌더마다 달라질 수 있는 값(props/state/derived). Non-reactive = 컴포넌트 밖 상수, ref.current",
+        "React는 deps를 Object.is로 한 칸씩 비교해 cleanup→재실행을 결정한다",
+        "[]는 '한 번 실행'이 아니라 '재동기화 조건 없음'이라는 주장이다"
+      ],
+      "lo_ids": ["LO-S5.2", "LO-S5.3"],
+      "visual_hint": "3줄 요약 카드",
+      "speaker_affect": "정리, 단호하게"
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "section_id": "S2",
+  "items": [
+    {
+      "id": "S2.Q1",
+      "type": "mcq_single",
+      "stem": "다음 코드에서 첫 클릭 시 input에 포커스가 들어가게 하려면 어디에 `inputRef.current.focus()`를 두어야 하는가?\n\n```jsx\nfunction SearchBox() {\n  const inputRef = useRef(null);\n  // ① 여기 (return 위쪽 본문)\n  return (\n    <>\n      <input ref={inputRef} />\n      <button onClick={/* ② 여기 */}>Focus</button>\n    </>\n  );\n}\n```",
+      "choices": [
+        "①번 위치에서 `inputRef.current.focus()` 호출",
+        "②번 위치에서 `() => inputRef.current.focus()` 호출",
+        "JSX의 `ref={...}` 속성에 `inputRef.current.focus`를 직접 전달",
+        "`useRef(null)` 호출 직후 같은 줄에서 `.focus()` 호출"
+      ],
+      "correct": ["B"],
+      "explanation": "ref.current는 commit 이후에야 채워진다. 이벤트 핸들러는 commit 이후 실행되므로 onClick 안에서 안전하게 `.focus()`를 부를 수 있다.",
+      "distractor_rationales": {
+        "A": "흔한 오해: 렌더 본문은 commit 이전이므로 ref.current는 아직 null이다. 첫 렌더에서 즉시 크래시한다.",
+        "C": "ref 속성은 React가 노드 부착에 쓰는 자리이지 메서드 호출 트리거가 아니다.",
+        "D": "useRef 호출 시점에는 DOM이 존재하지 않는다. ref.current는 null이다."
+      },
+      "lo_ids": ["LO-S2.1", "LO-S2.2"],
+      "bloom": "Apply",
+      "difficulty": 2
+    },
+    {
+      "id": "S2.Q2",
+      "type": "mcq_single",
+      "stem": "render → commit → effect 타이밍 모델에서 `ref.current`의 상태로 가장 정확한 설명은?",
+      "choices": [
+        "render phase에서는 이전 렌더의 DOM 노드를 가리키고, commit 이후 새 노드로 바뀐다",
+        "render phase에서는 null이며, commit phase에서 React가 노드를 채워 넣는다. 업데이트 시에는 노드 교체 직전 null로 초기화 후 다시 설정한다",
+        "useRef(null)이 호출된 직후 즉시 DOM 노드가 할당되고 그 이후로는 변하지 않는다",
+        "ref는 React의 reactive 시스템에 등록되므로 ref.current가 바뀌면 컴포넌트가 재렌더된다"
+      ],
+      "correct": ["B"],
+      "explanation": "React는 commit phase에서 DOM을 생성/갱신하며 ref.current를 채운다. 업데이트 시에도 노드 교체 직전 null로 리셋했다가 다시 설정한다 — 그래서 핸들러/Effect에서만 안전하다.",
+      "distractor_rationales": {
+        "A": "render phase에 ref가 '이전 노드를 가리킨다'는 보장은 없다. 업데이트 직전 React가 null로 초기화한다.",
+        "C": "useRef 호출은 단지 `{ current: null }` 객체를 만들 뿐이며, JSX에 부착되어 commit이 일어나야 노드가 들어온다.",
+        "D": "ref.current mutation은 재렌더를 트리거하지 않는다 — 이것이 useState와의 핵심 차이다."
+      },
+      "lo_ids": ["LO-S2.2"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "S2.Q3",
+      "type": "mcq_single",
+      "stem": "투두 리스트에 새 항목을 추가한 직후 자동으로 맨 아래로 스크롤하려고 한다. 다음 핸들러가 한 박자 어긋나 **이전 마지막 항목**으로 스크롤되는 원인은?\n\n```jsx\nfunction handleAdd() {\n  setTodos([...todos, newTodo]);\n  listRef.current.lastChild.scrollIntoView();\n}\n```",
+      "choices": [
+        "`scrollIntoView` 옵션에 `behavior: 'smooth'`가 빠져 있다",
+        "`listRef`가 commit 이전이라 null이기 때문이다",
+        "`setTodos`는 batched라 다음 줄 시점의 DOM은 아직 새 항목 이전 상태이고, 그래서 `lastChild`가 이전 마지막 노드를 가리킨다",
+        "React가 `scrollIntoView`를 비동기로 큐잉하여 다음 tick으로 미루기 때문이다"
+      ],
+      "correct": ["C"],
+      "explanation": "기본적으로 setState는 batched이며 이벤트 핸들러가 끝난 뒤 한 번에 commit된다. 따라서 setTodos 다음 줄에서는 아직 옛 DOM이 보이고 lastChild는 이전 마지막 항목이다. flushSync로 동기 commit을 강제해 해결한다.",
+      "distractor_rationales": {
+        "A": "smooth는 시각 효과일 뿐 어느 노드로 스크롤되는지에는 영향이 없다.",
+        "B": "핸들러는 commit 이후에 실행되므로 listRef.current는 이미 채워져 있다. 문제는 새 자식이 아직 추가되지 않았다는 점이다.",
+        "D": "scrollIntoView는 동기 호출이며 React가 큐잉하지 않는다."
+      },
+      "lo_ids": ["LO-S2.3"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "S2.Q4",
+      "type": "mcq_single",
+      "stem": "위 Q3 문제를 `flushSync`로 고친 코드로 가장 적절한 것은?",
+      "choices": [
+        "```jsx\nimport { flushSync } from 'react';\nfunction handleAdd() {\n  flushSync(setTodos([...todos, newTodo]));\n  listRef.current.lastChild.scrollIntoView();\n}\n```",
+        "```jsx\nimport { flushSync } from 'react-dom';\nfunction handleAdd() {\n  flushSync(() => {\n    setTodos([...todos, newTodo]);\n  });\n  listRef.current.lastChild.scrollIntoView();\n}\n```",
+        "```jsx\nimport { flushSync } from 'react-dom';\nfunction handleAdd() {\n  setTodos([...todos, newTodo]);\n  flushSync(() => {\n    listRef.current.lastChild.scrollIntoView();\n  });\n}\n```",
+        "```jsx\nfunction handleAdd() {\n  setTodos([...todos, newTodo]);\n  setTimeout(() => listRef.current.lastChild.scrollIntoView(), 0);\n}\n```"
+      ],
+      "correct": ["B"],
+      "explanation": "flushSync는 react-dom에서 import하며, 콜백 안에서 호출된 setter를 동기 commit하도록 강제한다. flushSync 다음 줄에서는 새 DOM이 보장되므로 lastChild가 새 항목을 가리킨다.",
+      "distractor_rationales": {
+        "A": "flushSync는 'react'가 아닌 'react-dom'에서 import한다. 또한 인자는 함수여야 하는데 setTodos 호출 결과(undefined)를 넘겼다.",
+        "C": "flushSync로 감싸야 할 것은 setter다. scrollIntoView를 감싸는 것은 효과가 없다.",
+        "D": "setTimeout(..., 0)은 우연히 동작할 수 있지만 batching 보장과 무관한 race를 만든다 — flushSync가 의도가 명시적인 정공법이다."
+      },
+      "lo_ids": ["LO-S2.3"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "S2.Q5",
+      "type": "mcq_multi",
+      "stem": "다음 중 **위험한** ref 사용 패턴을 모두 고르시오. (정답 2개)",
+      "choices": [
+        "JSX에 `<p>Hello</p>`로 그린 노드를 `ref.current.remove()`로 직접 삭제한 뒤, 이후 state로 다시 보이려 한다",
+        "`<div ref={containerRef} />`로 늘 비어 있는 컨테이너를 두고, 그 안쪽에서 D3 라이브러리가 자유롭게 자식을 append/remove한다",
+        "JSX에서 조건부 렌더로 그린 자식 노드를 `parentRef.current.appendChild(newDiv)`로 직접 추가한다",
+        "`isPlaying` state에 따라 Effect 안에서 `videoRef.current.play()` / `.pause()`를 호출한다",
+        "이벤트 핸들러에서 `inputRef.current.focus()`를 호출한다"
+      ],
+      "correct": ["A", "C"],
+      "explanation": "React state와 실제 DOM의 일관성은 React가 JSX로 그린 노드를 우리가 임의로 추가/제거할 때 깨진다. A는 state-DOM 불일치로 충돌, C는 React가 모르는 형제 노드가 끼어들어 reconcile 시 충돌·크래시 발생.",
+      "distractor_rationales": {
+        "B": "안전 영역의 정석. 'JSX에서 늘 비어 있는 컨테이너' 내부는 React가 손대지 않으므로 third-party 라이브러리에 위임 가능하다.",
+        "D": "play/pause는 노드를 추가/제거하지 않는 명령형 메서드 호출일 뿐이다 — 안전.",
+        "E": "focus는 읽기/명령형 호출일 뿐 노드 구조를 바꾸지 않는다 — 안전."
+      },
+      "lo_ids": ["LO-S2.4"],
+      "bloom": "Analyze",
+      "difficulty": 3
+    },
+    {
+      "id": "S2.Q6",
+      "type": "mcq_single",
+      "stem": "React 19 환경에서 자체 디자인 시스템의 `<MyInput />`이 부모에게 ref를 받게 하는 가장 자연스러운 코드는?",
+      "choices": [
+        "```jsx\nconst MyInput = forwardRef(function MyInput(props, ref) {\n  return <input ref={ref} {...props} />;\n});\n```",
+        "```jsx\nfunction MyInput({ ref, ...props }) {\n  return <input ref={ref} {...props} />;\n}\n```",
+        "```jsx\nfunction MyInput(props) {\n  return <input ref={props.ref} {...props} />;\n}\n// 부모에서 <MyInput ref={inputRef} /> — props.ref로 자동 들어옴\n```",
+        "```jsx\nfunction MyInput(props) {\n  const ref = useRef(null);\n  return <input ref={ref} {...props} />;\n}\n```"
+      ],
+      "correct": ["B"],
+      "explanation": "React 19에서는 ref가 일반 prop처럼 동작해 함수 시그니처에서 그대로 분해할 수 있다. forwardRef 래핑이 사라지면서 디자인 시스템 코드가 단순해진다.",
+      "distractor_rationales": {
+        "A": "React 18까지의 정공법. React 19에서 새로 도입할 이유는 없으며 마이그레이션 맥락이 아니라면 더 깔끔한 ref-as-prop을 쓴다.",
+        "C": "React 18 이전에는 ref가 props에 자동으로 들어오지 않는다. React 19부터만 ref가 prop이며, 그때도 분해 패턴이 일반적이다 — 게다가 보기 코드는 컴파일러 경고를 부르는 혼란스러운 형태다.",
+        "D": "자체 ref를 만들면 부모가 외부에서 input에 접근할 수 없다 — 부모의 ref는 무시되며 요구사항을 충족하지 못한다."
+      },
+      "lo_ids": ["LO-S2.5"],
+      "bloom": "Apply",
+      "difficulty": 2
+    },
+    {
+      "id": "S2.Q7",
+      "type": "mcq_single",
+      "stem": "비디오 플레이어 래퍼 `<VideoPlayer ref={...} />`를 설계할 때 부모에게 `play()`와 `pause()`만 노출하고 `currentTime`, `volume` 같은 내부 API는 막고 싶다. 가장 적절한 설계는?",
+      "choices": [
+        "ref를 그냥 내부 `<video>`에 위임한다 — 부모가 알아서 필요한 메서드만 골라 쓰면 된다",
+        "`useImperativeHandle(ref, () => ({ play, pause }))`로 facade를 설계해 외부 노출 표면을 좁힌다",
+        "`useImperativeHandle(ref, () => videoRef.current)`로 video 노드 전체를 그대로 넘기되 문서에 'play/pause만 사용'이라고 적는다",
+        "ref를 받지 않고 `isPlaying` prop만 받아 처리한다 — useImperativeHandle은 어떤 경우에도 도입하지 않는다"
+      ],
+      "correct": ["B"],
+      "explanation": "useImperativeHandle로 부모에게 노출되는 객체를 직접 설계하면, 자식의 내부 구현(예: video를 다른 요소로 교체)을 바꿔도 부모 코드가 깨지지 않는다. '명령형 API의 의도적 좁히기' = 캡슐화 가치를 지키는 선택이다.",
+      "distractor_rationales": {
+        "A": "ref 위임만으로는 부모가 .currentTime, .volume 등 video DOM 전체에 접근하게 되어 캡슐화가 깨진다 — 정확히 막아야 할 상황이다.",
+        "C": "전체 노드를 넘기는 것은 위임과 동일하며 문서화는 강제력이 없다. 코드 레벨에서 막아야 한다.",
+        "D": "재생/정지 같은 인터랙션 결과를 부모가 직접 트리거해야 하는 명령형 시나리오는 useImperativeHandle의 정당한 사용처다. '전혀 쓰지 않는다'는 과잉 일반화."
+      },
+      "lo_ids": ["LO-S2.5"],
+      "bloom": "Evaluate",
+      "difficulty": 3
+    }
+  ],
+  "bloom_distribution": {
+    "Understand": 1,
+    "Apply": 3,
+    "Analyze": 2,
+    "Evaluate": 1
+  }
+}

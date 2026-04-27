@@ -1,0 +1,96 @@
+{
+  "class_id": "S2.C1",
+  "title": "ref={...}로 DOM 만지기 — focus·scroll·measure·play",
+  "lo_ids": ["LO-S2.1", "LO-S2.2"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "검색창에 자동으로 커서가 들어가면 좋겠는데 React만으로는 안 된다",
+        "focus / scrollIntoView / video.play / getBoundingClientRect — 선언형으로 표현이 안 되는 명령형 DOM 작업들",
+        "이런 순간을 위해 React가 남겨둔 escape hatch가 ref={...} 패턴이다"
+      ],
+      "lo_ids": ["LO-S2.1"],
+      "visual_hint": "왼쪽 '선언형으로 가능' 박스(텍스트/색/조건부 렌더) vs 오른쪽 '브라우저 명령형 API 필요' 박스(focus·scroll·play·measure)를 대조하는 다이어그램",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "useRef(null)로 ref 객체를 만들고 JSX에서 ref={myRef}로 노드에 부착",
+        "React가 commit phase에서 myRef.current = DOM node를 채워준다",
+        "ref.current로 표준 DOM API(focus, scrollIntoView, play 등)를 직접 호출",
+        "한 가지 ref는 한 가지 노드 — 동적 리스트라면 Map이나 콜백 ref 패턴이 별도 필요"
+      ],
+      "lo_ids": ["LO-S2.1"],
+      "visual_hint": "코드 좌측: const inputRef = useRef(null) / <input ref={inputRef} /> — 우측에 화살표로 'inputRef.current = <input>' 가리키는 commit-시점 그림",
+      "speaker_affect": "차분하게 설명, 핵심 단어에 가벼운 강조"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 140,
+      "key_points": [
+        "render phase에서는 ref.current가 아직 null — 컴포넌트 함수가 단지 호출되었을 뿐",
+        "commit phase에 와서야 React가 DOM을 만들고 ref.current를 채운다",
+        "그래서 ref는 이벤트 핸들러나 Effect '안에서만' 안전하게 읽는다",
+        "업데이트 시에도 React는 노드를 바꾸기 직전 ref를 null로 초기화했다가 다시 설정한다",
+        "이 타이밍 모델을 머리에 박아두면 '왜 렌더 본문에서 ref를 만지면 안 되는가'가 자연스럽게 설명된다"
+      ],
+      "lo_ids": ["LO-S2.2"],
+      "visual_hint": "타임라인 다이어그램: render(ref.current=null) → commit(DOM mount + ref 설정) → user event/Effect(ref 안전) — 빨간 X와 초록 체크로 안전 영역 표시",
+      "speaker_affect": "강조, 주의를 주는 톤"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "예제 1: 버튼 클릭 → inputRef.current.focus() — '검색창 자동 포커스'",
+        "예제 2: 카탈로그 카드 클릭 → cardRef.current.scrollIntoView({behavior:'smooth', block:'nearest'}) — 부드러운 스크롤",
+        "예제 3: isPlaying 상태에 따라 videoRef.current.play() / .pause() — 선언형 state + 명령형 호출 결합",
+        "공통점: 모두 '이벤트 핸들러' 안에서 ref.current에 접근한다"
+      ],
+      "lo_ids": ["LO-S2.1", "LO-S2.2"],
+      "examples": [
+        "function SearchBox() { const inputRef = useRef(null); return (<><input ref={inputRef}/><button onClick={() => inputRef.current.focus()}>Focus</button></>); }",
+        "cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })",
+        "useEffect(() => { isPlaying ? videoRef.current.play() : videoRef.current.pause(); }, [isPlaying])"
+      ],
+      "visual_hint": "3분할 코드 슬라이드: focus / scrollIntoView / video.play 미니 데모 GIF나 정적 일러스트",
+      "speaker_affect": "활기차게, 데모 보여주듯"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 150,
+      "key_points": [
+        "자문자답: 다음 코드의 console.log(ref.current)가 null인 이유는? — render 중 호출되었기 때문",
+        "고치는 방법은? — useEffect(() => { console.log(ref.current) }, [])로 옮기거나 이벤트 핸들러 안으로",
+        "확장 질문: 컴포넌트 처음 마운트 시 자동으로 input에 포커스를 주려면 어디에 코드를 둬야 하나? — useEffect with [] deps",
+        "자기점검: '내가 ref를 읽는 위치는 commit 이후인가?' 한 줄로 답할 수 있어야 함"
+      ],
+      "lo_ids": ["LO-S2.2"],
+      "visual_hint": "Before/After 미니 코드 카드 — render 안 console.log(빨강) vs useEffect 안 console.log(초록)",
+      "speaker_affect": "차분하게, 잠시 멈춰서 생각하게 유도"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "useRef + ref={...}로 React 관리 DOM 노드를 잡아 focus·scroll·play·measure 같은 명령형 작업을 수행한다",
+        "타이밍: render에는 null, commit 이후 채워짐 → 핸들러/Effect에서만 읽는다",
+        "다음 시간엔 setState 직후 새 DOM을 즉시 읽어야 할 때 쓰는 flushSync, 그리고 직접 DOM 조작이 위험한 이유를 본다"
+      ],
+      "lo_ids": ["LO-S2.1", "LO-S2.2"],
+      "visual_hint": "3줄 bullet 정리 슬라이드 + 다음 class 티저 'flushSync & 위험한 직접 조작'",
+      "speaker_affect": "정리하는 톤, 부드러운 마무리"
+    }
+  ]
+}

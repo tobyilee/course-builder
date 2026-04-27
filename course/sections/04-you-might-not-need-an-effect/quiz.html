@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effect 안 써도 되는 경우 — 12가지 안티패턴 진단 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Effect 안 써도 되는 경우 — 12가지 안티패턴 진단 · 퀴즈</h1>
+  <p class="meta">9 문항 · Bloom: Apply:3, Analyze:2, Evaluate:4</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드의 안티패턴은 12가지 분류 중 어디에 해당하는가?
+
+```tsx
+const [fullName, setFullName] = useState(&#x27;&#x27;);
+useEffect(() =&gt; {
+  setFullName(firstName + &#x27; &#x27; + lastName);
+}, [firstName, lastName]);
+```</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. 외부 store 수동 구독 (#11)</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. props/state로부터 파생되는 값을 Effect+state로 보관 (#1 derived state)</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. 부모에 state 변경 통지 (#9)</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. fetch race condition (#12)</span></label>
+  <div class="explain"><strong>정답: B</strong><br>firstName/lastName은 이미 props/state이고, fullName은 단순 결합으로 render 중에 한 줄로 계산 가능합니다. Effect+state로 보관하면 &#x27;렌더 → Effect → setState → 재렌더&#x27;의 추가 렌더가 발생하는 #1 derived state 안티패턴입니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 외부 store(navigator.onLine 등)가 등장하지 않습니다 — 입력은 모두 React state입니다.</li><li><strong>C.</strong> onChange 같은 부모 콜백 호출이 없으므로 #9가 아닙니다.</li><li><strong>D.</strong> fetch나 비동기 응답 처리가 없으므로 race condition과 무관합니다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>Q1의 코드를 결정 트리에 따라 가장 적절히 리팩터링한 결과는?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> A. const fullName = useMemo(() =&gt; firstName + &#x27; &#x27; + lastName, [firstName, lastName]);</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> B. const fullName = firstName + &#x27; &#x27; + lastName;</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> C. &lt;Profile firstName={firstName} lastName={lastName} key={firstName+lastName} /&gt;로 key 강제 리셋</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> D. useSyncExternalStore로 fullName을 외부 store처럼 노출</span></label>
+  <div class="explain"><strong>정답: B</strong><br>Q1(render 중 계산 가능?)에서 즉시 종료 — 단순 문자열 결합이므로 변수 한 줄이 정답입니다. useMemo는 &#x27;진짜 비싼 계산 + 안정적 deps + 참조 일관성 필요&#x27;의 세 조건이 모두 맞을 때만 의미가 있습니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 문자열 결합은 비싸지 않으므로 useMemo는 코드 복잡도만 늘립니다.</li><li><strong>C.</strong> 리셋이 아니라 단순 파생값입니다. key는 인스턴스 통째 교체용입니다.</li><li><strong>D.</strong> 외부 store가 아닙니다 — React state로부터의 파생값입니다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_multi</span>
+  <h3>useMemo가 &#x27;실제로 의미 있는&#x27; 적용 조건을 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q2" value="A"><span><strong>A.</strong> A. 계산이 진짜 비싸다 (수십~수백 ms 이상)</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="B"><span><strong>B.</strong> B. 의존성 배열의 값들이 매 렌더마다 안정적이다 (새 객체 참조가 아님)</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="C"><span><strong>C.</strong> C. React.memo 자식처럼 참조 일관성이 필요한 하위 트리가 있다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="D"><span><strong>D.</strong> D. 코드 가독성을 위해 모든 파생 변수에 자동 반사적으로 적용한다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="E"><span><strong>E.</strong> E. Effect 안에서 setState로 캐싱하는 대안보다 항상 우선이다</span></label>
+  <div class="explain"><strong>정답: A, B, C</strong><br>useMemo는 (1) 비싼 계산 (2) 안정적 deps (3) 참조 일관성 수요라는 세 조건이 모두 맞을 때만 가치가 있습니다. 비싸지 않은 계산에 두르면 비교 비용·코드 복잡도만 늘고, React Compiler가 자동 메모이즈할 수도 있습니다.<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> 비싸지 않은 계산을 메모이즈하면 비교 비용이 늘고 코드만 복잡해집니다 — 안티패턴입니다.</li><li><strong>E.</strong> 둘 다 보통 안티패턴 후보입니다. &#x27;항상 우선&#x27;이 아니라 측정 후 결정해야 합니다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>Profile 컴포넌트가 userId가 바뀔 때 comment, draft, scrollPos 등 모든 내부 state를 처음 값으로 되돌려야 한다. 다음 처방 중 가장 적절한 것은?</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> A. useEffect(() =&gt; { setComment(&#x27;&#x27;); setDraft(&#x27;&#x27;); setScrollPos(0); }, [userId])</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> B. &lt;Profile userId={userId} key={userId} /&gt;</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> C. const [prevId, setPrevId] = useState(userId); if (userId !== prevId) { setPrevId(userId); setComment(&#x27;&#x27;); setDraft(&#x27;&#x27;); setScrollPos(0); }</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> D. const comment = useMemo(() =&gt; &#x27;&#x27;, [userId])</span></label>
+  <div class="explain"><strong>정답: B</strong><br>전체 리셋이면 key prop으로 인스턴스를 통째로 갈아끼우는 것이 가장 깔끔합니다. state를 추가해도 자동 리셋되고, 깜빡임 없고, dev 더블 마운트 영향도 받지 않습니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 한 번 깜빡이는 추가 렌더, dev 더블 마운트, state 추가 시 리셋 누락 위험 — 안티패턴 #3입니다.</li><li><strong>C.</strong> state-during-render는 &#x27;부분 조정&#x27;에 쓰는 2순위 답입니다. 전체 리셋엔 key가 더 명료합니다.</li><li><strong>D.</strong> useMemo는 값을 리셋하지 않습니다 — state를 변경하지도 않고 의미가 어긋납니다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_single</span>
+  <h3>items 배열이 바뀔 때 selectedId만 무효화하고 싶다. 가장 이상적인(1순위) 처방은?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> A. useEffect(() =&gt; setSelection(null), [items])</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> B. &lt;Component items={items} key={items} /&gt;로 인스턴스 리셋</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> C. selection을 state에서 제거하고 const selection = items.find(i =&gt; i.id === selectedId) ?? null로 derived</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> D. const [prevItems, setPrevItems] = useState(items); if (items !== prevItems) { setPrevItems(items); setSelection(null); }</span></label>
+  <div class="explain"><strong>정답: C</strong><br>1순위는 derived value입니다 — selection을 state로 두지 않고 매 렌더 items.find로 도출하면 동기화 자체가 사라집니다. D(state-during-render)는 derived가 어려운 경우의 2순위, A는 안티패턴 #4, B는 부분이 아니라 전체 리셋용입니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> Effect로 setState하는 처방은 깜빡임·이중 호출·확장성 문제로 마지막 후보입니다.</li><li><strong>B.</strong> 부분 조정인데 컴포넌트 정체성을 통째로 갈아끼우면 다른 state까지 의도치 않게 잃습니다.</li><li><strong>D.</strong> 유효하지만 2순위 — derived가 가능한 상황에서는 state를 유지할 이유가 없습니다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>다음 시나리오들 중 &#x27;Effect가 아니라 이벤트 핸들러에 둬야 하는&#x27; 것을 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q5" value="A"><span><strong>A.</strong> A. 사용자가 &#x27;Submit&#x27; 버튼을 눌렀을 때 폼 데이터를 POST한다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="B"><span><strong>B.</strong> B. 카드 게임에서 &#x27;카드 놓기&#x27; 클릭 시 card·goldCount·round를 차례로 갱신한다 (현재 Effect 3개 체인)</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="C"><span><strong>C.</strong> C. 사용자가 토글을 누르면 setIsOn하고 부모의 onChange(next)를 호출한다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="D"><span><strong>D.</strong> D. 페이지가 표시되면 방문 분석 이벤트를 1회 전송한다</span></label>
+  <label class="choice"><input type="checkbox" name="q5" value="E"><span><strong>E.</strong> E. roomId가 바뀔 때마다 채팅 서버에 connect/disconnect한다</span></label>
+  <div class="explain"><strong>정답: A, B, C</strong><br>A·B·C는 모두 &#x27;사용자가 클릭했기 때문에&#x27; 트리거되는 인터랙션 결과 — #6 폼 제출, #7 계산 체인, #9 부모 통지. D는 &#x27;표시되었기 때문&#x27; → mount-only Effect가 적절(분석 로깅), E는 외부 시스템(채팅 서버) 동기화의 정당한 Effect 사용처입니다.<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> &#x27;페이지 표시 때문&#x27;이라는 트리거이므로 Effect가 정답입니다.</li><li><strong>E.</strong> 외부 시스템(서버) 연결 유지는 Effect의 정당한 사용 — 핸들러에 두면 동기화가 깨집니다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 안티패턴 코드를 한 핸들러로 합쳐 캐스케이딩 재렌더를 제거하려 한다. 가장 적절한 After는?
+
+```tsx
+// Before
+useEffect(() =&gt; { if (card.gold) setGoldCount(g =&gt; g + 1); }, [card]);
+useEffect(() =&gt; { if (goldCount === 3) { setGoldCount(0); setRound(r =&gt; r + 1); } }, [goldCount]);
+```</h3>
+  <label class="choice"><input type="radio" name="q6" value="A"><span><strong>A.</strong> A. 두 Effect의 deps에 [card, goldCount]를 추가해 한 Effect로 합친다</span></label>
+  <label class="choice"><input type="radio" name="q6" value="B"><span><strong>B.</strong> B. handlePlaceCard(nextCard) 핸들러 안에서 setCard, 그리고 nextCard·현재 goldCount를 보고 setGoldCount/setRound을 직접 계산해 호출한다</span></label>
+  <label class="choice"><input type="radio" name="q6" value="C"><span><strong>C.</strong> C. useMemo로 round를 derived value로 만든다</span></label>
+  <label class="choice"><input type="radio" name="q6" value="D"><span><strong>D.</strong> D. setCard 직후 flushSync를 호출해 동기 업데이트를 강제한다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>안티패턴 #7(계산 체인)의 표준 처방은 한 핸들러에서 다음 상태를 직접 계산해 한 번에 setState하는 것입니다. 1회 렌더로 압축되고, 인과 관계가 명확해지며, dev 더블 마운트의 영향도 없습니다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 한 Effect로 합쳐도 여전히 &#x27;표시 트리거&#x27;에 의존하는 캐스케이드는 남고, 마운트/리로드에서도 발화합니다.</li><li><strong>C.</strong> round는 누적 게임 상태이지 단순 파생값이 아닙니다 — useMemo로 만들 수 없습니다.</li><li><strong>D.</strong> flushSync는 새 DOM을 즉시 읽어야 하는 경우(focus·scroll)의 처방이지 체인 정리와 무관합니다.</li></ul></div>
+</div>
+<div class="q" id="q7">
+  <span class="tag">Q8</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>검색어 query와 page에 따라 결과를 가져오는 다음 코드의 race condition을 가장 표준적으로 제거한 After는?
+
+```tsx
+// Before
+useEffect(() =&gt; {
+  fetchResults(query, page).then(setResults);
+}, [query, page]);
+```</h3>
+  <label class="choice"><input type="radio" name="q7" value="A"><span><strong>A.</strong> A. useEffect(() =&gt; { let ignore = false; fetchResults(query, page).then(json =&gt; { if (!ignore) setResults(json); }); return () =&gt; { ignore = true; }; }, [query, page]);</span></label>
+  <label class="choice"><input type="radio" name="q7" value="B"><span><strong>B.</strong> B. useEffect(() =&gt; { fetchResults(query, page).then(setResults); }, []) — deps를 비워 첫 렌더에만 호출</span></label>
+  <label class="choice"><input type="radio" name="q7" value="C"><span><strong>C.</strong> C. const results = useMemo(() =&gt; fetchResults(query, page), [query, page]) — Promise를 메모이즈</span></label>
+  <label class="choice"><input type="radio" name="q7" value="D"><span><strong>D.</strong> D. useSyncExternalStore(subscribe, () =&gt; fetchResults(query, page)) — 외부 store처럼 다룬다</span></label>
+  <div class="explain"><strong>정답: A</strong><br>fetch in Effect의 race condition 표준 처방은 ignore flag cleanup입니다. cleanup이 ignore=true로 스위치를 켜서 늦게 도착한 응답을 폐기 — &#x27;a&#x27;/&#x27;ab&#x27;/&#x27;abc&#x27; 빠르게 입력해도 stale 결과가 화면에 박히지 않습니다. 다음 단계로 useData 커스텀 훅 캡슐화가 옵니다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> deps []는 query/page가 바뀌어도 재요청하지 않아 검색 자체가 동작하지 않습니다.</li><li><strong>C.</strong> useMemo는 Promise를 캐시할 뿐 해결되지 않은 비동기 race를 풀어주지 않으며, 렌더 중 fetch는 React 모델 위반입니다.</li><li><strong>D.</strong> useSyncExternalStore는 즉시 동기로 snapshot을 반환해야 합니다 — 비동기 fetch 결과는 그 모델에 맞지 않습니다.</li></ul></div>
+</div>
+<div class="q" id="q8">
+  <span class="tag">Q9</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">short_answer</span>
+  <h3>다음 세 시나리오 각각에 대해, S4의 결정 트리(Q1 render 중 계산 / Q2 useMemo / Q3 핸들러 / Q4 key·state-during-render·derived / Q5 useSyncExternalStore·useData) 중 어떤 도구를 선택할지와 그 이유를 한 문장씩 정당화하시오.
+
+(1) 헤더와 푸터 양쪽에서 navigator.onLine을 표시한다.
+(2) 메뉴 항목을 클릭하면 라우트를 변경하고 동시에 분석 이벤트를 보낸다.
+(3) 정렬 기준 sort prop이 바뀔 때 페이지 번호 page만 1로 되돌린다.</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain">모범답안:
+(1) **useSyncExternalStore** — navigator.onLine은 React 외부 store. 두 컴포넌트가 같은 hook(useOnlineStatus)을 호출하면 React가 tearing 없이 일관성을 보장하고, getServerSnapshot으로 SSR도 안전. 수동 useEffect+addEventListener는 #11 안티패턴.
+(2) **이벤트 핸들러** — 둘 다 &#x27;메뉴 클릭 때문에&#x27; 발생하는 인터랙션 결과. 한 핸들러에서 navigate(...)와 trackEvent(...)를 함께 호출. 분석을 Effect에 두면 리로드/뒤로가기 같은 표시 트리거에서도 발화하는 #6 안티패턴.
+(3) **state-during-render(2순위)** 또는 **derived(가능하면 1순위)** — 부분 조정. const [prevSort, setPrevSort] = useState(sort); if (sort !== prevSort) { setPrevSort(sort); setPage(1); }. page를 derived로 만들 수 없다면(사용자가 직접 페이지를 넘기는 state) state-during-render가 적절. Effect로 setPage(1)을 부르면 #4 안티패턴.<strong>채점 기준:</strong><ul><li>criteria</li><li>full_credit</li><li>partial_credit</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S4.Q1", "type": "mcq_single", "stem": "다음 코드의 안티패턴은 12가지 분류 중 어디에 해당하는가?\n\n```tsx\nconst [fullName, setFullName] = useState('');\nuseEffect(() => {\n  setFullName(firstName + ' ' + lastName);\n}, [firstName, lastName]);\n```", "choices": ["A. 외부 store 수동 구독 (#11)", "B. props/state로부터 파생되는 값을 Effect+state로 보관 (#1 derived state)", "C. 부모에 state 변경 통지 (#9)", "D. fetch race condition (#12)"], "correct": ["B"], "explanation": "firstName/lastName은 이미 props/state이고, fullName은 단순 결합으로 render 중에 한 줄로 계산 가능합니다. Effect+state로 보관하면 '렌더 → Effect → setState → 재렌더'의 추가 렌더가 발생하는 #1 derived state 안티패턴입니다.", "distractor_rationales": {"A": "외부 store(navigator.onLine 등)가 등장하지 않습니다 — 입력은 모두 React state입니다.", "C": "onChange 같은 부모 콜백 호출이 없으므로 #9가 아닙니다.", "D": "fetch나 비동기 응답 처리가 없으므로 race condition과 무관합니다."}, "lo_ids": ["LO-S4.1"], "bloom": "Analyze", "difficulty": 2}, {"id": "S4.Q2", "type": "mcq_single", "stem": "Q1의 코드를 결정 트리에 따라 가장 적절히 리팩터링한 결과는?", "choices": ["A. const fullName = useMemo(() => firstName + ' ' + lastName, [firstName, lastName]);", "B. const fullName = firstName + ' ' + lastName;", "C. <Profile firstName={firstName} lastName={lastName} key={firstName+lastName} />로 key 강제 리셋", "D. useSyncExternalStore로 fullName을 외부 store처럼 노출"], "correct": ["B"], "explanation": "Q1(render 중 계산 가능?)에서 즉시 종료 — 단순 문자열 결합이므로 변수 한 줄이 정답입니다. useMemo는 '진짜 비싼 계산 + 안정적 deps + 참조 일관성 필요'의 세 조건이 모두 맞을 때만 의미가 있습니다.", "distractor_rationales": {"A": "문자열 결합은 비싸지 않으므로 useMemo는 코드 복잡도만 늘립니다.", "C": "리셋이 아니라 단순 파생값입니다. key는 인스턴스 통째 교체용입니다.", "D": "외부 store가 아닙니다 — React state로부터의 파생값입니다."}, "lo_ids": ["LO-S4.2"], "bloom": "Apply", "difficulty": 2}, {"id": "S4.Q3", "type": "mcq_multi", "stem": "useMemo가 '실제로 의미 있는' 적용 조건을 모두 고르시오. (정답 3개)", "choices": ["A. 계산이 진짜 비싸다 (수십~수백 ms 이상)", "B. 의존성 배열의 값들이 매 렌더마다 안정적이다 (새 객체 참조가 아님)", "C. React.memo 자식처럼 참조 일관성이 필요한 하위 트리가 있다", "D. 코드 가독성을 위해 모든 파생 변수에 자동 반사적으로 적용한다", "E. Effect 안에서 setState로 캐싱하는 대안보다 항상 우선이다"], "correct": ["A", "B", "C"], "explanation": "useMemo는 (1) 비싼 계산 (2) 안정적 deps (3) 참조 일관성 수요라는 세 조건이 모두 맞을 때만 가치가 있습니다. 비싸지 않은 계산에 두르면 비교 비용·코드 복잡도만 늘고, React Compiler가 자동 메모이즈할 수도 있습니다.", "distractor_rationales": {"D": "비싸지 않은 계산을 메모이즈하면 비교 비용이 늘고 코드만 복잡해집니다 — 안티패턴입니다.", "E": "둘 다 보통 안티패턴 후보입니다. '항상 우선'이 아니라 측정 후 결정해야 합니다."}, "lo_ids": ["LO-S4.2"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S4.Q4", "type": "mcq_single", "stem": "Profile 컴포넌트가 userId가 바뀔 때 comment, draft, scrollPos 등 모든 내부 state를 처음 값으로 되돌려야 한다. 다음 처방 중 가장 적절한 것은?", "choices": ["A. useEffect(() => { setComment(''); setDraft(''); setScrollPos(0); }, [userId])", "B. <Profile userId={userId} key={userId} />", "C. const [prevId, setPrevId] = useState(userId); if (userId !== prevId) { setPrevId(userId); setComment(''); setDraft(''); setScrollPos(0); }", "D. const comment = useMemo(() => '', [userId])"], "correct": ["B"], "explanation": "전체 리셋이면 key prop으로 인스턴스를 통째로 갈아끼우는 것이 가장 깔끔합니다. state를 추가해도 자동 리셋되고, 깜빡임 없고, dev 더블 마운트 영향도 받지 않습니다.", "distractor_rationales": {"A": "한 번 깜빡이는 추가 렌더, dev 더블 마운트, state 추가 시 리셋 누락 위험 — 안티패턴 #3입니다.", "C": "state-during-render는 '부분 조정'에 쓰는 2순위 답입니다. 전체 리셋엔 key가 더 명료합니다.", "D": "useMemo는 값을 리셋하지 않습니다 — state를 변경하지도 않고 의미가 어긋납니다."}, "lo_ids": ["LO-S4.3"], "bloom": "Evaluate", "difficulty": 2}, {"id": "S4.Q5", "type": "mcq_single", "stem": "items 배열이 바뀔 때 selectedId만 무효화하고 싶다. 가장 이상적인(1순위) 처방은?", "choices": ["A. useEffect(() => setSelection(null), [items])", "B. <Component items={items} key={items} />로 인스턴스 리셋", "C. selection을 state에서 제거하고 const selection = items.find(i => i.id === selectedId) ?? null로 derived", "D. const [prevItems, setPrevItems] = useState(items); if (items !== prevItems) { setPrevItems(items); setSelection(null); }"], "correct": ["C"], "explanation": "1순위는 derived value입니다 — selection을 state로 두지 않고 매 렌더 items.find로 도출하면 동기화 자체가 사라집니다. D(state-during-render)는 derived가 어려운 경우의 2순위, A는 안티패턴 #4, B는 부분이 아니라 전체 리셋용입니다.", "distractor_rationales": {"A": "Effect로 setState하는 처방은 깜빡임·이중 호출·확장성 문제로 마지막 후보입니다.", "B": "부분 조정인데 컴포넌트 정체성을 통째로 갈아끼우면 다른 state까지 의도치 않게 잃습니다.", "D": "유효하지만 2순위 — derived가 가능한 상황에서는 state를 유지할 이유가 없습니다."}, "lo_ids": ["LO-S4.3"], "bloom": "Evaluate", "difficulty": 3}, {"id": "S4.Q6", "type": "mcq_multi", "stem": "다음 시나리오들 중 'Effect가 아니라 이벤트 핸들러에 둬야 하는' 것을 모두 고르시오. (정답 3개)", "choices": ["A. 사용자가 'Submit' 버튼을 눌렀을 때 폼 데이터를 POST한다", "B. 카드 게임에서 '카드 놓기' 클릭 시 card·goldCount·round를 차례로 갱신한다 (현재 Effect 3개 체인)", "C. 사용자가 토글을 누르면 setIsOn하고 부모의 onChange(next)를 호출한다", "D. 페이지가 표시되면 방문 분석 이벤트를 1회 전송한다", "E. roomId가 바뀔 때마다 채팅 서버에 connect/disconnect한다"], "correct": ["A", "B", "C"], "explanation": "A·B·C는 모두 '사용자가 클릭했기 때문에' 트리거되는 인터랙션 결과 — #6 폼 제출, #7 계산 체인, #9 부모 통지. D는 '표시되었기 때문' → mount-only Effect가 적절(분석 로깅), E는 외부 시스템(채팅 서버) 동기화의 정당한 Effect 사용처입니다.", "distractor_rationales": {"D": "'페이지 표시 때문'이라는 트리거이므로 Effect가 정답입니다.", "E": "외부 시스템(서버) 연결 유지는 Effect의 정당한 사용 — 핸들러에 두면 동기화가 깨집니다."}, "lo_ids": ["LO-S4.4"], "bloom": "Analyze", "difficulty": 3}, {"id": "S4.Q7", "type": "mcq_single", "stem": "다음 안티패턴 코드를 한 핸들러로 합쳐 캐스케이딩 재렌더를 제거하려 한다. 가장 적절한 After는?\n\n```tsx\n// Before\nuseEffect(() => { if (card.gold) setGoldCount(g => g + 1); }, [card]);\nuseEffect(() => { if (goldCount === 3) { setGoldCount(0); setRound(r => r + 1); } }, [goldCount]);\n```", "choices": ["A. 두 Effect의 deps에 [card, goldCount]를 추가해 한 Effect로 합친다", "B. handlePlaceCard(nextCard) 핸들러 안에서 setCard, 그리고 nextCard·현재 goldCount를 보고 setGoldCount/setRound을 직접 계산해 호출한다", "C. useMemo로 round를 derived value로 만든다", "D. setCard 직후 flushSync를 호출해 동기 업데이트를 강제한다"], "correct": ["B"], "explanation": "안티패턴 #7(계산 체인)의 표준 처방은 한 핸들러에서 다음 상태를 직접 계산해 한 번에 setState하는 것입니다. 1회 렌더로 압축되고, 인과 관계가 명확해지며, dev 더블 마운트의 영향도 없습니다.", "distractor_rationales": {"A": "한 Effect로 합쳐도 여전히 '표시 트리거'에 의존하는 캐스케이드는 남고, 마운트/리로드에서도 발화합니다.", "C": "round는 누적 게임 상태이지 단순 파생값이 아닙니다 — useMemo로 만들 수 없습니다.", "D": "flushSync는 새 DOM을 즉시 읽어야 하는 경우(focus·scroll)의 처방이지 체인 정리와 무관합니다."}, "lo_ids": ["LO-S4.4"], "bloom": "Apply", "difficulty": 3}, {"id": "S4.Q8", "type": "mcq_single", "stem": "검색어 query와 page에 따라 결과를 가져오는 다음 코드의 race condition을 가장 표준적으로 제거한 After는?\n\n```tsx\n// Before\nuseEffect(() => {\n  fetchResults(query, page).then(setResults);\n}, [query, page]);\n```", "choices": ["A. useEffect(() => { let ignore = false; fetchResults(query, page).then(json => { if (!ignore) setResults(json); }); return () => { ignore = true; }; }, [query, page]);", "B. useEffect(() => { fetchResults(query, page).then(setResults); }, []) — deps를 비워 첫 렌더에만 호출", "C. const results = useMemo(() => fetchResults(query, page), [query, page]) — Promise를 메모이즈", "D. useSyncExternalStore(subscribe, () => fetchResults(query, page)) — 외부 store처럼 다룬다"], "correct": ["A"], "explanation": "fetch in Effect의 race condition 표준 처방은 ignore flag cleanup입니다. cleanup이 ignore=true로 스위치를 켜서 늦게 도착한 응답을 폐기 — 'a'/'ab'/'abc' 빠르게 입력해도 stale 결과가 화면에 박히지 않습니다. 다음 단계로 useData 커스텀 훅 캡슐화가 옵니다.", "distractor_rationales": {"B": "deps []는 query/page가 바뀌어도 재요청하지 않아 검색 자체가 동작하지 않습니다.", "C": "useMemo는 Promise를 캐시할 뿐 해결되지 않은 비동기 race를 풀어주지 않으며, 렌더 중 fetch는 React 모델 위반입니다.", "D": "useSyncExternalStore는 즉시 동기로 snapshot을 반환해야 합니다 — 비동기 fetch 결과는 그 모델에 맞지 않습니다."}, "lo_ids": ["LO-S4.5"], "bloom": "Apply", "difficulty": 3}, {"id": "S4.Q9", "type": "short_answer", "stem": "다음 세 시나리오 각각에 대해, S4의 결정 트리(Q1 render 중 계산 / Q2 useMemo / Q3 핸들러 / Q4 key·state-during-render·derived / Q5 useSyncExternalStore·useData) 중 어떤 도구를 선택할지와 그 이유를 한 문장씩 정당화하시오.\n\n(1) 헤더와 푸터 양쪽에서 navigator.onLine을 표시한다.\n(2) 메뉴 항목을 클릭하면 라우트를 변경하고 동시에 분석 이벤트를 보낸다.\n(3) 정렬 기준 sort prop이 바뀔 때 페이지 번호 page만 1로 되돌린다.", "correct": [], "explanation": "모범답안:\n(1) **useSyncExternalStore** — navigator.onLine은 React 외부 store. 두 컴포넌트가 같은 hook(useOnlineStatus)을 호출하면 React가 tearing 없이 일관성을 보장하고, getServerSnapshot으로 SSR도 안전. 수동 useEffect+addEventListener는 #11 안티패턴.\n(2) **이벤트 핸들러** — 둘 다 '메뉴 클릭 때문에' 발생하는 인터랙션 결과. 한 핸들러에서 navigate(...)와 trackEvent(...)를 함께 호출. 분석을 Effect에 두면 리로드/뒤로가기 같은 표시 트리거에서도 발화하는 #6 안티패턴.\n(3) **state-during-render(2순위)** 또는 **derived(가능하면 1순위)** — 부분 조정. const [prevSort, setPrevSort] = useState(sort); if (sort !== prevSort) { setPrevSort(sort); setPage(1); }. page를 derived로 만들 수 없다면(사용자가 직접 페이지를 넘기는 state) state-during-render가 적절. Effect로 setPage(1)을 부르면 #4 안티패턴.", "distractor_rationales": {}, "rubric": {"criteria": ["(1) useSyncExternalStore를 지목하고 tearing/SSR 일관성을 이유로 제시 (1점)", "(2) 이벤트 핸들러를 지목하고 '클릭 트리거'를 이유로 제시 (1점)", "(3) state-during-render 또는 derived를 지목하고 '부분 조정/Effect 안티패턴 회피'를 이유로 제시 (1점)", "각 시나리오에서 도구 이름이 결정 트리의 leaf와 정확히 일치 (1점)"], "full_credit": "3개 시나리오 모두 도구 + 한 문장 정당화가 정확", "partial_credit": "2개 정답 시 부분 점수, 도구는 맞으나 이유가 모호하면 절반 점수"}, "lo_ids": ["LO-S4.6", "LO-S4.5"], "bloom": "Evaluate", "difficulty": 4}];
+const NEXT_HREF = "../05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/player.html";
+const NEXT_TITLE = "컴포넌트 라이프사이클 vs Effect 라이프사이클 — 매 렌더가 자기 closure";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

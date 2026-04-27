@@ -1,0 +1,188 @@
+[slide 1]
+자, 이번 클래스는 실전 추출 편입니다.
+[pause:300]
+지난 시간엔 왜 Custom Hook을 만드는가, 그 원칙을 봤죠.
+[pause:400]
+오늘은 어떻게 만드는가, 손으로 따라가 봅니다.
+[pause:500]
+세 가지 케이스를 난이도 사다리처럼 올라갈 거예요.
+[pause:400]
+유즈온라인스테이터스는 인자가 없는 가장 단순한 형태입니다.
+[pause:300]
+유즈폼인풋은 인자도 받고 객체로 반환하는 한 단계 위 형태고요.
+[pause:300]
+유즈챗룸은 reactive 값에 핸들러까지 받는 끝판입니다.
+[pause:500]
+마지막에 함정이 하나 있어요.
+[pause:300]
+핸들러를 그냥 deps에 넣으면 매 렌더마다 채팅방이 끊겼다 다시 연결됩니다.
+[pause:400]
+이걸 useEffectEvent로 푸는 패턴까지 다룹니다.
+[pause:400]
+오늘 끝나면 도메인 의미가 있는 훅을 직접 설계할 수 있게 됩니다.
+[pause:600]
+
+[slide 2]
+첫 번째, 유즈폼인풋부터 봅시다.
+[pause:400]
+함수에 initial이라는 인자를 받아요.
+[pause:300]
+안에서 유즈스테이트로 value와 setValue를 만들고, initial로 초기화합니다.
+[pause:400]
+그리고 객체를 반환해요. value 키와 onChange 키 두 개를 담아서요.
+[pause:300]
+onChange는 이벤트를 받아 setValue를 e.target.value로 호출합니다.
+[pause:500]
+사용처를 보시죠.
+[pause:300]
+const firstName에 유즈폼인풋 호출 결과를 받습니다. 인자로 'Mary'를 넘기고요.
+[pause:400]
+그다음 input 태그에 중괄호 스프레드로 firstName을 펼치면, value와 onChange가 한 번에 꽂힙니다.
+[pause:500]
+이 패턴의 가치가 뭘까요.
+[pause:300]
+같은 폼에 input이 다섯 개 있어도, 유즈스테이트와 onChange 핸들러를 다섯 번 쓰지 않아요.
+[pause:400]
+한 줄씩으로 압축됩니다.
+[pause:500]
+반환을 객체로 한 이유도 짚고 가요.
+[pause:300]
+호출처에서 firstName.value, firstName.onChange를 따로 쓸 수도 있고, 스프레드로 펼칠 수도 있습니다.
+[pause:400]
+둘 다 가능하게 설계한 거예요.
+[pause:500]
+그리고 다시 강조합니다.
+[pause:400]
+firstName과 lastName은 각자 독립된 useState slot입니다.
+[pause:300]
+한 input에 타이핑한다고 다른 input이 갱신되지 않아요. 지난 시간 원칙 그대로입니다.
+[pause:600]
+
+[slide 3]
+다음은 유즈챗룸의 요구사항을 정리합시다.
+[pause:400]
+roomId가 바뀌면 재연결해야 합니다. 이건 reactive한 값이죠.
+[pause:400]
+serverUrl이 바뀌어도 재연결해야 합니다. 역시 reactive입니다.
+[pause:500]
+그런데 onReceiveMessage 핸들러는 매 렌더마다 새 함수가 만들어지더라도, 재연결되면 안 됩니다.
+[pause:500]
+왜 그럴까요.
+[pause:400]
+부모가 리렌더할 때마다 화살표 함수로 만든 onReceiveMessage는 새 참조를 갖습니다.
+[pause:400]
+만약 이걸 deps에 넣어두면, 매 렌더마다 connect와 disconnect가 폭주해요.
+[pause:500]
+그렇다고 deps에서 빼면 어떻게 될까요.
+[pause:400]
+ESLint exhaustive-deps가 경고를 띄우고, stale closure 때문에 옛날 핸들러를 호출할 위험이 생깁니다.
+[pause:500]
+해법은 이겁니다.
+[pause:400]
+핸들러는 reactive하지 않다는 의도를 React에 알려주는 도구, useEffectEvent로 wrap하는 거예요.
+[pause:500]
+S6에서 배운 useEffectEvent를 이번엔 Custom Hook 안에서 씁니다.
+[pause:400]
+사용처가 아니라 훅 정의 안에 위치시키는 게 핵심입니다.
+[pause:600]
+
+[slide 4]
+유즈챗룸 코드를 한 줄씩 짚어봅시다.
+[pause:400]
+함수가 객체 인자를 받아요. serverUrl, roomId, onReceiveMessage 세 개를 구조분해합니다.
+[pause:500]
+첫 줄에서 onMessage라는 변수에 useEffectEvent로 onReceiveMessage를 wrap합니다.
+[pause:500]
+그다음 유즈이펙트 안에서 createConnection을 호출해 c라는 연결 객체를 만들어요.
+[pause:300]
+options에는 serverUrl과 roomId를 담습니다.
+[pause:400]
+c.connect를 부르고, c.on으로 message 이벤트에 콜백을 답니다.
+[pause:300]
+콜백 안에서 onMessage를 호출해요.
+[pause:400]
+cleanup으로는 c.disconnect를 반환합니다.
+[pause:500]
+그리고 deps 배열을 보세요.
+[pause:300]
+roomId와 serverUrl 두 개만 있습니다.
+[pause:400]
+onReceiveMessage는 들어가지 않아요. useEffectEvent로 감쌌으니까요.
+[pause:500]
+사용처는 어떻게 보일까요.
+[pause:400]
+유즈챗룸을 호출하면서 roomId, serverUrl, 그리고 onReceiveMessage 콜백을 객체로 넘깁니다.
+[pause:300]
+콜백 안에서는 showNotification으로 새 메시지 알림을 띄우고요.
+[pause:500]
+호출하는 컴포넌트는 useEffectEvent의 존재를 몰라도 됩니다. 캡슐화된 거예요.
+[pause:500]
+검증 시나리오를 떠올려 봅시다.
+[pause:400]
+부모가 무관한 state를 백 번 set해도 connect는 한 번만 일어납니다.
+[pause:400]
+roomId가 general에서 random으로 바뀌면 cleanup 후 재연결됩니다.
+[pause:300]
+정확히 의도한 시점에만 재동기화돼요.
+[pause:500]
+한 줄로 정리하죠.
+[pause:300]
+reactive 값은 인자에서 deps로 흐르고, 핸들러는 인자에서 useEffectEvent로 wrap됩니다.
+[pause:600]
+
+[slide 5]
+보너스로 유즈온라인스테이터스를 다시 봅시다.
+[pause:400]
+인자도 없고, 반환은 boolean 하나예요.
+[pause:400]
+가장 단순한 형태도 같은 패턴을 따릅니다. 유즈스테이트, 유즈이펙트, cleanup이요.
+[pause:500]
+세 훅을 표로 비교해 봅시다.
+[pause:400]
+유즈온라인스테이터스, 인자 없음, 반환은 boolean. Effect 있음. 핸들러 wrap 없음.
+[pause:500]
+유즈폼인풋, 인자는 initial. 반환은 value와 onChange를 담은 객체. Effect 없음. 핸들러 wrap 없음.
+[pause:500]
+유즈챗룸, 인자는 serverUrl, roomId, onReceiveMessage 객체. 반환 없음. Effect 있음. useEffectEvent 사용.
+[pause:500]
+패턴이 보이시죠.
+[pause:400]
+필요한 만큼만, 도메인이 요구하는 모양으로 인자와 반환을 설계하는 겁니다.
+[pause:600]
+
+[slide 6]
+직접 답해볼 시간입니다.
+[pause:400]
+첫째, 유즈챗룸의 deps에 onReceiveMessage를 넣으면 어떤 증상이 보일까요.
+[pause:500]
+부모가 리렌더할 때마다 채팅이 끊겼다 다시 연결됩니다. 그 사이 새 메시지가 누락될 수 있고요.
+[pause:500]
+둘째, useEffectEvent로 감싼 onMessage를 deps에 넣어도 될까요.
+[pause:500]
+안 됩니다. Effect Event는 deps에 등장 금지가 규칙이에요. linter가 막아줍니다.
+[pause:500]
+셋째, 유즈폼인풋처럼 Effect가 없는 훅은 그냥 일반 함수로 만들어도 되지 않을까요.
+[pause:500]
+안 됩니다. 유즈스테이트를 호출하니까 반드시 훅이어야 해요. use 접두사가 정당합니다.
+[pause:500]
+넷째, 유즈챗룸 안에서 useEffectEvent 대신 useCallback을 쓰면 어떻게 될까요.
+[pause:500]
+useCallback은 deps가 같을 때만 같은 참조를 보장합니다.
+[pause:400]
+핸들러가 의존하는 값이 바뀌면 여전히 deps가 오염돼요. 의도가 다른 도구입니다.
+[pause:600]
+
+[slide 7]
+오늘의 세 줄 정리입니다.
+[pause:400]
+첫째, 유즈폼인풋처럼 도메인 의미가 있는 훅은 호출처를 한 줄로 줄여줍니다.
+[pause:500]
+둘째, reactive 값인 roomId, serverUrl은 인자에서 deps로 흐릅니다.
+[pause:300]
+핸들러는 인자에서 useEffectEvent로 wrap합니다.
+[pause:500]
+셋째, useEffectEvent는 호출하는 컴포넌트가 모르는 채로 훅 안에 캡슐화됩니다.
+[pause:300]
+사용처는 평범한 콜백만 넘기면 끝이에요.
+[pause:500]
+다음 클래스에서는 언제 추출할지 말지를 가르고, composition으로 미래 API에 대비하는 법을 봅니다.

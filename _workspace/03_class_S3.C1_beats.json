@@ -1,0 +1,105 @@
+{
+  "class_id": "S3.C1",
+  "title": "Effect는 라이프사이클이 아니라 동기화다",
+  "lo_ids": ["LO-S3.1"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "'useEffect = mount/update/unmount 훅'으로 외운 분, 솔직히 손!",
+        "그 멘탈모델로는 '왜 두 번 실행돼?', '의존성 뭐 넣지?' 같은 질문에 매번 막힌다",
+        "오늘은 정의 자체를 바꾼다 — Effect는 라이프사이클이 아니라 '동기화'다"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "왼쪽엔 'mount/update/unmount' 라벨 붙은 옛 멘탈모델, 오른쪽엔 'sync' 라벨이 붙은 새 멘탈모델 — 가운데 화살표로 패러다임 전환",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "Effect는 '렌더링 자체가 일으키는 부수효과' — 이벤트 핸들러도, 순수 렌더 코드도 아님",
+        "라이프사이클 비유가 위험한 이유: '한 번만 실행돼야 해'라는 잘못된 직관을 만든다",
+        "더 나은 정의: '컴포넌트가 화면에 떠 있는 동안 외부 시스템과의 연결을 유지하는 코드'",
+        "'외부 시스템'의 예: DOM 노드, 서버 connection, 타이머, 구독, 브라우저 API"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "삼각 벤다이어그램: '순수 렌더', '이벤트 핸들러', 'Effect(외부 동기화)' 세 영역이 겹치지 않게 분리 — 각각 한 줄 정의 라벨",
+      "speaker_affect": "차분하게 정의 재구성"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "핵심 비유: 친구에게 '메시지 한 번 보내기' vs '전화 연결을 유지하기'",
+        "메시지 보내기 = 이벤트 핸들러 — 특정 클릭/입력에 반응해 1회 실행",
+        "연결 유지 = Effect — 어떤 인터랙션이든 '컴포넌트가 보이는 동안' 상태가 일치하도록 계속 동기화",
+        "그래서 '언제 실행되나'가 아니라 '무엇과 무엇을 동기화하나'를 먼저 묻는다"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "두 칸 비교: 왼쪽 '버튼 → 메시지 1통(이벤트)', 오른쪽 '컴포넌트 살아있는 동안 ⇄ 서버 연결 유지(Effect)' — 점선 화살표는 '계속 동기화' 표현",
+      "speaker_affect": "비유 강조, 친근하게"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 180,
+      "key_points": [
+        "VideoPlayer 컴포넌트: prop isPlaying ↔ DOM <video>의 play()/pause() 상태를 일치시킨다",
+        "렌더 중에 ref.current.play()를 호출하면? null이라 폭발 — DOM은 commit 후에야 존재",
+        "정답: useEffect(() => { isPlaying ? ref.current.play() : ref.current.pause(); }, [isPlaying])",
+        "여기서 핵심 — '매 인터랙션'이 아니라 'isPlaying 값과 DOM 상태가 어긋날 때마다' 동기화한다",
+        "재생/일시정지 토글뿐 아니라 다른 prop 변경으로 재렌더돼도 isPlaying이 같으면 아무 일도 안 일어남"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "VideoPlayer 코드 스니펫과 함께 좌측 'React state(isPlaying)' ↔ 우측 'DOM <video>' 양방향 화살표, 그 위에 'useEffect로 동기화' 라벨",
+      "speaker_affect": "예시 풀어 설명, 또박또박"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "대조 케이스: '메시지 보내기 버튼' — 이건 Effect가 아니다",
+        "버튼 클릭 시점이 트리거이므로 onClick 핸들러에 들어가야 정상",
+        "만약 useEffect에 넣으면? 다른 prop 변경으로 재렌더될 때마다 메시지가 나가버린다(중복 발송)",
+        "판별 질문: '이 동작은 사용자 액션 때문인가, 아니면 화면이 떠 있어서인가?'"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "Before/After 두 칸 — Before: useEffect 안의 sendMessage(빨간 X), After: onClick={sendMessage}(초록 체크)",
+      "speaker_affect": "대조 강조, 경고 톤 살짝"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "자문자답 1: '구매 완료 알림 토스트' — Effect? 핸들러? (정답: 핸들러, 클릭 액션이 트리거)",
+        "자문자답 2: '채팅방에 들어가면 서버에 연결 유지' — Effect? 핸들러? (정답: Effect, '보이는 동안' 유지)",
+        "자문자답 3: 'isOpen이 true일 때 모달의 첫 input에 focus' — Effect? 핸들러? (정답: Effect, isOpen ↔ DOM focus 동기화)"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "체크리스트 카드 3장 — 각 시나리오 한 줄 + '이벤트/Effect' 토글 아이콘",
+      "speaker_affect": "잠깐 멈춤 유도, 친근하게"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "Effect는 라이프사이클 훅이 아니라 '외부 시스템과의 동기화'다",
+        "비유: 메시지 1통(이벤트) vs 연결 유지(Effect) — '왜 실행돼야 하나'를 먼저 물어라",
+        "VideoPlayer에서 봤듯, React state ↔ 외부 세계가 어긋날 때마다 자동으로 맞추는 도구",
+        "다음 시간엔 이 동기화를 '정확히 언제 다시 돌릴지' 결정하는 의존성 배열과 cleanup으로 들어간다"
+      ],
+      "lo_ids": ["LO-S3.1"],
+      "visual_hint": "3줄 요약 카드 + 다음 클래스 예고 화살표('의존성 + cleanup')",
+      "speaker_affect": "정리 톤, 따뜻하게 마무리"
+    }
+  ]
+}

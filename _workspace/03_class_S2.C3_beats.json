@@ -1,0 +1,102 @@
+{
+  "class_id": "S2.C3",
+  "title": "자식에게 ref 넘기기 — forwardRef → React 19 ref prop, 그리고 useImperativeHandle",
+  "lo_ids": ["LO-S2.5"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "자체 디자인 시스템의 <MyInput />에 부모가 ref를 꽂아 focus()를 부르고 싶다",
+        "그런데 <MyInput ref={inputRef} />가 그냥은 동작하지 않는다 — 왜?",
+        "React 18까지의 forwardRef, React 19의 ref-as-prop, 그리고 노출 API를 좁히는 useImperativeHandle을 본다"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "부모 컴포넌트 → 'MyInput에 ref 못 꽂음' 경고 풍선 → 해결 경로 3개(forwardRef / ref prop / useImperativeHandle)로 갈라지는 분기 다이어그램",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 140,
+      "key_points": [
+        "기본적으로 ref는 prop이 아니다 — 컴포넌트 함수의 인자로 자동 전달되지 않는다",
+        "React 18 이전: forwardRef로 컴포넌트를 감싸 (props, ref) 시그니처를 명시 노출",
+        "const MyInput = forwardRef((props, ref) => <input ref={ref} {...props} />)",
+        "이 한 단계 보일러플레이트가 디자인 시스템 전반에 깔리던 시절이 길었다"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "examples": [
+        "const MyInput = forwardRef(function MyInput(props, ref) { return <input ref={ref} {...props} />; });"
+      ],
+      "visual_hint": "forwardRef 코드 + 화살표로 (props, ref) 두 인자 강조. 옆에 '~React 18' 라벨",
+      "speaker_affect": "차분하게 설명, 역사적 맥락 톤"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 140,
+      "key_points": [
+        "React 19부터 ref는 일반 prop처럼 동작 — function MyInput({ ref }) { ... }로 바로 받는다",
+        "forwardRef 래핑 불필요, 디자인 시스템 boilerplate가 사라진다",
+        "마이그레이션: 기존 forwardRef 코드는 codemod로 자동 전환 가능. 점진 채택 OK",
+        "단, 라이브러리 호환성을 위해 한동안은 두 패턴이 공존 — 어느 쪽을 만나도 의도를 읽을 수 있어야 한다"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "examples": [
+        "function MyInput({ ref, ...props }) { return <input ref={ref} {...props} />; }",
+        "function MyForm() { const inputRef = useRef(null); return <MyInput ref={inputRef} />; }"
+      ],
+      "visual_hint": "Before(forwardRef 래핑) / After(ref가 그냥 prop) 좌우 코드 비교. 'React 19' 배지",
+      "speaker_affect": "활기차게, 변화의 단순함을 강조"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 180,
+      "key_points": [
+        "문제 상황: ref를 그냥 노출하면 부모가 .focus()뿐 아니라 .value, .blur(), .select() 등 input의 모든 API에 접근 가능",
+        "캡슐화 균열 — 자식이 의도한 명령형 표면이 입력 DOM 전체로 새어 나간다",
+        "useImperativeHandle(ref, () => ({ focus() {...} }))로 부모에게 노출되는 객체를 직접 설계",
+        "내부 realInputRef는 따로 두고, 바깥에는 focus()만 주는 facade — '명령형 API의 의도적 좁히기'",
+        "평가 감각: 노출이 좁을수록 자식의 내부 구현(예: 실제 input을 textarea로 바꾸기)을 깰 위험이 줄어든다"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "examples": [
+        "function MyInput({ ref }) { const realInputRef = useRef(null); useImperativeHandle(ref, () => ({ focus() { realInputRef.current.focus(); } })); return <input ref={realInputRef} />; }"
+      ],
+      "visual_hint": "박스 다이어그램: 외부에서 보이는 ref API = { focus() } 만 / 내부에 숨겨진 realInputRef = 진짜 <input> DOM. 캡슐화 막을 시각화",
+      "speaker_affect": "강조, 설계 감각을 일깨우는 톤"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 150,
+      "key_points": [
+        "자문자답 1: 새 프로젝트가 React 19라면 forwardRef를 새로 도입해야 하나? — 아니. ref-as-prop으로 충분",
+        "자문자답 2: 라이브러리가 React 18 사용자도 지원해야 한다면? — forwardRef 유지가 안전. 호환성 우선",
+        "자문자답 3: <Modal>이 부모에게 open()/close()만 노출하고 내부 portal 구조는 숨기고 싶다면? — useImperativeHandle로 facade 설계",
+        "자문자답 4: '왜 모든 자식에 useImperativeHandle을 쓰지 않나?' — 대부분은 단순 ref 위임이면 충분, 캡슐화가 진짜로 깨질 때만 도입"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "4개의 의사결정 카드 — 각 카드 위에 시나리오, 아래에 권장 도구(forwardRef / ref prop / useImperativeHandle / 그냥 ref 위임)",
+      "speaker_affect": "차분하게, 평가하듯 무게감 있게"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "ref는 자동 prop이 아니다 — React 18은 forwardRef, React 19는 ref-as-prop으로 노출",
+        "useImperativeHandle은 자식이 부모에게 주는 명령형 API를 의도적으로 좁히는 캡슐화 도구",
+        "S2 마무리: ref는 '기본이 아닌 마지막 수단', 타이밍과 노출 표면을 모두 설계해야 한다",
+        "다음 섹션 예고: ref가 아닌 다른 escape hatch — Effect로 외부 시스템과 동기화하기"
+      ],
+      "lo_ids": ["LO-S2.5"],
+      "visual_hint": "3줄 정리 + S2 전체 마인드맵 미니어처(ref 기본 / flushSync / 자식 ref 노출) + 다음 섹션 'Effect 동기화 모델' 티저",
+      "speaker_affect": "정리하는 톤, 섹션 마무리답게 약간 무게감 있게"
+    }
+  ]
+}

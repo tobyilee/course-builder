@@ -1,0 +1,98 @@
+{
+  "class_id": "S1.C1",
+  "title": "useRef 기본과 state와의 차이",
+  "lo_ids": ["LO-S1.1", "LO-S1.2"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "채팅 앱에서 '전송 취소' 버튼이 눌리면 setTimeout을 cancel해야 한다",
+        "지역 변수 `let timeoutID`로 ID를 보관하면 매 렌더에서 초기화돼 cancel이 항상 실패한다",
+        "useState로 보관하면 setter 호출이 또 다른 재렌더를 유발해 어색하다",
+        "재렌더 없이 렌더 사이에 살아남는 '메모 칸'이 필요하다 — 그게 ref다"
+      ],
+      "lo_ids": ["LO-S1.1"],
+      "visual_hint": "왼쪽: 지역 변수가 매 렌더마다 null로 리셋되는 타임라인. 오른쪽: 같은 자리에 ref가 5초 동안 timeout ID를 들고 있는 타임라인",
+      "speaker_affect": "호기심 유발, 친근하게 문제 제시"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "`const ref = useRef(0)`은 `{ current: 0 }` 객체를 반환한다",
+        "매 렌더에서 동일한 객체 참조가 유지된다 (개념적 구현: useState로 객체를 한 번 만들어 그대로 돌려준다)",
+        "`ref.current = 5`처럼 직접 mutation 가능 — setter 함수가 없다",
+        "mutation해도 React는 재렌더하지 않는다",
+        "값은 다음 렌더, 그 다음 렌더까지 그대로 보존된다"
+      ],
+      "lo_ids": ["LO-S1.1"],
+      "visual_hint": "useRef 반환 객체 다이어그램: `{ current: 0 }` 박스에 화살표로 'mutable', 'persists across renders', 'no re-render' 표기",
+      "speaker_affect": "차분하게, 개념을 또박또박"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "비교 축 1: 재렌더 트리거 — state는 트리거함, ref는 안 함",
+        "비교 축 2: mutation 방식 — state는 setter 필수, ref는 직접 `current = ...`",
+        "비교 축 3: 렌더 중 읽기 — state는 snapshot으로 안전하게 읽음, ref는 렌더 중 읽기 금지(초기화 제외)",
+        "공통점: 둘 다 렌더 사이 값이 보존된다",
+        "판별 규칙: 화면에 보일 정보면 state, 화면에 영향 없으면 ref"
+      ],
+      "lo_ids": ["LO-S1.2"],
+      "visual_hint": "3축 비교표 (재렌더 트리거 / mutation / 렌더 중 읽기) — state vs ref 행을 색으로 구분",
+      "speaker_affect": "강조, 비교 포인트마다 또렷하게"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "Before: `let timeoutID = null` 지역 변수 — 매 렌더마다 null로 리셋되어 handleUndo에서 cancel 실패",
+        "After: `const timeoutRef = useRef(null)` — handleSend에서 `timeoutRef.current = setTimeout(...)`, handleUndo에서 `clearTimeout(timeoutRef.current)`",
+        "두 핸들러 모두 같은 `{ current }` 객체를 보고 있어 ID가 살아있다",
+        "이 코드의 timeout ID는 화면에 안 보인다 — ref가 정답",
+        "만약 '몇 초 남았는지'를 화면에 띄우려면 그 카운트는 state로 둬야 한다"
+      ],
+      "lo_ids": ["LO-S1.1", "LO-S1.2"],
+      "examples": [
+        "chat-with-undo (Before/After: let timeoutID → useRef)"
+      ],
+      "visual_hint": "Before/After 코드 두 칸 비교 — 빨간 X와 초록 체크 마크, 화살표로 변경 지점 강조",
+      "speaker_affect": "친근하게, 변환 과정을 단계별로 안내"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 120,
+      "key_points": [
+        "다음 데이터들을 state/ref 중 어디에 둘지 스스로 분류해보기",
+        "(a) Stopwatch가 화면에 보여주는 경과 시간 → ?",
+        "(b) Stopwatch의 setInterval이 반환한 ID → ?",
+        "(c) 디바운싱용 setTimeout ID → ?",
+        "판별 기준: '이 값이 바뀌면 화면이 다시 그려져야 하는가?' YES면 state, NO면 ref"
+      ],
+      "lo_ids": ["LO-S1.2"],
+      "visual_hint": "체크리스트 카드 3장: (a)(b)(c) 항목 옆에 빈 [ state ] / [ ref ] 라디오 버튼. 마지막에 정답 (state, ref, ref) 페이드인",
+      "speaker_affect": "친근하게, 잠깐 멈춰서 생각해보라고 권유"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 40,
+      "key_points": [
+        "useRef는 `{ current }` 객체를 주고, 직접 mutation해도 재렌더가 일어나지 않는다",
+        "state vs ref는 '재렌더 트리거 / mutation / 렌더 중 읽기' 세 축으로 갈린다",
+        "화면에 보이면 state, 영향 없으면 ref — 다음 class에서 ref가 빛나는 사례 셋을 본다"
+      ],
+      "lo_ids": ["LO-S1.1", "LO-S1.2"],
+      "visual_hint": "3개 핵심 카드 한 화면 정렬 — 마지막 카드는 다음 class 미리보기",
+      "speaker_affect": "차분하게 마무리, 다음 class 기대감"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "class_id": "S7.C1",
+  "title": "deps는 코드의 거울 — linter suppress 절대 금지 원칙",
+  "lo_ids": ["LO-S7.1", "LO-S7.2"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "한 줄짜리 // eslint-disable-next-line이 정말 그렇게 위험할까?",
+        "카운터가 1에서 멈추는 실제 버그를 잠깐 보여줌",
+        "이번 class의 약속: '의존성을 고른다'는 사고방식을 부수고 워크플로로 갈아끼운다"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "왼쪽: suppress된 useEffect 코드, 오른쪽: '1, 1, 1, 1...'에서 멈춘 카운터 화면 캡처를 나란히 배치한 대조 다이어그램",
+      "speaker_affect": "호기심 유발, 약간의 경고 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "원칙 1: deps는 '고르는 것'이 아니다 — Effect 코드가 사용한 reactive 값(prop/state/body 변수)이 곧 deps",
+        "원칙 2: deps와 코드가 어긋나면 거짓말하는 의존성이 됨 — React가 Object.is 비교로 잘못된 시점에 재실행하거나 아예 재실행하지 않음",
+        "linter exhaustive-deps는 '거울이 잘 맞는지' 검사하는 도구",
+        "거울 비유: 코드를 바꾸지 않고 deps만 손대는 건 거울 속 얼굴을 지우는 것과 같다"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "코드 박스(왼쪽: Effect 본문에서 사용한 식별자 하이라이트) → 화살표 → deps 배열(오른쪽). 그 사이에 '거울'이라는 라벨",
+      "speaker_affect": "차분하고 단단하게, 정의를 못 박듯"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 140,
+      "key_points": [
+        "Counter 예제: setInterval(() => setCount(count + 1), 1000)을 deps=[]로 suppress",
+        "첫 렌더의 closure가 frozen 상태로 영구 캡처 → 매 tick마다 setCount(0 + 1)만 호출",
+        "결과: 1, 1, 1, 1... 화면에 멈춤 (재렌더는 발생하지만 값은 항상 1)",
+        "이 버그는 콘솔에 에러를 내지 않음 — 그래서 더 위험하다",
+        "교훈: suppress는 '문제를 숨길 뿐 해결하지 않는다'"
+      ],
+      "lo_ids": ["LO-S7.1"],
+      "visual_hint": "라이브 코드 시연 스타일. 상단에 Counter 코드, 하단에 'count: 1' 숫자가 깜빡이며 멈춰있는 미니 데모. 첫 렌더 closure 박스를 점선으로 강조",
+      "speaker_affect": "현장감 있게, '직접 보세요' 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "올바른 워크플로 4단계: ① Effect 코드 작성 ② linter 따라 deps 채움 ③ deps가 마음에 안 들면 코드(=거울 원본)를 바꾼다 ④ 만족까지 반복",
+        "핵심 전환: '의존성을 줄이려면' = '코드를 어떻게 바꿀지' 질문",
+        "이 워크플로의 도구상자가 바로 6가지 전략",
+        "6 전략 한눈 매핑: ①정적값 외부화 ②객체/함수 Effect 안에서 생성 ③updater 함수 ④useEffectEvent ⑤Effect 분리 ⑥객체 prop 원시값 분해"
+      ],
+      "lo_ids": ["LO-S7.1", "LO-S7.2"],
+      "visual_hint": "상단: 4단계 사이클(원형 화살표 다이어그램). 하단: 6 전략을 '문제 신호 → 전략' 표로 정리 (deps 너무 많음 / 무한 루프 / 매 렌더 재생성 / 읽기만 하고 싶음 / 여러 동기화 묶임 / suppress 유혹)",
+      "speaker_affect": "지도(map)를 펼치듯 안내하는 톤"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 110,
+      "key_points": [
+        "미니 자문자답: 다음 4개 증상에 6 전략 중 어느 게 후보인지 머릿속으로 매핑해보세요",
+        "(1) options 객체를 매 렌더 새로 만들어 deps에 넣었더니 무한 재연결 → ②/⑥",
+        "(2) setInterval 안에서 setCount(count + 1) 쓰니까 deps에 count 들어가서 매 tick 재생성 → ③",
+        "(3) isMuted 토글마다 채팅이 끊겼다 다시 붙음 → ④",
+        "(4) 한 Effect가 country fetch + city fetch 같이 함 → ⑤",
+        "정답은 다음 두 class에서 직접 코드로 확인"
+      ],
+      "lo_ids": ["LO-S7.2"],
+      "visual_hint": "퀴즈 형식 카드 4장, 각 증상 옆에 빈 칸 표시. 정답은 다음 슬라이드에서 살짝 공개하지 않고 '다음 두 class에서'로 미룸",
+      "speaker_affect": "친근하게, 같이 풀어보자는 톤"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "deps는 거울 — Effect 코드가 결정한다",
+        "linter suppress는 frozen closure 버그를 부르는 지름길, 절대 금지",
+        "워크플로: 작성 → linter → 코드 변경 → 반복. 그 도구가 다음 두 class의 6 전략"
+      ],
+      "lo_ids": ["LO-S7.1", "LO-S7.2"],
+      "visual_hint": "거울 + 코드 + 6 전략 아이콘 3개를 세로로 정렬한 핵심 카드",
+      "speaker_affect": "정리하듯 차분하게"
+    }
+  ]
+}

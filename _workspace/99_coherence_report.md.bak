@@ -1,0 +1,79 @@
+# Coherence Review — React Escape Hatches 심화 (full course)
+
+**Scope:** full course (S0..S9, 31 classes, 45 LOs)
+**Language spec:** ko, friendly tone
+**Reviewer run:** 2026-04-26
+
+## VERDICT: REVISE
+
+3 errors localized to **S6 (Event vs Effect)** notes — note `[slide N]` refs point to slide indices beyond what slide.source.md actually contains. Everything else passes. Route fix to note-writing agent for S6.C1/C2/C3 only; no other artifacts need touching.
+
+---
+
+## Course-level checks
+
+| Check | Result | Detail |
+|---|---|---|
+| LO coverage | PASS | All 45 LOs are tested in ≥1 quiz item across 76 quiz items |
+| Bloom balance | PASS | 5 levels in LO design (Understand 8, Apply 14, Analyze 11, Evaluate 8, Create 4). Remember intentionally absent for intermediate audience per spec. No section quiz >50% Remember/Understand |
+| Slide ↔ transcript cues | PASS | All 31 classes follow `cues = slides − 1` (intro slide has no `[slide N]` cue, consistent with course-builder convention) |
+| Note ↔ slide refs | **FAIL (S6 only)** | See issues below |
+| Note LO vs beats LO | PASS | Every class note quotes the same lo_ids declared in `03_class_*_beats.json` |
+| Transcript speakability | PASS | No code fences, JSX tags, arrow funcs, or object literals; markers always on own lines |
+| Quiz item quality | PASS | All 76 items have lo_ids in registry + explanation field populated |
+| Tone consistency | PASS | Friendly Korean throughout (sampled S4.C2 / S2.C2 / S8.C2) |
+| Cross-class refs `[Sx.Cy]` | PASS | All 24 unique refs resolve to existing classes |
+
+---
+
+## Errors (3) — must fix before build
+
+### E1. S6.C1 note slide-ref out of range  [error]
+- File: `course/sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/note.md`
+- Slide count: 7. Note references `[slide 11]`.
+- Fix: Renumber the late-stage callout (line ~44, "버튼 클릭 시 fetch도 하니까 effect로 옮겨야지" 함정) to fit within 1–7, OR add a slide for that beat. Likely a copy-paste artifact from an earlier draft.
+
+### E2. S6.C2 note slide-ref out of range  [error]
+- File: `course/sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/note.md`
+- Slide count: 8. Note references `[slide 9]`, `[slide 10]`, `[slide 12]`, `[slide 13]`.
+- Fix: The note enumerates the lint-suppress antipattern, naming antipattern (`onMount`), and decision procedure as additional beats. Either:
+  - (preferred) renumber refs to 7/8 — collapse the four off-by trailing refs onto existing summary slides, OR
+  - extend slide.source.md by 5 slides if those beats deserve their own visual.
+
+### E3. S6.C3 note slide-ref out of range  [error]
+- File: `course/sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/note.md`
+- Slide count: 7. Note references `[slide 11]`, `[slide 13]`, `[slide 14]`.
+- Fix: This class enumerates 4 constraints + 2 antipatterns ⇒ 6+ content slides. Either trim the note's two trailing antipattern beats to fit existing slides, or add the missing slides. Renumbering alone is the lower-cost fix.
+
+---
+
+## Warnings (0) and Info (1)
+
+### I1. Speakable terminology mixing  [info]
+- Notably `S4.C2` and `S7.C1..C4` transcripts use English API identifiers (`useEffect`, `useEffectEvent`, `setCount`, `createConnection`) as bare words. `S4.C2` mixes Hangul transliteration (`유즈메모`, `유즈이펙트`) and English in adjacent lines.
+- Not a blocker — TTS gpt-4o-mini-tts handles both. Optional polish: pick one style per class.
+
+---
+
+## Routed fixes
+
+Only one agent is routed:
+
+```
+SendMessage → note-writer
+REVISE S6.C1 note.md  — renumber [slide 11] → ≤7
+REVISE S6.C2 note.md  — renumber [slide 9],[slide 10],[slide 12],[slide 13] → ≤8
+REVISE S6.C3 note.md  — renumber [slide 11],[slide 13],[slide 14] → ≤7
+```
+
+No quiz, slide, transcript, or beats agents need re-invocation. Section-level regression on S6 only after fix.
+
+---
+
+## Decision rule applied
+
+- pass ≤ 0 errors AND ≤ 5 warns
+- **revise = 1–3 errors** ← this run (3 errors, 0 warns, 1 info)
+- fail = structural problems
+
+3 errors localized to one section's note files → **revise**, not fail.

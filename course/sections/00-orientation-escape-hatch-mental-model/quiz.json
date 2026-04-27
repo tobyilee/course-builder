@@ -1,0 +1,135 @@
+{
+  "section_id": "S0",
+  "items": [
+    {
+      "id": "Q-S0-1",
+      "type": "mcq_single",
+      "stem": "다음 중 React의 '기본 흐름' 안에서 해결되는 사례가 아닌 것은?",
+      "choices": [
+        "A. fullName = firstName + ' ' + lastName 처럼 props로부터 표시 값을 derive 하기",
+        "B. 부모-자식이 같은 카운터를 공유하기 위해 state를 lifting 하기",
+        "C. 검색 input에 마운트 시 자동으로 .focus()를 호출하기",
+        "D. 리스트 아이템 인스턴스 분리를 위해 key prop을 사용하기"
+      ],
+      "correct": ["C"],
+      "explanation": "C는 DOM 노드라는 외부 시스템에 명령형으로 접근해야 하므로 useState/렌더로는 표현 불가능 — Escape Hatch(ref) 영역이다. A·B·D는 모두 'Managing State' 흐름(derived 값, lifting, key) 안에서 해결된다.",
+      "distractor_rationales": {
+        "A": "오해: derived 값은 Effect로 만들어야 한다고 생각하기 쉽지만, 렌더 중 계산이 가능하므로 기본 흐름 안에 있다.",
+        "B": "lifting은 'Managing State' 코스의 표준 패턴 — 기본 흐름 안에 있다.",
+        "D": "key는 인스턴스 격리를 위한 선언형 도구 — 기본 흐름 안에 있다."
+      },
+      "lo_ids": ["LO-S0.1"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "Q-S0-2",
+      "type": "mcq_multi",
+      "stem": "Escape Hatch(useRef·useEffect·Custom Hook)가 등장하는 '세 가지 시나리오'에 해당하는 것을 모두 고르세요. (정답 3개)",
+      "choices": [
+        "A. 외부 시스템 동기화 — 채팅 서버 연결/해제, 구독",
+        "B. 명령형 DOM 조작 — focus, scrollIntoView, video.play()",
+        "C. 비-렌더 데이터 보관 — setTimeout ID, 디바운서 인스턴스",
+        "D. 부모-자식 컴포넌트 사이의 상태 공유",
+        "E. 리스트 아이템마다 독립적인 입력 폼 상태 분리"
+      ],
+      "correct": ["A", "B", "C"],
+      "explanation": "A·B·C가 강의에서 제시한 세 가지 escape 시나리오다. 공통점은 '렌더 결과로 표현되지 않는 일'이라는 것. D는 lifting, E는 key prop으로 해결되는 기본 흐름 영역이다.",
+      "distractor_rationales": {
+        "D": "오해: 상태 공유에 useEffect/Custom Hook이 필요해 보일 수 있지만, 정답은 lifting state up — 기본 흐름이다.",
+        "E": "오해: 인스턴스 분리도 ref가 필요해 보이지만, key prop으로 React가 알아서 분리해준다."
+      },
+      "lo_ids": ["LO-S0.1"],
+      "bloom": "Understand",
+      "difficulty": 2
+    },
+    {
+      "id": "Q-S0-3",
+      "type": "mcq_single",
+      "stem": "결정 트리의 3개 질문은 '외부 시스템? → 렌더 중 계산? → 인터랙션 결과?' 순서로 흐릅니다. 다음 시나리오의 결론으로 가장 적절한 것은?\n\n시나리오: items 배열에서 검색어로 필터링한 결과를 화면에 표시하기",
+      "choices": [
+        "A. useEffect로 filteredItems state를 setState 한다",
+        "B. 외부 시스템이 없고 렌더 중 filter 호출이 가능하므로 render 중 계산 또는 useMemo로 처리한다",
+        "C. useRef에 필터 결과를 저장해 재렌더를 줄인다",
+        "D. 사용자 인터랙션이 있으므로 event handler에서 setState 한다"
+      ],
+      "correct": ["B"],
+      "explanation": "Q1(외부 시스템?)에서 No, Q2(렌더 중 계산?)에서 Yes — 잎 노드 'render 중 계산·useMemo'에 도달한다. Effect로 derive 하는 것은 S4의 대표 안티패턴이다.",
+      "distractor_rationales": {
+        "A": "흔한 오해 — 표시 값을 만들기 위해 Effect+setState 체인을 쓰면 한 박자 늦은 렌더와 무한 루프의 씨앗이 된다.",
+        "C": "ref는 '비-렌더 데이터'용이다. 화면에 표시되는 값은 ref가 아닌 렌더 산출물이어야 한다.",
+        "D": "필터링은 입력값을 바탕으로 매 렌더마다 표시되는 것이지, 인터랙션이 발생한 그 순간에만 일어나는 일이 아니다."
+      },
+      "lo_ids": ["LO-S0.2"],
+      "bloom": "Apply",
+      "difficulty": 3
+    },
+    {
+      "id": "Q-S0-4",
+      "type": "mcq_single",
+      "stem": "'폼 제출 후 성공 토스트 띄우기 + 3초 후 자동 닫기' 기능에 결정 트리를 적용한 결과로 가장 정확한 것은?",
+      "choices": [
+        "A. 전체를 useEffect 하나로 감싸 toastVisible state를 watch 한다",
+        "B. 토스트 띄우기와 3초 닫기 모두 event handler 안에서 처리한다",
+        "C. 토스트 띄우기는 submit handler에서, 3초 타이머는 외부 시스템이므로 ref에 ID 저장 + cleanup 으로 분리한다",
+        "D. 토스트와 타이머를 모두 useRef로 보관하고 렌더에서 읽는다"
+      ],
+      "correct": ["C"],
+      "explanation": "한 기능 안에서도 결정 트리를 부분별로 적용한다. '띄우기'는 Q3(인터랙션 결과) → handler, '3초 타이머'는 Q1(외부 시스템) → ref + cleanup. 두 갈래로 분리해 적용하는 것이 핵심.",
+      "distractor_rationales": {
+        "A": "Effect로 모든 흐름을 감싸면 인터랙션 결과까지 한 박자 늦게 실행되고 추적이 어려워진다.",
+        "B": "타이머 ID를 보관하지 않으면 다음 입력 때 clearTimeout이 불가능해 토스트가 겹쳐 뜨거나 정리되지 않는다.",
+        "D": "토스트의 표시 여부는 화면에 그려져야 하므로 state가 적합하다 — ref는 비-렌더 데이터용이다."
+      },
+      "lo_ids": ["LO-S0.2"],
+      "bloom": "Analyze",
+      "difficulty": 4
+    },
+    {
+      "id": "Q-S0-5",
+      "type": "true_false",
+      "stem": "다음 진술의 참/거짓을 판단하세요.\n\n진술: 'useEffect는 강력하므로, 같은 로직이라면 event handler 보다 useEffect 안에 두는 것이 더 안전하다.'",
+      "choices": [
+        "A. 참",
+        "B. 거짓"
+      ],
+      "correct": ["B"],
+      "explanation": "거짓이다. 인터랙션의 결과(클릭/제출의 직접 산출물)를 Effect로 우회하면 한 박자 늦게 실행되고 추적이 어려워진다. 또한 Effect는 예측 가능성·테스트 용이성·동기화 비용을 추가로 떠안기 때문에 '기본은 안 쓰는 것'이 코스의 자세다. 인터랙션 결과는 handler가, 동기화는 Effect가 — 역할 분리가 옳다.",
+      "distractor_rationales": {
+        "A": "흔한 오해 — '강력 = 안전'이 아니다. Effect는 외부 시스템 동기화에 한정한 도구이며 인터랙션 결과를 처리하는 도구가 아니다."
+      },
+      "lo_ids": ["LO-S0.3"],
+      "bloom": "Evaluate",
+      "difficulty": 3
+    },
+    {
+      "id": "Q-S0-6",
+      "type": "short_answer",
+      "stem": "'Escape Hatch는 마지막 수단(기본 = 안 씀)'이라는 코스의 자세를 정당화하는 세 가지 비용을 각각 한 줄씩 설명하고, 이 자세가 '같은 결과를 내는 두 코드 중 어느 쪽을 선호해야 하는가'에 어떤 기준을 제공하는지 한 문장으로 서술하세요.",
+      "choices": [],
+      "correct": [],
+      "explanation": "정답 답안에는 세 가지 비용이 각각 명시되어야 한다. (1) 예측 가능성 비용: ref/effect는 렌더 결과 바깥에서 동작하므로 코드만 보고 결과를 추론하기 어려워진다. (2) 테스트 용이성 비용: 외부 시스템(타이머·네트워크·DOM)이 끼면 단위 테스트가 통합 테스트로 격상된다. (3) 동기화 비용: Effect는 의존성 배열을 계속 관리해야 하고, 까먹으면 stale 값 또는 무한 재실행이 발생한다. 마지막으로 '같은 결과를 낸다면 Escape Hatch를 쓰지 않는 코드가 항상 더 낫다(=기본 흐름 안에서 풀리는 코드를 우선한다)'는 기준을 제시해야 한다.",
+      "distractor_rationales": {},
+      "lo_ids": ["LO-S0.3", "LO-S0.1"],
+      "bloom": "Evaluate",
+      "difficulty": 4,
+      "rubric": {
+        "full_credit": "세 비용(예측 가능성·테스트 용이성·동기화)을 모두 명명하고 각각의 메커니즘을 한 줄씩 정확히 설명 + '같은 결과면 Escape Hatch 미사용 코드를 선호한다'는 기준을 명시 (4점)",
+        "partial_credit": "세 비용 중 2개를 정확히 설명하거나, 세 비용을 모두 나열했지만 메커니즘 설명이 모호함 (2~3점)",
+        "minimal_credit": "비용 1개만 언급하거나, 비용 없이 '복잡하니까'와 같이 일반론으로 답함 (1점)",
+        "no_credit": "Effect/ref가 좋다고 옹호하거나, 비용을 한 가지도 짚지 못함 (0점)"
+      }
+    }
+  ],
+  "bloom_distribution": {
+    "Understand": 2,
+    "Apply": 1,
+    "Analyze": 1,
+    "Evaluate": 2
+  },
+  "lo_coverage": {
+    "LO-S0.1": ["Q-S0-1", "Q-S0-2", "Q-S0-6"],
+    "LO-S0.2": ["Q-S0-3", "Q-S0-4"],
+    "LO-S0.3": ["Q-S0-5", "Q-S0-6"]
+  }
+}

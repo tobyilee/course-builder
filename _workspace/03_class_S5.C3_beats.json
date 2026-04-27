@@ -1,0 +1,136 @@
+{
+  "class_id": "S5.C3",
+  "title": "exhaustive-deps 해결 3가지 옵션과 Effect 분리 원칙",
+  "lo_ids": ["LO-S5.4", "LO-S5.5"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "ESLint가 'React Hook useEffect has a missing dependency: roomId' 빨간 줄을 그었다",
+        "흔한 응급처치 두 가지: // eslint-disable-next-line, 또는 deps에 그냥 추가",
+        "둘 다 틀렸다 — 정답은 '코드를 바꾸는 것'이다. 그 길이 세 갈래"
+      ],
+      "lo_ids": ["LO-S5.4"],
+      "visual_hint": "에디터 캡처 스타일 — 빨간 밑줄 + 두 개의 X(disable, 무지성 추가) + 체크마크 3개로 갈라지는 화살표",
+      "speaker_affect": "호기심 유발, 약간의 경고톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 240,
+      "key_points": [
+        "옵션 1 — 진짜 reactive면 deps에 추가하고, 재실행이 일어나도 괜찮은 코드로 만든다 (예: roomId 바뀌면 재연결이 맞다)",
+        "옵션 2 — 사실 non-reactive였다면 컴포넌트 밖으로 옮기거나(모듈 상수) Effect 안에서 생성한다 (예: options 객체)",
+        "옵션 3 — 최신 값은 필요한데 그 값으로 재동기화는 싫다면 useEffectEvent로 추출 (다음 강의에서 자세히)",
+        "결정 기준: '이 값이 바뀌면 동기화를 새로 시작해야 하는가?' Yes→1, No→2 또는 3",
+        "절대 하지 말 것: linter suppress. 거짓 deps는 stale closure 버그를 그대로 통과시킨다"
+      ],
+      "lo_ids": ["LO-S5.4"],
+      "visual_hint": "결정 트리 다이어그램. 'reactive인가?'→Yes(옵션1) / No('정말 안 변하나?'→Yes 옵션2 / 변하긴 함→옵션3)",
+      "speaker_affect": "차분하게, 옵션마다 적용 신호 명시"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 150,
+      "key_points": [
+        "ChatRoom 케이스: linter가 'roomId 빠졌다'고 외치면 → 옵션 1 (재연결이 의도된 동작)",
+        "options 객체를 prop으로 받아 쓰는 경우: options를 deps에 넣으면 부모 렌더마다 새 참조라 무한 재연결 → 옵션 2 (Effect 안에서 생성하거나 원시값으로 분해)",
+        "온라인 상태 변경 시 '최신 theme'으로 알림 띄우기: theme이 바뀌어도 재연결은 싫다 → 옵션 3 (useEffectEvent)",
+        "같은 경고도 코드 맥락에 따라 처방이 다르다는 점이 포인트"
+      ],
+      "lo_ids": ["LO-S5.4"],
+      "examples": [
+        "// 옵션 1: roomId는 진짜 reactive",
+        "useEffect(() => {",
+        "  const c = createConnection(serverUrl, roomId);",
+        "  c.connect();",
+        "  return () => c.disconnect();",
+        "}, [roomId]);",
+        "",
+        "// 옵션 2: serverUrl을 컴포넌트 밖 상수로",
+        "const serverUrl = 'https://localhost:1234'; // 모듈 스코프",
+        "",
+        "// 옵션 3: 미리보기 (다음 강의)",
+        "// const onTheme = useEffectEvent(() => notify(theme));"
+      ],
+      "visual_hint": "3단 카드(옵션 1/2/3) 각각 'linter 경고' → '진단 질문' → '리팩터링 결과' 흐름",
+      "speaker_affect": "친근하게, 케이스별 톤 변화"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 120,
+      "key_points": [
+        "Effect 분리 원칙: '하나의 Effect = 하나의 독립적 동기화 프로세스'",
+        "한 Effect 안에 무관한 동기화가 묶이면 한쪽 의존성이 바뀔 때 다른 쪽도 따라 재실행됨",
+        "분리 기준: cleanup이 정말 한 쌍으로 묶여야 하는가? 묶이지 않으면 두 Effect로",
+        "deps가 같다고 해서 합쳐야 하는 게 아니다 — 책임이 같아야 합친다"
+      ],
+      "lo_ids": ["LO-S5.5"],
+      "visual_hint": "큰 사각형 한 개 vs 작은 사각형 두 개. 위에 '책임이 다르면 분리'라고 적힌 화살표",
+      "speaker_affect": "강조, 원칙 선언"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 120,
+      "key_points": [
+        "Before: 한 Effect 안에 logVisit(roomId) + createConnection 둘 다 들어있다",
+        "문제: '방문 로깅'과 '연결 유지'는 책임이 다른데, 한쪽이 deps 문제로 재실행되면 다른 쪽도 같이 재실행된다",
+        "After: useEffect(() => logVisit(roomId), [roomId]); 와 useEffect(() => { connect... }, [roomId]); 두 개로 분리",
+        "각자의 cleanup, 각자의 deps를 가지므로 한쪽 변경이 다른 쪽에 새지 않는다",
+        "ChatRoom의 메인 예제 그대로 — 분석 로깅과 연결을 깔끔히 가른 모습"
+      ],
+      "lo_ids": ["LO-S5.5"],
+      "examples": [
+        "// 🔴 Before — 채팅 + 분석 섞임",
+        "useEffect(() => {",
+        "  logVisit(roomId);",
+        "  const c = createConnection(serverUrl, roomId);",
+        "  c.connect();",
+        "  return () => c.disconnect();",
+        "}, [roomId]);",
+        "",
+        "// ✅ After — 책임별 분리",
+        "useEffect(() => { logVisit(roomId); }, [roomId]);",
+        "useEffect(() => {",
+        "  const c = createConnection(serverUrl, roomId);",
+        "  c.connect();",
+        "  return () => c.disconnect();",
+        "}, [roomId]);"
+      ],
+      "visual_hint": "Before/After 좌우 비교. Before는 한 박스, After는 두 박스. 두 박스 사이에 'logVisit', 'connection' 라벨",
+      "speaker_affect": "친근하게, 리팩터링 만족감"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 60,
+      "key_points": [
+        "자문자답: 한 Effect 안에 'addEventListener(scroll, ...)' + 'document.title = roomId'가 같이 있다. 이걸 분리해야 할까?",
+        "정답: 분리한다. scroll 리스너의 cleanup은 removeEventListener이고, title 동기화는 cleanup도 deps도 다른 책임",
+        "신호: '두 코드를 다른 시점에 실행/중지하고 싶어지면 분리하라'"
+      ],
+      "lo_ids": ["LO-S5.5"],
+      "visual_hint": "퀴즈 카드 — Effect 한 개 안에 두 줄, '분리 vs 유지?' 선택지",
+      "speaker_affect": "학습자에게 묻듯, 잠깐의 여백"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 45,
+      "key_points": [
+        "exhaustive-deps 경고는 suppress가 아니라 코드를 바꿔서 해결한다 — 옵션 3가지(deps 추가 / 외부화 / useEffectEvent)",
+        "linter 경고를 '코드 설계의 거울'로 받아들이는 습관을 들인다",
+        "한 Effect = 한 동기화 책임. 책임이 다르면 분리해 각자의 deps와 cleanup을 갖게 한다"
+      ],
+      "lo_ids": ["LO-S5.4", "LO-S5.5"],
+      "visual_hint": "3줄 요약 카드, 각 줄 앞에 체크마크",
+      "speaker_affect": "정리, 단호하게"
+    }
+  ]
+}

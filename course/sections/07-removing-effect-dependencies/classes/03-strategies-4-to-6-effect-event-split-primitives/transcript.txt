@@ -1,0 +1,154 @@
+[slide 1]
+6 전략의 후반부, 4부터 6까지를 다룰 시간이에요.
+useEffectEvent, Effect 분리, 그리고 객체 prop을 원시값으로 분해.
+[pause:400]
+이번 시간이 끝나면 여러분 손에 6 전략 전부가 들어옵니다.
+
+[slide 2]
+두 가지 흔한 비명을 먼저 들어볼게요.
+[pause:400]
+첫 번째.
+Welcome 화면이 사용자가 슬라이더를 만질 때마다, 페이드인 애니메이션이 처음부터 다시 시작합니다.
+[pause:500]
+두 번째.
+부모 컴포넌트가 리렌더할 때마다, 채팅이 끊겼다 다시 붙어요.
+[pause:500]
+공통 원인이 보이세요?
+"읽고는 싶지만 반응시키긴 싫은" 값이 뎁스에 들어가 있어요.
+[pause:400]
+남은 3 전략으로 이걸 정복합니다.
+
+[slide 3]
+전략 4, useEffectEvent예요.
+[pause:400]
+비-반응형 로직을 useEffectEvent로 추출하는 전략입니다.
+[pause:400]
+Effect 안에서 "읽고 싶지만, 변경에 반응하고 싶지는 않은" 값이 있을 때 써요.
+isMuted, theme, duration 같은 값들이죠.
+[pause:500]
+useEffectEvent에 핸들러를 감싸면, 항상 최신 값을 보지만 reactive하지 않아요.
+뎁스에 안 넣어도 되고, 넣을 수도 없어요.
+[pause:500]
+제약이 있습니다.
+Effect 안에서만 호출하세요.
+다른 컴포넌트나 Hook에 넘기면 안 됩니다.
+[pause:400]
+적용 신호는 이거예요.
+"이 값이 바뀌어도, 동기화는 다시 안 해도 돼."
+
+[slide 4]
+실제 케이스로 가볼게요.
+Welcome 컴포넌트의 페이드인 애니메이션이에요.
+[pause:400]
+Before.
+useEffect 안에서 FadeInAnimation을 만들고, a.start에 duration을 넘겨요.
+뎁스는 duration.
+[pause:400]
+슬라이더로 duration을 바꿀 때마다, 애니메이션이 처음부터 다시 시작해요.
+짜증 나죠.
+[pause:500]
+After.
+const onAppear를 useEffectEvent로 감싸요.
+이 안에서 a.start에 duration을 넘기는 거죠.
+useEffect 본문에서는 onAppear를 호출만 하고, 뎁스는 빈 배열.
+[pause:500]
+결과.
+mount 시 딱 한 번만 시작해요.
+duration 변경은 다음 mount 때 반영되고, 현재 진행 중인 애니메이션은 안 끊겨요.
+[pause:500]
+포인트가 뭐냐면요.
+"값을 읽긴 했지만, 재실행 트리거에선 빠진다."
+거울이 아니라, 거울 옆 메모지 같은 거예요.
+
+[slide 5]
+전략 5, Effect 분리.
+[pause:400]
+한 Effect에 묶인 무관한 동기화는, 두 Effect로 분리하세요.
+[pause:400]
+신호는 이렇습니다.
+뎁스가 a, b인데, a가 바뀔 때 b 관련 동기화도 같이 재실행되는 게 어색하게 느껴질 때.
+[pause:500]
+예를 들어, country fetch와 city fetch가 같은 Effect 안에 있어요.
+city가 바뀔 때 country fetch까지 재실행돼요.
+비효율이고, 버그가 됩니다.
+[pause:500]
+분리하면 각 Effect의 뎁스가 깨끗해져요.
+재실행 트리거도 정확해지고요.
+[pause:400]
+원칙은 한 줄.
+"하나의 Effect는 하나의 동기화 목적."
+
+[slide 6]
+전략 6, 객체나 함수 prop을 원시값으로 분해.
+[pause:400]
+부모가 ChatRoom에 options라는 객체 prop을 매 렌더 새로 넘긴다고 해볼게요.
+serverUrl과 roomId가 들어 있는 객체죠.
+[pause:400]
+자식의 뎁스가 options라면, 매번 달라져요.
+재연결 폭주가 일어납니다.
+[pause:500]
+해결은 평탄화예요.
+부모가 ChatRoom에 roomId와 serverUrl을 따로따로 넘기게 합니다.
+자식 뎁스는 roomId, serverUrl 두 개의 원시값.
+[pause:500]
+원시값, 즉 문자열이나 숫자, 불린은 Object.is 비교에서 같은 값이면 안정적이에요.
+[pause:400]
+적용 신호.
+"부모가 리렌더만 해도, 자식 Effect가 재실행된다."
+
+[slide 7]
+이제 ChatRoom 통합 정리예요.
+전략 2와 전략 6 조합입니다.
+[pause:400]
+함수 시그니처에서 ChatRoom이 roomId와 serverUrl을 원시값 prop으로 받아요.
+[pause:400]
+useEffect 안에서 options 객체를 만들어요.
+createConnection에 넘기고, c.connect 호출.
+[pause:400]
+cleanup에서 c.disconnect 잊지 마세요.
+[pause:400]
+뎁스는 roomId, serverUrl.
+[pause:500]
+객체 참조 문제는 보통 이 두 전략이 함께 등장합니다.
+하나만으로는 부족할 때가 많아요.
+
+[slide 8]
+미니 자문자답입니다.
+적용 전략을 골라보세요.
+[pause:500]
+(a) theme 토글마다 채팅이 재연결돼요.
+근데 theme은 알림 색상에만 쓰이고요.
+[pause:400]
+힌트.
+읽고 싶지만 반응시키긴 싫죠.
+전략 4, useEffectEvent.
+[pause:500]
+(b) Effect 하나가 socket 연결과 분석 로깅을 같이 하고 있어요.
+[pause:400]
+힌트.
+무관한 동기화 두 개죠.
+전략 5, 분리.
+[pause:500]
+(c) 부모가 onChange에 인라인 화살표 함수 prop을 넘기고, 자식 뎁스가 onChange예요.
+[pause:400]
+힌트.
+함수 참조가 매번 새거죠.
+전략 6, 또는 전략 2로 Effect 안에서 정의.
+
+[slide 9]
+정리하겠습니다.
+6 전략 라인업입니다.
+[pause:400]
+이전 class에서 1, 2, 3.
+정적값 외부화, Effect 안 생성, 업데이터.
+[pause:400]
+이번 class에서 4.
+useEffectEvent로 비반응형 로직 추출.
+[pause:400]
+5.
+Effect 분리로 무관한 동기화 떼어내기.
+[pause:400]
+6.
+원시값 분해로 객체 prop 평탄화.
+[pause:500]
+다음 class에서는 이 6 전략을 실전 케이스에서 어떻게 조합하고, 트레이드오프를 어떻게 평가할지 보겠습니다.

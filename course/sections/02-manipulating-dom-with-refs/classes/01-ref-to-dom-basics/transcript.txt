@@ -1,0 +1,116 @@
+[slide 1]
+ref={...}로 DOM 만지기, 시작하겠습니다.
+[pause:400]
+이번 시간에는 focus, scroll, measure, play 같은 작업들을 다룹니다.
+[pause:300]
+선언형으로는 표현이 안 되는, 명령형 DOM 작업들이죠.
+
+[slide 2]
+한 가지 상황을 떠올려 볼게요.
+[pause:300]
+검색창이 화면에 뜨자마자, 거기에 자동으로 커서가 들어가면 좋겠다.
+[pause:400]
+그런데 React만으로는 이게 안 됩니다.
+[pause:500]
+리스트에 새 항목을 추가하고 거기까지 부드럽게 스크롤하기, 비디오를 재생하거나 일시정지하기, 요소의 크기를 측정하기.
+[pause:400]
+이런 작업은 전부 브라우저의 명령형 DOM API가 필요합니다.
+[pause:400]
+React는 이런 순간을 위해 escape hatch를 하나 남겨뒀어요.
+[pause:300]
+바로 ref={...} 패턴입니다.
+
+[slide 3]
+기본 패턴부터 보겠습니다.
+[pause:400]
+useRef를 import하고, useRef(null)로 ref 객체를 하나 만듭니다.
+[pause:400]
+그리고 JSX에서 input 태그에 ref={inputRef}로 달아주면 끝이에요.
+[pause:500]
+그러면 React가 commit phase에서 inputRef.current에 실제 input DOM 노드를 채워줍니다.
+[pause:500]
+한 가지 ref는 한 가지 노드를 가리킨다, 이게 기본입니다.
+[pause:400]
+동적인 리스트에 ref를 일대일로 붙이고 싶다면, Map이나 콜백 ref 같은 별도 패턴이 필요해요.
+[pause:300]
+오늘은 일단 단일 노드 케이스에 집중하겠습니다.
+
+[slide 4]
+이제 가장 중요한 타이밍 이야기입니다.
+[pause:500]
+render phase, 그러니까 컴포넌트 함수가 호출되는 그 시점에는 ref.current가 아직 null이에요.
+[pause:400]
+React는 그저 함수를 한 번 호출했을 뿐, 아직 DOM을 만들지도 않았거든요.
+[pause:500]
+그러다가 commit phase에 와서야 React가 실제 DOM을 만들고, 그제서야 ref.current에 노드를 주입합니다.
+[pause:500]
+업데이트 시에도 마찬가지예요.
+[pause:300]
+React는 노드를 바꾸기 직전에 ref를 일단 null로 초기화하고, 새 노드로 교체한 다음 다시 설정합니다.
+[pause:500]
+그래서 ref를 안전하게 읽을 수 있는 위치는 두 군데뿐입니다.
+[pause:400]
+이벤트 핸들러 안, 그리고 Effect 안.
+[pause:500]
+이 타이밍 모델을 머리에 박아두면, 왜 렌더 본문에서 ref를 만지면 안 되는지가 자연스럽게 설명됩니다.
+
+[slide 5]
+실제 예제 세 개를 보겠습니다.
+[pause:400]
+첫 번째, 버튼 클릭으로 input에 포커스 주기.
+[pause:300]
+onClick 안에서 inputRef.current.focus()를 호출하면 됩니다.
+[pause:400]
+두 번째, 카드를 부드럽게 화면 안으로 가져오기.
+[pause:300]
+cardRef.current.scrollIntoView를 호출하고, behavior는 smooth, block은 nearest로 옵션을 넘깁니다.
+[pause:400]
+세 번째, 상태에 따라 비디오 제어하기.
+[pause:300]
+isPlaying이 true면 videoRef.current.play를, false면 pause를 호출합니다.
+[pause:400]
+이건 useEffect 안에서, isPlaying을 dependency로 넣어 처리해요.
+[pause:500]
+세 예제의 공통점이 보이시죠?
+[pause:300]
+전부 이벤트 핸들러나 Effect 안에서 ref.current에 접근한다는 것.
+[pause:300]
+선언형 state와 명령형 호출이, 안전한 위치에서 만나는 패턴입니다.
+
+[slide 6]
+이제 자기점검 시간이에요.
+[pause:400]
+이런 코드가 있다고 해봅시다.
+[pause:300]
+함수 컴포넌트 본문에서 console.log로 ref.current를 찍는 거예요.
+[pause:400]
+이게 왜 null로 나올까요?
+[pause:500]
+정답은, render 중에 호출됐기 때문입니다.
+[pause:400]
+그럼 어떻게 고치죠?
+[pause:400]
+useEffect 안으로 옮기거나, 이벤트 핸들러 안으로 옮기면 됩니다.
+[pause:500]
+확장 질문 하나 더.
+[pause:300]
+컴포넌트가 처음 마운트될 때 자동으로 input에 포커스를 주려면 코드를 어디에 둬야 할까요?
+[pause:500]
+빈 배열을 dependency로 갖는 useEffect 안입니다.
+[pause:500]
+스스로에게 한 줄로 답해보세요.
+[pause:300]
+"내가 ref를 읽는 위치는 commit 이후인가?"
+
+[slide 7]
+정리하겠습니다.
+[pause:400]
+useRef와 ref={...}로 React가 관리하는 DOM 노드를 잡아서, focus, scroll, play, measure 같은 명령형 작업을 수행한다.
+[pause:500]
+타이밍은, render에는 null, commit 이후에 채워짐.
+[pause:300]
+그래서 핸들러나 Effect 안에서만 읽는다.
+[pause:500]
+ref는 React가 직접 못 하는 일을 위한 escape hatch라는 점, 기억해 주세요.
+[pause:500]
+다음 시간에는 setState 직후에 새로 만들어진 DOM을 즉시 측정해야 할 때 쓰는 flushSync, 그리고 직접 DOM 조작이 왜 위험한지를 다룹니다.

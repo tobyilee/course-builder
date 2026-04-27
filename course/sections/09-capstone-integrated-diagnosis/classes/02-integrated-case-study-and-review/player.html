@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.55}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  header{padding:12px 20px;border-bottom:1px solid #1f2430;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:600}
+  .meta{color:#8b95a7;font-size:13px}
+  button.menu-toggle{background:transparent;border:1px solid #2a3345;color:#e8eaed;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer}
+  button.menu-toggle:hover{background:#222a3a}
+  /* Progress bar */
+  #progress{padding:10px 20px;background:#12151c;border-bottom:1px solid #1f2430;display:flex;gap:14px;align-items:center;font-size:13px;color:#8b95a7}
+  #progress .bar{flex:1;height:4px;background:#1f2430;border-radius:2px;overflow:hidden}
+  #progress .bar .fill{height:100%;background:linear-gradient(90deg,#2d6cdf,#5ea0ff);border-radius:2px;transition:width .3s ease}
+  #progress .label{white-space:nowrap}
+  #progress strong{color:#e8eaed;font-weight:600}
+  /* Sidebar */
+  aside#toc{background:#12151c;border-right:1px solid #1f2430;padding:16px 14px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0}
+  aside#toc h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#8b95a7;margin:14px 0 6px 0;font-weight:500}
+  aside#toc h3:first-child{margin-top:0}
+  aside#toc ul{list-style:none;padding:0;margin:0 0 12px 0}
+  aside#toc li{padding:6px 8px;border-radius:6px;margin-bottom:2px;font-size:13px}
+  aside#toc a{color:#c4cad6;text-decoration:none;display:block}
+  aside#toc a:hover{color:#fff}
+  aside#toc li:hover{background:#1a1f29}
+  aside#toc li.current{background:#1a2e4a;border-left:3px solid #2d6cdf}
+  aside#toc li.current a{color:#fff;font-weight:600}
+  aside#toc li.quiz a{color:#3a8a4f}
+  main{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;padding:16px;max-width:1700px;margin:0 auto;align-items:start}
+  @media(max-width:1280px){main{grid-template-columns:1fr 320px} aside#toc{display:none} aside#toc.open{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.4);max-height:100vh}}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  #stage{background:#181c26;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  #slide-wrap{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #slide{max-width:100%;max-height:100%;display:block}
+  #controls{display:flex;gap:8px;align-items:center;padding:6px 2px}
+  button{background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}
+  button:hover{background:#2a3547}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.play{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}
+  button.play:hover{background:#3578e5}
+  button.speed{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}
+  #pos{color:#8b95a7;font-size:13px;margin-left:auto}
+  audio{width:100%}
+  aside#transcript{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}
+  aside#transcript h2{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  #tx-body p{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}
+  #tx-body p.active{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}
+  #thumbs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}
+  .thumb{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}
+  .thumb.current{border-color:#2d6cdf}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb span{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}
+  #end-panel{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}
+  #end-panel.active{display:block;animation:slideIn .4s ease-out}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #end-panel h2{margin:0 0 4px 0;font-size:18px;color:#fff}
+  #end-panel .sub{color:#8fb3e8;margin-bottom:12px;font-size:13px}
+  .end-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}
+  .btn-cta.primary{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}
+  .btn-cta.primary:hover{background:#3578e5;transform:translateY(-1px)}
+  .btn-cta.secondary{background:#222a3a;color:#e8eaed;border:1px solid #2a3345}
+  .btn-cta.secondary:hover{background:#2a3547}
+  .btn-cta .label{font-size:12px;opacity:.75;font-weight:400;display:block;margin-bottom:1px}
+  .btn-cta .title{display:block}
+  footer{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}
+  footer a{margin:0 10px}
+  /* Resume banner */
+  #resume-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}
+  #resume-banner.show{display:flex}
+  #resume-banner .text{font-size:13px;color:#c4cad6}
+  #resume-banner .text strong{color:#fff}
+  #resume-banner button{padding:6px 12px;font-size:13px;margin:0}
+  #resume-banner button.primary{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <button class="menu-toggle" id="menu-toggle" title="목차 열기/닫기">☰</button>
+  <a href="../../../index.html">← 홈</a>
+  <h1>통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지</h1>
+  <span class="meta">LOs: LO-S9.2, LO-S9.3 · 8장 · 17.3분</span>
+</header>
+
+<div id="progress">
+  <span class="label"><strong>Class 31</strong> / 31</span>
+  <div class="bar"><div class="fill" id="course-fill" style="width:100.0%"></div></div>
+  <span class="label">슬라이드 <strong id="slide-num">1</strong> / 8</span>
+  <div class="bar"><div class="fill" id="slide-fill"></div></div>
+</div>
+
+<main>
+  <aside id="toc">
+    <h3>오리엔테이션 — Escape Hatch 멘탈모델</h3>
+    <ul>
+      <li class=""><a href="../../../00-orientation-escape-hatch-mental-model/classes/01-why-escape-hatches/player.html">왜 &#x27;Escape Hatch&#x27;인가 — React의 기본 흐름과 마지막 수단</a></li>
+      <li class=""><a href="../../../00-orientation-escape-hatch-mental-model/classes/02-escape-hatch-decision-tree/player.html">결정 트리 — 지금 이 코드, Escape Hatch가 정말 필요한가?</a></li>
+      <li class="quiz"><a href="../../../00-orientation-escape-hatch-mental-model/quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+    <h3>Ref로 값 참조하기 — 재렌더 없이 기억하기</h3>
+    <ul>
+      <li class=""><a href="../../../01-referencing-values-with-refs/classes/01-useref-basics-vs-state/player.html">useRef 기본과 state와의 차이</a></li>
+      <li class=""><a href="../../../01-referencing-values-with-refs/classes/02-ref-good-use-cases/player.html">Ref의 좋은 사용 사례 — timeout, 디바운싱, 최신 값</a></li>
+      <li class=""><a href="../../../01-referencing-values-with-refs/classes/03-ref-antipatterns-and-refactor/player.html">Ref 안티패턴과 전역 변수 → ref 리팩터링</a></li>
+      <li class="quiz"><a href="../../../01-referencing-values-with-refs/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Ref로 DOM 조작하기 — focus, scroll, 그리고 통제된 노출</h3>
+    <ul>
+      <li class=""><a href="../../../02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/player.html">ref={...}로 DOM 만지기 — focus·scroll·measure·play</a></li>
+      <li class=""><a href="../../../02-manipulating-dom-with-refs/classes/02-flushsync-and-dont-touch-react-dom/player.html">flushSync로 타이밍 맞추기 + React가 관리하는 DOM은 손대지 않기</a></li>
+      <li class=""><a href="../../../02-manipulating-dom-with-refs/classes/03-forwardref-to-ref-as-prop-and-imperative-handle/player.html">자식에게 ref 넘기기 — forwardRef → React 19 ref prop, 그리고 useImperativeHandle</a></li>
+      <li class="quiz"><a href="../../../02-manipulating-dom-with-refs/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Effect로 동기화하기 — 라이프사이클이 아닌 동기화 모델</h3>
+    <ul>
+      <li class=""><a href="../../../03-synchronizing-with-effects/classes/01-effect-as-synchronization/player.html">Effect는 라이프사이클이 아니라 동기화다</a></li>
+      <li class=""><a href="../../../03-synchronizing-with-effects/classes/02-useeffect-signature-deps-cleanup/player.html">useEffect 시그니처, 의존성 배열, cleanup 패턴</a></li>
+      <li class=""><a href="../../../03-synchronizing-with-effects/classes/03-strict-mode-double-invoke-and-ref-antipattern/player.html">Strict Mode 더블 호출의 의도와 ref-회피 안티패턴</a></li>
+      <li class="quiz"><a href="../../../03-synchronizing-with-effects/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Effect 안 써도 되는 경우 — 12가지 안티패턴 진단</h3>
+    <ul>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/player.html">Effect 안 써도 되는 경우 — 진단 프레임과 결정 트리</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/02-derived-state-and-memo/player.html">Derived state — render 중 계산과 useMemo</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/03-resetting-and-adjusting-state/player.html">State 리셋과 조정 — key prop과 state-during-render</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/04-handlers-vs-effects/player.html">인터랙션 vs 표시 — 핸들러로 옮겨야 할 6가지</a></li>
+      <li class=""><a href="../../../04-you-might-not-need-an-effect/classes/05-external-store-fetch-and-tree/player.html">외부 통합과 종합 결정 트리 — useSyncExternalStore · fetch race</a></li>
+      <li class="quiz"><a href="../../../04-you-might-not-need-an-effect/quiz.html">📝 섹션 퀴즈 (9문항)</a></li>
+    </ul>
+    <h3>반응형 Effect의 라이프사이클</h3>
+    <ul>
+      <li class=""><a href="../../../05-lifecycle-of-reactive-effects/classes/01-component-vs-effect-lifecycle/player.html">컴포넌트 라이프사이클 vs Effect 라이프사이클 — 매 렌더가 자기 closure</a></li>
+      <li class=""><a href="../../../05-lifecycle-of-reactive-effects/classes/02-reactive-values-and-rerun-flow/player.html">Reactive vs Non-reactive 값 — Object.is로 판정되는 재실행 흐름</a></li>
+      <li class=""><a href="../../../05-lifecycle-of-reactive-effects/classes/03-exhaustive-deps-and-effect-splitting/player.html">exhaustive-deps 해결 3가지 옵션과 Effect 분리 원칙</a></li>
+      <li class="quiz"><a href="../../../05-lifecycle-of-reactive-effects/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Event와 Effect 분리하기 — useEffectEvent</h3>
+    <ul>
+      <li class=""><a href="../../../06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/player.html">Event냐 Effect냐 — &#x27;왜 실행돼야 하나?&#x27;로 가르기</a></li>
+      <li class=""><a href="../../../06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/player.html">useEffectEvent로 non-reactive 추출 — theme/roomId 패턴</a></li>
+      <li class=""><a href="../../../06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/player.html">Effect Event의 제약과 안티패턴 — 외부에 노출 금지</a></li>
+      <li class="quiz"><a href="../../../06-separating-events-from-effects/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>Effect 의존성 줄이기 — 6가지 전략</h3>
+    <ul>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/player.html">deps는 코드의 거울 — linter suppress 절대 금지 원칙</a></li>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/02-strategies-1-to-3-static-inline-updater/player.html">전략 1-3 — 정적값 외부화 · 객체/함수 안에서 생성 · updater</a></li>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/03-strategies-4-to-6-effect-event-split-primitives/player.html">전략 4-6 — useEffectEvent · Effect 분리 · 객체 prop 분해</a></li>
+      <li class=""><a href="../../../07-removing-effect-dependencies/classes/04-case-study-and-tradeoff-evaluation/player.html">실전 케이스 스터디 — 6 전략 조합 선택과 트레이드오프 평가</a></li>
+      <li class="quiz"><a href="../../../07-removing-effect-dependencies/quiz.html">📝 섹션 퀴즈 (8문항)</a></li>
+    </ul>
+    <h3>Custom Hook으로 로직 재사용하기</h3>
+    <ul>
+      <li class=""><a href="../../../08-reusing-logic-with-custom-hooks/classes/01-custom-hook-rules-and-shared-logic/player.html">Custom Hook의 규칙 — use 접두사와 &#x27;로직만 공유&#x27; 원칙</a></li>
+      <li class=""><a href="../../../08-reusing-logic-with-custom-hooks/classes/02-extracting-real-hooks-useFormInput-useChatRoom/player.html">실전 추출 — useFormInput, useChatRoom과 useEffectEvent wrap</a></li>
+      <li class=""><a href="../../../08-reusing-logic-with-custom-hooks/classes/03-when-to-extract-composition-future-proofing/player.html">추출할 것인가 말 것인가 — composition과 미래 대비</a></li>
+      <li class="quiz"><a href="../../../08-reusing-logic-with-custom-hooks/quiz.html">📝 섹션 퀴즈 (7문항)</a></li>
+    </ul>
+    <h3>종합 — 안티패턴 진단과 통합 케이스 스터디</h3>
+    <ul>
+      <li class=""><a href="../01-antipattern-diagnosis-clinic/player.html">안티패턴 진단 클리닉 — 코드 6개, 어디가 잘못됐나</a></li>
+      <li class="current"><a href="../02-integrated-case-study-and-review/player.html">통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지</a></li>
+      <li class="quiz"><a href="../../quiz.html">📝 섹션 퀴즈 (6문항)</a></li>
+    </ul>
+  </aside>
+  <div id="stage">
+    <div id="slide-wrap"><img id="slide" alt="slide"/></div>
+    <div id="controls">
+      <button id="prev">◀ 이전</button>
+      <button id="play" class="play">▶ 재생</button>
+      <button id="next">다음 ▶</button>
+      <button id="speed" class="speed" title="재생 속도">1×</button>
+      <span id="pos">1 / 8</span>
+    </div>
+    <audio id="audio" preload="auto"></audio>
+    <section id="end-panel">
+      <h2>🎉 수업을 완료했어요!</h2>
+      <p class="sub">다음으로 이동하거나 배운 내용을 점검해보세요.</p>
+      <div class="end-actions"><a class="btn-cta primary" href="../../quiz.html"><span><span class="label">이 섹션</span><span class="title">📝 마지막 퀴즈 풀기</span></span></a>
+    <a class="btn-cta secondary" href="../../../index.html"><span><span class="label">완료</span><span class="title">🎉 코스 목차로</span></span></a></div>
+    </section>
+  </div>
+  <aside id="transcript">
+    <h2>발화 스크립트</h2>
+    <div id="tx-body"></div>
+  </aside>
+</main>
+
+<section id="thumbs"></section>
+
+<div id="resume-banner" role="dialog" aria-live="polite">
+  <span class="text">🎧 이전 위치: <strong id="resume-pos">—</strong></span>
+  <button id="resume-yes" class="primary">이어 듣기</button>
+  <button id="resume-no">처음부터</button>
+</div>
+
+<footer>
+  <a href="../../quiz.html">📝 섹션 퀴즈 풀기</a>
+  <a href="../../../index.html">목차로</a>
+</footer>
+
+<script>
+const SLIDES = [{"png": "slides_png/slide.001.png", "mp3": "audio/slide_01.mp3", "transcript": ["드디어, 다 합쳐봅니다.", "이번이 코스의 마지막 빌드 클래스예요.", "한 화면에 다 들어 있는 작은 앱을 처음부터 끝까지 만들어 봅니다.", "어떤 앱인지 그려볼게요.", "검색창 하나가 상단에 있고, 입력하면 결과가 실시간으로 따라옵니다.", "중앙에는 채팅방 메시지 리스트.", "새 메시지가 도착하면 리스트가 자동으로 끝까지 스크롤돼요.", "우상단엔 다크모드 토글.", "좌상단엔 \"connected\" 배지.", "별거 아닌 것 같죠?", "근데 이 안에 이 코스의 거의 모든 기둥이 다 들어가 있습니다.", "이게 왜 통합이냐.", "하나씩 짚어볼게요.", "검색은 fetch race condition.", "채팅은 roomId 변경 시 재연결.", "스크롤은 ref 더하기 flushSync.", "다크모드 토글은 useEffectEvent.", "그리고 마지막에 useChatRoom과 useData로 추출하면서 마무리.", "오늘은 결정 트리를 코드 한 줄 한 줄에 적용하면서 빌드합니다.", "빌드 끝나면 바로 review 모드로 넘어가서 정당화해요.", "\"왜 이렇게 짰지?\" 라는 질문에 한 줄로 답하는 연습이에요.", "끝나면 \"왜 ref인가, 왜 Effect인가, 왜 useEffectEvent인가\"를 PR 코멘트 톤으로 답할 수 있게 됩니다.", "이게 오늘의 목표예요.", "사고의 흐름을 손에 익히는 시간입니다."], "transcriptTimes": [{"start": 0.0, "end": 1.836}, {"start": 1.836, "end": 4.801}, {"start": 4.801, "end": 10.026}, {"start": 10.026, "end": 11.862}, {"start": 11.862, "end": 17.087}, {"start": 17.087, "end": 19.487}, {"start": 19.487, "end": 24.006}, {"start": 24.006, "end": 25.842}, {"start": 25.842, "end": 28.666}, {"start": 28.666, "end": 30.219}, {"start": 30.219, "end": 35.162}, {"start": 35.162, "end": 36.574}, {"start": 36.574, "end": 37.986}, {"start": 37.986, "end": 41.516}, {"start": 41.516, "end": 44.34}, {"start": 44.34, "end": 47.588}, {"start": 47.588, "end": 50.977}, {"start": 50.977, "end": 56.767}, {"start": 56.767, "end": 61.709}, {"start": 61.709, "end": 66.228}, {"start": 66.228, "end": 71.029}, {"start": 71.029, "end": 80.914}, {"start": 80.914, "end": 82.609}, {"start": 82.609, "end": 85.574}]}, {"png": "slides_png/slide.002.png", "mp3": "audio/slide_02.mp3", "transcript": ["빌드 순서는 결정 트리 순이에요.", "이게 굉장히 중요합니다.", "순서를 잘못 잡으면 추출부터 하다가 추상화가 다 깨지는 경우가 많아요.", "우리는 외부 시스템 동기화부터 시작해서 안쪽으로 들어갑니다.", "처음은 외부 시스템.", "S3 Effect로 시작합니다.", "서버, 브라우저 API, 채팅 connection 같은 외부 시스템과 동기화하는 코드부터 깔아요.", "이게 가장 위험하고 가장 중요한 부분이거든요.", "다음은 동기화 격리.", "S5와 S7에서 본 reactive 값과 deps 정리.", "어느 값이 reactive고 어느 값이 non-reactive인지 가르는 단계예요.", "그 다음 명령형 DOM, S2의 ref.", "React가 대체 못 하는 작업이 있을 때만 ref를 꺼냅니다.", "스크롤 위치 조정 같은 거요.", "마지막에 추출, S8 Custom Hook.", "\"먼저 동작하는 코드를 만들고, 그 다음에 추출\" 순서예요.", "인라인부터 잘 짜야 좋은 hook이 나옵니다.", "구체적으로 다섯 블록입니다.", "하나, useData로 검색 결과 fetch.", "둘, ChatRoom 연결.", "셋, 새 메시지 자동 스크롤.", "넷, 다크모드 토글이 재연결을 안 일으키게.", "다섯, useChatRoom과 useData로 추출.", "각 블록마다 빌드 후 즉시 review해요.", "다른 도구는 왜 탈락했는지 한 줄 정당화.", "S0부터 S8까지 다 봤으니 코드는 빠르게 갑니다.", "대신 결정 정당화에 시간을 씁니다.", "오늘은 코드 작성보다 사고 과정이 핵심이에요."], "transcriptTimes": [{"start": 0.0, "end": 2.562}, {"start": 2.562, "end": 4.413}, {"start": 4.413, "end": 9.964}, {"start": 9.964, "end": 14.662}, {"start": 14.662, "end": 16.228}, {"start": 16.228, "end": 18.648}, {"start": 18.648, "end": 26.335}, {"start": 26.335, "end": 29.893}, {"start": 29.893, "end": 31.459}, {"start": 31.459, "end": 35.872}, {"start": 35.872, "end": 42.42}, {"start": 42.42, "end": 45.552}, {"start": 45.552, "end": 50.534}, {"start": 50.534, "end": 52.812}, {"start": 52.812, "end": 56.228}, {"start": 56.228, "end": 60.925}, {"start": 60.925, "end": 64.484}, {"start": 64.484, "end": 66.619}, {"start": 66.619, "end": 70.178}, {"start": 70.178, "end": 72.313}, {"start": 72.313, "end": 74.591}, {"start": 74.591, "end": 78.007}, {"start": 78.007, "end": 82.135}, {"start": 82.135, "end": 85.552}, {"start": 85.552, "end": 88.826}, {"start": 88.826, "end": 92.812}, {"start": 92.812, "end": 95.516}, {"start": 95.516, "end": 99.075}]}, {"png": "slides_png/slide.003.png", "mp3": "audio/slide_03.mp3", "transcript": ["블록 1, 검색창입니다.", "사용자가 검색창에 타이핑하면, query state가 바뀌고 그에 맞춰 서버에서 결과를 가져와야 해요.", "간단해 보이는데 함정이 두 개 있습니다.", "useEffect 안에 ignore 플래그를 false로 두고요.", "fetch 호출하고, 결과가 도착하면 ignore가 false일 때만 setResults.", "cleanup에서 ignore를 true로 만듭니다.", "deps는 query 하나.", "이렇게만 하면 race condition이 막힙니다.", "왜 Effect를 썼냐.", "서버라는 외부 시스템과의 동기화니까요.", "사용자가 클릭하거나 엔터를 쳐서 발생한 인터랙션 결과가 아니에요.", "URL로 진입해도, 뒤로가기로 돌아와도, query가 있으면 fetch가 일어나야 해요.", "주소창에 검색 결과 페이지를 직접 친 사용자도 있으니까요.", "그래서 Effect입니다.", "\"이 코드는 query 표시 상태를 서버 데이터와 동기화한다\" 이게 한 줄 정당화예요.", "왜 ignore 플래그냐.", "빠른 타이핑 시 race condition이 생겨요.", "사용자가 \"rea\"까지 치고 fetch가 발사되고, 곧바로 \"react\"까지 치면 두 번째 fetch가 또 발사됩니다.", "그런데 네트워크 사정에 따라 첫 번째 응답이 더 늦게 도착할 수도 있어요.", "그러면 화면은 \"react\" 검색 결과 위에 \"rea\" 결과를 덮어쓰게 돼요.", "사용자 입장에선 \"내가 친 query랑 결과가 안 맞는데?\" 라는 이상한 상태입니다.", "S3에서 본 race condition 패턴이고, ignore flag로 cleanup에서 무시 처리합니다.", "새 query가 오면 이전 Effect의 cleanup이 먼저 돌고 ignore가 true가 되니까요.", "늦게 도착한 응답은 그냥 버려져요.", "탈락한 선택지 짚고 갑니다.", "useMemo, 비동기 작업이 안 되니 탈락.", "event handler에 fetch를 두는 거, query는 표시 중 동기화이지 인터랙션 결과가 아니에요.", "URL 진입이나 뒤로가기에서도 fetch가 필요합니다.", "review 코멘트 미리 둡니다.", "이건 useData 커스텀 훅으로 빼면 깔끔하지만, 우선 인라인으로 패턴을 보이고 나중에 추출.", "S8.5의 composition 복선이에요."], "transcriptTimes": [{"start": 0.0, "end": 1.626}, {"start": 1.626, "end": 8.758}, {"start": 8.758, "end": 11.511}, {"start": 11.511, "end": 16.015}, {"start": 16.015, "end": 22.27}, {"start": 22.27, "end": 25.899}, {"start": 25.899, "end": 27.775}, {"start": 27.775, "end": 31.404}, {"start": 31.404, "end": 33.03}, {"start": 33.03, "end": 35.658}, {"start": 35.658, "end": 40.162}, {"start": 40.162, "end": 46.292}, {"start": 46.292, "end": 50.296}, {"start": 50.296, "end": 52.048}, {"start": 52.048, "end": 58.053}, {"start": 58.053, "end": 59.805}, {"start": 59.805, "end": 63.433}, {"start": 63.433, "end": 71.691}, {"start": 71.691, "end": 76.82}, {"start": 76.82, "end": 82.2}, {"start": 82.2, "end": 88.081}, {"start": 88.081, "end": 95.588}, {"start": 95.588, "end": 102.719}, {"start": 102.719, "end": 105.096}, {"start": 105.096, "end": 106.973}, {"start": 106.973, "end": 110.101}, {"start": 110.101, "end": 117.608}, {"start": 117.608, "end": 121.361}, {"start": 121.361, "end": 123.613}, {"start": 123.613, "end": 130.244}, {"start": 130.244, "end": 133.247}]}, {"png": "slides_png/slide.004.png", "mp3": "audio/slide_04.mp3", "transcript": ["블록 2와 3 같이 갑니다.", "블록 2, ChatRoom 연결.", "useEffect 안에서 createConnection으로 c를 만들고, c.connect를 호출.", "cleanup에서 c.disconnect.", "deps는 serverUrl과 roomId.", "이게 표준 외부 시스템 동기화 패턴이에요.", "mount 때 connect, unmount 때 disconnect, deps 변경 시 cleanup 후 재실행.", "왜 cleanup이 필수냐.", "두 가지 이유예요.", "첫째, Strict Mode 더블 마운트로 cleanup 누락이 즉시 노출됩니다.", "mount, unmount, mount 순으로 React가 한 번 더 돌려보거든요.", "이때 cleanup이 없으면 connection이 두 개가 돼요.", "둘째, 실제로 roomId가 바뀔 때마다 깔끔히 끊고 다시 연결해야 해요.", "끊지 않으면 연결이 누적돼서 메시지가 중복으로 옵니다.", "사용자 입장에선 같은 메시지가 두세 번 떠요.", "왜 deps에 roomId냐.", "reactive 값이니까요.", "컴포넌트 바깥에서 정의된 게 아니라 props로 들어왔습니다.", "Object.is 비교로 변하면 cleanup하고 재실행해야 해요.", "S5.2에서 본 reactive 정의입니다.", "탈락 선택지 하나 짚고 갈게요.", "ref guard로 더블 호출을 회피하는 거.", "\"if 처음 호출 아니면 return\" 이런 패턴이요.", "이렇게 하면 Strict Mode 경고는 사라지지만, 진짜 unmount 때 cleanup이 누수돼요.", "S3.4에서 본 그 함정입니다.", "처방이 아닙니다, 증상만 가린 거예요.", "블록 3, 자동 스크롤.", "새 메시지가 도착하면 리스트가 끝까지 스크롤되어야 해요.", "이게 안 되면 사용자는 매번 직접 스크롤해야 합니다.", "flushSync로 setMessages를 감싸고요, 그 다음에 listRef의 scrollTo로 scrollHeight까지.", "왜 ref냐.", "DOM 명령형 작업입니다.", "React가 선언적으로 표현 못 하는 작업이에요.", "\"스크롤을 끝까지 내려라\" 이건 렌더 결과물이 아니라 DOM API 호출이거든요.", "왜 flushSync냐.", "기본 batching에선 setMessages 후에도 DOM이 아직 업데이트 전이에요.", "바로 scrollTo를 호출하면 새 메시지가 들어가기 전 scrollHeight를 보고 스크롤합니다.", "그러면 스크롤이 한 칸 모자라요.", "flushSync로 동기적으로 DOM을 업데이트한 다음 scrollTo를 호출해야 정확한 위치로 갑니다.", "S2.3의 핵심 타이밍이에요."], "transcriptTimes": [{"start": 0.0, "end": 1.89}, {"start": 1.89, "end": 4.159}, {"start": 4.159, "end": 11.09}, {"start": 11.09, "end": 13.988}, {"start": 13.988, "end": 17.013}, {"start": 17.013, "end": 19.911}, {"start": 19.911, "end": 27.851}, {"start": 27.851, "end": 29.741}, {"start": 29.741, "end": 31.001}, {"start": 31.001, "end": 36.672}, {"start": 36.672, "end": 42.469}, {"start": 42.469, "end": 47.006}, {"start": 47.006, "end": 52.173}, {"start": 52.173, "end": 55.954}, {"start": 55.954, "end": 59.104}, {"start": 59.104, "end": 61.12}, {"start": 61.12, "end": 63.011}, {"start": 63.011, "end": 67.296}, {"start": 67.296, "end": 71.958}, {"start": 71.958, "end": 74.983}, {"start": 74.983, "end": 77.125}, {"start": 77.125, "end": 80.276}, {"start": 80.276, "end": 84.056}, {"start": 84.056, "end": 91.24}, {"start": 91.24, "end": 93.382}, {"start": 93.382, "end": 96.028}, {"start": 96.028, "end": 97.667}, {"start": 97.667, "end": 101.573}, {"start": 101.573, "end": 105.228}, {"start": 105.228, "end": 114.049}, {"start": 114.049, "end": 114.932}, {"start": 114.932, "end": 116.696}, {"start": 116.696, "end": 120.099}, {"start": 120.099, "end": 125.769}, {"start": 125.769, "end": 127.408}, {"start": 127.408, "end": 133.457}, {"start": 133.457, "end": 140.514}, {"start": 140.514, "end": 142.782}, {"start": 142.782, "end": 150.092}, {"start": 150.092, "end": 152.108}]}, {"png": "slides_png/slide.005.png", "mp3": "audio/slide_05.mp3", "transcript": ["블록 4, 다크모드 토글이에요.", "사용자가 우상단 토글을 누르면 light에서 dark로 바뀝니다.", "근데 토글마다 채팅이 재연결되면 곤란합니다.", "메시지가 끊기고 \"Reconnecting…\" 배지가 깜빡거려요.", "사용자 경험 망가집니다.", "naive 코드를 먼저 보세요.", "useEffect에서 connect를 호출하고, showToast로 \"Connected in 어떤 theme\" 알리고요.", "deps에 roomId랑 theme 둘 다 들어 있어요.", "왜 theme이 deps에 들어갔냐, Effect 안에서 theme을 읽기 때문입니다.", "linter가 자동으로 추가해줘요, exhaustive-deps 룰이 정확한 거예요.", "문제는 theme도 deps에 있으니까 토글마다 cleanup이 돌고 재연결됩니다.", "\"theme 바뀐 거랑 채팅 연결이 무슨 상관이지?\" 사용자는 모르죠.", "진단을 해볼게요.", "theme은 알림 메시지에만 쓰여요.", "연결 자체와는 무관합니다.", "\"Effect는 동기화한다\"는 관점에서 보면, theme은 연결 동기화에 속하지 않아요.", "non-reactive 의도예요.", "\"toast 띄울 때 최신 theme을 읽고 싶지만, theme 변경 자체로는 재실행을 안 일으키고 싶다.\" 이게 정확한 표현이에요.", "처방은 useEffectEvent.", "onConnected라는 함수를 useEffectEvent로 감싸서, 그 안에서 showToast를 호출.", "그러면 onConnected는 reactive하지 않습니다.", "Effect deps에 추가할 필요가 없어요.", "linter도 추가하라고 안 해요.", "Effect deps는 roomId만 남습니다.", "이제 theme 토글에 채팅이 영향을 안 받아요.", "왜 useEffectEvent냐.", "Effect 안에서 최신 theme은 읽되, theme 변경 자체로는 Effect를 다시 실행시키지 않아요.", "S6.2에서 본 동작이에요.", "\"reactive하지 않은 부분을 Effect 밖으로 추출\" 그게 핵심입니다.", "탈락 선택지 두 개.", "첫째, theme을 ref에 동기화.", "가능은 한데 보일러플레이트가 많아져요.", "useRef + useEffect로 theme 추적하고, Effect에서 ref.current 읽고.", "useEffectEvent가 의도가 더 명시적입니다.", "둘째, linter suppress.", "\"eslint-disable next-line\" 한 줄로 막는 거.", "S7.1에서 본 금지 원칙이라 탈락이에요.", "원인을 가린 거지 고친 게 아닙니다.", "참고로 useEffectEvent는 실험적 API라서, 코스 caveat에 적힌 대로 stable이 아니면 ref와 layoutEffect 패턴이 fallback이에요.", "프로젝트 환경에 따라 선택하세요."], "transcriptTimes": [{"start": 0.0, "end": 2.077}, {"start": 2.077, "end": 6.476}, {"start": 6.476, "end": 9.408}, {"start": 9.408, "end": 13.684}, {"start": 13.684, "end": 15.272}, {"start": 15.272, "end": 17.35}, {"start": 17.35, "end": 25.536}, {"start": 25.536, "end": 29.323}, {"start": 29.323, "end": 35.188}, {"start": 35.188, "end": 40.93}, {"start": 40.93, "end": 46.55}, {"start": 46.55, "end": 51.315}, {"start": 51.315, "end": 52.415}, {"start": 52.415, "end": 54.859}, {"start": 54.859, "end": 56.569}, {"start": 56.569, "end": 62.556}, {"start": 62.556, "end": 64.755}, {"start": 64.755, "end": 73.797}, {"start": 73.797, "end": 76.118}, {"start": 76.118, "end": 83.327}, {"start": 83.327, "end": 87.358}, {"start": 87.358, "end": 90.413}, {"start": 90.413, "end": 92.734}, {"start": 92.734, "end": 95.911}, {"start": 95.911, "end": 99.21}, {"start": 99.21, "end": 101.409}, {"start": 101.409, "end": 108.74}, {"start": 108.74, "end": 110.573}, {"start": 110.573, "end": 115.826}, {"start": 115.826, "end": 117.17}, {"start": 117.17, "end": 119.614}, {"start": 119.614, "end": 122.18}, {"start": 122.18, "end": 129.022}, {"start": 129.022, "end": 132.565}, {"start": 132.565, "end": 135.009}, {"start": 135.009, "end": 139.529}, {"start": 139.529, "end": 142.339}, {"start": 142.339, "end": 144.783}, {"start": 144.783, "end": 156.268}, {"start": 156.268, "end": 158.467}]}, {"png": "slides_png/slide.006.png", "mp3": "audio/slide_06.mp3", "transcript": ["블록 5, 추출입니다.", "이제 인라인으로 다 동작하는 코드를 깔끔한 hook으로 빼는 단계예요.", "순서가 중요합니다, 동작 먼저 추출은 나중.", "useChatRoom 함수를 만들어요.", "인자로 serverUrl, roomId, onMessage를 받습니다.", "함수 안에서 onMsg를 useEffectEvent로 감쌉니다.", "그리고 useEffect 안에서 createConnection으로 연결하고, 메시지 핸들러를 등록하고, cleanup에서 disconnect.", "deps는 serverUrl과 roomId.", "원칙 하나가 여기 있어요.", "reactive 값은 인자로 받고, 핸들러는 useEffectEvent로 wrap.", "이렇게 하면 deps 오염 없이 핸들러가 항상 최신 상태를 봅니다.", "호출처에서 onMessage가 매 렌더 새 함수여도, 안에서 useEffectEvent로 감싸니까 deps에 영향이 없어요.", "S8.3에서 본 패턴이에요.", "useData도 같이 추출해요.", "generic 형태로 url을 받고, 안에서 ignore flag 패턴을 캡슐화합니다.", "호출처는 그냥 const data = useData 호출 한 줄이면 끝이에요.", "race condition 처리는 hook 내부에 숨어 있고, 호출처는 결과만 받아요.", "왜 추출하냐.", "도메인 의미를 호출처에서 노이즈 없이 표현할 수 있어요.", "\"채팅방 연결\", \"데이터 fetch\" 이런 식으로 코드가 읽힙니다.", "컴포넌트 본문이 선언적으로 짧아져요.", "useEffect, cleanup, ignore flag 같은 메커니즘 디테일이 가려집니다.", "나중에 useSyncExternalStore로 내부 구현을 교체할 여지도 생깁니다.", "S8.5의 composition 관점이에요.", "hook의 입출력은 그대로 두고 내부만 바꾸면 호출처는 영향이 없어요.", "탈락 선택지 두 개.", "첫째, useMount나 useEffectOnce 같은 wrapper 추가.", "의도를 잃고 deps linter가 죽어요.", "S8.4에서 본 함정입니다.", "S9.C1에서도 봤죠, 같은 패턴이에요.", "둘째, 단일 사용처라서 추출 보류.", "이건 좀 가려야 해요.", "useData는 검색이랑 채팅 두 곳에서 fetch 패턴이 있으니 추출이 정당.", "useChatRoom은 단일 사용처지만 의도 캡슐화 가치가 큽니다.", "복잡한 동기화 로직을 컴포넌트 본문에서 빼는 것 자체가 가치예요.", "그래서 추출합니다."], "transcriptTimes": [{"start": 0.0, "end": 1.549}, {"start": 1.549, "end": 6.584}, {"start": 6.584, "end": 9.682}, {"start": 9.682, "end": 12.394}, {"start": 12.394, "end": 17.428}, {"start": 17.428, "end": 21.947}, {"start": 21.947, "end": 32.146}, {"start": 32.146, "end": 35.244}, {"start": 35.244, "end": 37.051}, {"start": 37.051, "end": 42.99}, {"start": 42.99, "end": 47.767}, {"start": 47.767, "end": 56.675}, {"start": 56.675, "end": 58.611}, {"start": 58.611, "end": 60.806}, {"start": 60.806, "end": 67.003}, {"start": 67.003, "end": 72.554}, {"start": 72.554, "end": 78.751}, {"start": 78.751, "end": 79.654}, {"start": 79.654, "end": 83.656}, {"start": 83.656, "end": 88.562}, {"start": 88.562, "end": 91.144}, {"start": 91.144, "end": 97.728}, {"start": 97.728, "end": 103.667}, {"start": 103.667, "end": 106.765}, {"start": 106.765, "end": 111.8}, {"start": 111.8, "end": 113.22}, {"start": 113.22, "end": 118.642}, {"start": 118.642, "end": 121.741}, {"start": 121.741, "end": 123.677}, {"start": 123.677, "end": 126.517}, {"start": 126.517, "end": 128.97}, {"start": 128.97, "end": 130.519}, {"start": 130.519, "end": 136.2}, {"start": 136.2, "end": 140.976}, {"start": 140.976, "end": 145.624}, {"start": 145.624, "end": 146.915}]}, {"png": "slides_png/slide.007.png", "mp3": "audio/slide_07.mp3", "transcript": ["이제 review 모드예요.", "동료가 PR을 보고 묻습니다.", "한 줄로 답해보세요.", "실전에서 이런 질문을 받으면 한 박자 늦게 답하지 말고, 결정 트리로 바로 답할 수 있어야 합니다.", "그게 시니어와 주니어를 가르는 차이예요.", "첫 질문.", "\"검색 결과를 useState로 두고 onChange에서 fetch하면 안 돼?\"", "답은요, query는 표시 중 동기화입니다.", "URL로 진입했을 때, 뒤로가기로 돌아왔을 때도 fetch가 필요해요.", "인터랙션 결과가 아닙니다.", "\"화면에 보여야 할 query 상태와 fetch 결과를 동기화하는 거\"라고 답하세요.", "\"onChange에 두면 URL 직접 진입한 사용자에겐 결과가 안 떠요.\" 이게 핵심 반증이에요.", "두 번째.", "\"flushSync 없이 그냥 setMessages 후 scrollTo 하면 안 돼?\"", "답은요, batching 때문에 DOM이 아직 새 메시지 반영 전이에요.", "scrollHeight가 stale입니다.", "스크롤이 한 칸 모자라게 가요.", "\"새 DOM 측정 후 명령형 호출이 필요할 때만 flushSync.\" 이 원칙으로 답하세요.", "세 번째.", "\"theme도 deps에 넣고 reconnect 받아들이면 안 돼?\"", "답은요, 사용자 경험 손상이에요.", "메시지가 끊기고 \"Reconnecting…\" 깜빡거립니다.", "가독성 대 정확성에서 정확성이 이깁니다.", "\"linter는 정확하지만, 정확한 deps가 의도와 다를 땐 useEffectEvent로 의도를 분리하라.\" 이게 답이에요.", "네 번째.", "\"useChatRoom 단일 사용처인데 왜 뺐어?\"", "답은요, 의도 캡슐화 더하기 테스트 가능성 더하기 미래의 useSyncExternalStore 교체 여지.", "세 가지 가치가 있을 때는 추출이 정당합니다.", "트레이드오프는 약간의 간접 지향, 하지만 그만한 가치가 있습니다.", "각 답변에서 \"다른 선택지, 왜 탈락\"을 꼭 포함하세요.", "\"이 도구를 골랐고, 이 도구는 이 이유로 떨어졌다.\" 이 형식이에요.", "두 가지를 같이 적으면 리뷰가 토론으로 넘어가지 않고 정리됩니다.", "이게 LO-S9.3의 본질입니다."], "transcriptTimes": [{"start": 0.0, "end": 1.862}, {"start": 1.862, "end": 3.848}, {"start": 3.848, "end": 5.213}, {"start": 5.213, "end": 12.039}, {"start": 12.039, "end": 14.77}, {"start": 14.77, "end": 15.39}, {"start": 15.39, "end": 20.976}, {"start": 20.976, "end": 23.954}, {"start": 23.954, "end": 28.795}, {"start": 28.795, "end": 30.532}, {"start": 30.532, "end": 36.366}, {"start": 36.366, "end": 43.068}, {"start": 43.068, "end": 43.689}, {"start": 43.689, "end": 49.646}, {"start": 49.646, "end": 54.611}, {"start": 54.611, "end": 57.466}, {"start": 57.466, "end": 59.576}, {"start": 59.576, "end": 65.905}, {"start": 65.905, "end": 66.526}, {"start": 66.526, "end": 71.242}, {"start": 71.242, "end": 73.477}, {"start": 73.477, "end": 77.448}, {"start": 77.448, "end": 80.179}, {"start": 80.179, "end": 88.867}, {"start": 88.867, "end": 89.487}, {"start": 89.487, "end": 92.963}, {"start": 92.963, "end": 100.286}, {"start": 100.286, "end": 103.388}, {"start": 103.388, "end": 107.857}, {"start": 107.857, "end": 111.704}, {"start": 111.704, "end": 116.545}, {"start": 116.545, "end": 121.013}, {"start": 121.013, "end": 123.247}]}, {"png": "slides_png/slide.008.png", "mp3": "audio/slide_08.mp3", "transcript": ["오늘 만든 앱을 한 번 더 짚고 마무리할게요.", "검색은 useData와 race 처리, S3.", "채팅은 useChatRoom과 재연결, S5.", "자동스크롤은 ref 더하기 flushSync, S2.", "다크모드는 useEffectEvent, S6.", "그리고 useChatRoom과 useData 추출이 S8.", "한 작은 앱에 코스의 모든 가지가 다 들어왔어요.", "S0 멘탈모델, S1 ref 격리, S2 DOM 조작, S3 동기화, S4 안 써도 되는 Effect, S5 reactive 라이프사이클, S6 useEffectEvent, S7 deps 줄이기, S8 Custom Hook.", "모든 섹션이 한 번씩 등장한 셈이에요.", "결정 트리는 코드 모든 줄에 적용했어요.", "왜 이 도구인가, 다른 건 왜 탈락인가, 어떤 트레이드오프인가.", "이 세 가지를 매번 입에 올리면 코드 리뷰의 격이 달라집니다.", "PR 코멘트가 단순한 지적이 아니라 작은 강의가 돼요.", "코스 전체를 관통한 원칙 하나로 마무리합니다.", "Escape Hatch는 마지막 수단이에요.", "React의 선언적 모델이 먼저고, 그 안에서 안 되는 부분에서만 ref, Effect, Custom Hook을 꺼냅니다.", "그러나 필요할 땐 정확히 씁니다.", "어설프게 피하면 더 큰 함정에 빠져요.", "escape hatch는 무서워서 안 쓰는 도구가 아니라, 알고 정확히 쓰는 도구입니다.", "S0 멘탈모델부터 여기까지, 한 바퀴 잘 돌아오셨습니다.", "Refs, Effects, Custom Hooks를 보는 눈이 처음과는 분명 달라졌을 거예요.", "처음에 막연했던 \"언제 useEffect를 쓰지\", \"왜 cleanup이 필요하지\", \"왜 deps에 뭐가 들어가지\" 같은 질문에 이제 결정 트리로 답할 수 있습니다.", "멘탈모델이 잡히면 코드가 짧아지고, 버그도 줄어들고, 리뷰도 빨라집니다.", "앞으로 본인 코드를 짤 때나 동료의 PR을 리뷰할 때, 오늘까지 본 결정 트리가 손에 익은 도구가 되길 바랍니다.", "코드 한 줄마다 \"왜 이 도구인가\" 물어보세요.", "그 질문이 쌓이면 시니어가 됩니다.", "긴 시간 함께해 주셔서 감사합니다.", "끝까지 따라와 주신 여러분 정말 수고하셨어요.", "React Escape Hatches 코스, 여기서 끝맺습니다.", "다음 코스에서 또 만나요."], "transcriptTimes": [{"start": 0.0, "end": 3.226}, {"start": 3.226, "end": 6.452}, {"start": 6.452, "end": 9.678}, {"start": 9.678, "end": 13.421}, {"start": 13.421, "end": 16.647}, {"start": 16.647, "end": 20.776}, {"start": 20.776, "end": 24.261}, {"start": 24.261, "end": 40.391}, {"start": 40.391, "end": 43.101}, {"start": 43.101, "end": 45.94}, {"start": 45.94, "end": 50.457}, {"start": 50.457, "end": 54.844}, {"start": 54.844, "end": 58.716}, {"start": 58.716, "end": 61.942}, {"start": 61.942, "end": 65.039}, {"start": 65.039, "end": 73.814}, {"start": 73.814, "end": 76.137}, {"start": 76.137, "end": 78.847}, {"start": 78.847, "end": 85.17}, {"start": 85.17, "end": 89.17}, {"start": 89.17, "end": 95.881}, {"start": 95.881, "end": 107.882}, {"start": 107.882, "end": 113.044}, {"start": 113.044, "end": 121.174}, {"start": 121.174, "end": 124.529}, {"start": 124.529, "end": 126.981}, {"start": 126.981, "end": 129.433}, {"start": 129.433, "end": 132.659}, {"start": 132.659, "end": 137.175}, {"start": 137.175, "end": 138.982}]}];
+let current = 0;
+const img = document.getElementById('slide');
+const audio = document.getElementById('audio');
+const txBody = document.getElementById('tx-body');
+const pos = document.getElementById('pos');
+const thumbs = document.getElementById('thumbs');
+const btnPrev = document.getElementById('prev');
+const btnPlay = document.getElementById('play');
+const btnNext = document.getElementById('next');
+
+SLIDES.forEach((s, i) => {
+  const t = document.createElement('div');
+  t.className = 'thumb';
+  t.dataset.i = i;
+  t.innerHTML = '<img src="' + s.png + '"/><span>' + (i+1) + '</span>';
+  t.onclick = () => loadSlide(i, true);
+  thumbs.appendChild(t);
+});
+
+function loadSlide(i, autoplay, resumeTime) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, i));
+  const s = SLIDES[current];
+  img.src = s.png;
+  audio.src = s.mp3;
+  if (resumeTime && resumeTime > 1) {
+    audio.addEventListener('loadedmetadata', () => {
+      const dur = audio.duration;
+      if (isFinite(dur)) audio.currentTime = Math.min(resumeTime, Math.max(0, dur - 1));
+    }, { once: true });
+  }
+  pos.textContent = (current + 1) + ' / ' + SLIDES.length;
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === SLIDES.length - 1;
+
+  txBody.innerHTML = '';
+  const times = s.transcriptTimes || [];
+  s.transcript.forEach((line, idx) => {
+    const p = document.createElement('p');
+    p.textContent = line;
+    const t = times[idx];
+    if (t && typeof t.start === 'number' && typeof t.end === 'number') {
+      p.dataset.start = t.start;
+      p.dataset.end = t.end;
+    }
+    txBody.appendChild(p);
+  });
+
+  document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('current', idx === current));
+  const cur = document.querySelector('.thumb.current');
+  if (cur) cur.scrollIntoView({block:'nearest', inline:'center'});
+
+  maybeShowEnd();
+  saveState();
+
+  if (autoplay) audio.play().catch(() => {});
+}
+
+// localStorage resume — key = page path so each class gets its own slot
+const STORAGE_KEY = 'course-builder:' + location.pathname;
+const STATE_MAX_AGE_MS = 30 * 86400 * 1000;
+let lastSaveTs = 0;
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      slide: current,
+      time: audio.currentTime || 0,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
+function loadResumeState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > STATE_MAX_AGE_MS) return null;
+    if (typeof s.slide !== 'number' || s.slide < 0 || s.slide >= SLIDES.length) return null;
+    // Don't bother prompting if they barely started
+    if (s.slide === 0 && (s.time || 0) < 3) return null;
+    return s;
+  } catch(e) { return null; }
+}
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+function fmtTime(t) {
+  const sec = Math.max(0, Math.floor(t || 0));
+  return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}
+
+let lastActiveLine = null;
+audio.addEventListener('timeupdate', () => {
+  const now = Date.now();
+  if (now - lastSaveTs > 3000) { saveState(); lastSaveTs = now; }
+  // Highlight the transcript line whose [start, end) range contains currentTime.
+  // Line timings come from char-proportional splitting of the slide's MP3 duration.
+  const t = audio.currentTime;
+  const lines = txBody.children;
+  let newActive = null;
+  for (let i = 0; i < lines.length; i++) {
+    const el = lines[i];
+    const s = parseFloat(el.dataset.start);
+    const e = parseFloat(el.dataset.end);
+    if (!isNaN(s) && !isNaN(e) && t >= s && t < e) { newActive = el; break; }
+  }
+  if (newActive !== lastActiveLine) {
+    if (lastActiveLine) lastActiveLine.classList.remove('active');
+    if (newActive) {
+      newActive.classList.add('active');
+      newActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    lastActiveLine = newActive;
+  }
+});
+
+// Playback speed — single cycle button, global across classes
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const SPEED_KEY = 'course-builder:playback-speed';
+const btnSpeed = document.getElementById('speed');
+
+function loadSpeed() {
+  try {
+    const v = parseFloat(localStorage.getItem(SPEED_KEY));
+    if (SPEEDS.includes(v)) return v;
+  } catch(e) {}
+  return 1;
+}
+function applySpeed(v) {
+  audio.playbackRate = v;
+  if ('preservesPitch' in audio) audio.preservesPitch = true;
+  // Display: 1× (no decimal) / 1.25× / 1.5× etc.
+  btnSpeed.textContent = (Number.isInteger(v) ? v : v.toString()) + '×';
+  btnSpeed.classList.toggle('speed-fast', v > 1);
+  btnSpeed.classList.toggle('speed-slow', v < 1);
+}
+let currentSpeed = loadSpeed();
+applySpeed(currentSpeed);
+btnSpeed.onclick = () => {
+  const idx = SPEEDS.indexOf(currentSpeed);
+  currentSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+  applySpeed(currentSpeed);
+  try { localStorage.setItem(SPEED_KEY, String(currentSpeed)); } catch(e) {}
+};
+audio.addEventListener('loadedmetadata', () => { audio.playbackRate = currentSpeed; });
+
+const endPanel = document.getElementById('end-panel');
+const slideFill = document.getElementById('slide-fill');
+const slideNumEl = document.getElementById('slide-num');
+const toc = document.getElementById('toc');
+const menuToggle = document.getElementById('menu-toggle');
+menuToggle.addEventListener('click', () => toc.classList.toggle('open'));
+
+function maybeShowEnd() {
+  if (current === SLIDES.length - 1) {
+    endPanel.classList.add('active');
+  } else {
+    endPanel.classList.remove('active');
+  }
+  // Update progress bar
+  const pct = ((current + 1) / SLIDES.length) * 100;
+  slideFill.style.width = pct + '%';
+  slideNumEl.textContent = current + 1;
+}
+
+btnPrev.onclick = () => loadSlide(current - 1, true);
+btnNext.onclick = () => loadSlide(current + 1, true);
+btnPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
+
+audio.addEventListener('play', () => btnPlay.textContent = '⏸ 일시정지');
+audio.addEventListener('pause', () => btnPlay.textContent = '▶ 재생');
+audio.addEventListener('ended', () => {
+  if (current < SLIDES.length - 1) {
+    loadSlide(current + 1, true);
+  } else {
+    maybeShowEnd();
+    endPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); btnPlay.click(); }
+  else if (e.key === 'ArrowRight') btnNext.click();
+  else if (e.key === 'ArrowLeft') btnPrev.click();
+});
+
+// Initial load — show resume banner if prior state exists, otherwise start at slide 0
+const resumeState = loadResumeState();
+loadSlide(0, false);
+if (resumeState) {
+  document.getElementById('resume-pos').textContent =
+    '슬라이드 ' + (resumeState.slide + 1) + ' · ' + fmtTime(resumeState.time);
+  const banner = document.getElementById('resume-banner');
+  banner.classList.add('show');
+  document.getElementById('resume-yes').onclick = () => {
+    banner.classList.remove('show');
+    loadSlide(resumeState.slide, true, resumeState.time);
+  };
+  document.getElementById('resume-no').onclick = () => {
+    banner.classList.remove('show');
+    clearState();
+  };
+}
+</script>
+</body>
+</html>

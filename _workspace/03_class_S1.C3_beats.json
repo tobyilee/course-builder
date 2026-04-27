@@ -1,0 +1,103 @@
+{
+  "class_id": "S1.C3",
+  "title": "Ref 안티패턴과 전역 변수 → ref 리팩터링",
+  "lo_ids": ["LO-S1.4", "LO-S1.5"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "ref가 강력하다고 아무 곳에나 쓰면 무서운 일이 생긴다",
+        "카운터 버튼을 만들었는데 — 클릭해도 화면 숫자가 안 바뀐다",
+        "토글 스위치를 만들었는데 — 항상 'Off'만 보인다",
+        "두 버그 모두 'ref를 잘못된 자리에 쓴' 같은 원인에서 나온다",
+        "오늘은 안티패턴을 식별하고, 전역 변수로 timeout을 관리하던 디바운싱 코드를 ref로 리팩터링한다"
+      ],
+      "lo_ids": ["LO-S1.4"],
+      "visual_hint": "두 개의 GIF 풍 미니 데모: 카운터(클릭해도 0 그대로), 토글(항상 Off). 둘 다 빨간 X",
+      "speaker_affect": "호기심 유발, 약간의 미스터리 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "안티패턴 1 — 렌더 결과에 쓰일 값을 ref에 저장: `<button>You clicked {countRef.current} times</button>`",
+        "왜 깨지는가: ref.current가 바뀌어도 React는 재렌더하지 않는다 → 화면에는 옛 값이 그대로 박혀 있다 (stale 표시)",
+        "안티패턴 2 — 렌더 함수 안에서 ref.current를 읽어 분기/렌더 — 비결정적: React는 언제 렌더할지 정확한 보장이 없고 ref는 mutable이라 같은 입력에 다른 출력이 나올 수 있다",
+        "원칙: 렌더 중에는 ref.current를 읽거나 쓰지 않는다 (초기화 `useRef(initial)` 호출만 예외)",
+        "안전한 자리: 이벤트 핸들러, Effect 안 — 렌더가 끝난 뒤"
+      ],
+      "lo_ids": ["LO-S1.4"],
+      "visual_hint": "타임라인 — '렌더 중 영역(빨간 빗금)'과 '핸들러/Effect 영역(초록)'으로 가른 띠. ref 아이콘이 빨간 영역에 들어가면 X, 초록 영역에서 OK",
+      "speaker_affect": "강조, 경고 톤이지만 친근하게"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "Counter 안티패턴 진단: handleClick에서 `countRef.current++`만 한다 → ref는 1, 2, 3으로 증가하지만 재렌더가 없어 화면은 0",
+        "수정: 화면에 보여야 하는 값이므로 useState로 바꾼다",
+        "Toggle 안티패턴 진단: `<div>{isOnRef.current ? 'On' : 'Off'}</div>` — 토글 핸들러가 ref를 바꿔도 재렌더가 없으니 화면은 영원히 'Off'",
+        "수정: 표시 값이므로 useState",
+        "공통 진단 질문 한 줄: '이 값이 바뀌면 화면이 다시 그려져야 하는가?' YES면 state로 옮긴다"
+      ],
+      "lo_ids": ["LO-S1.4"],
+      "examples": [
+        "Counter (ref 잘못 사용) — state로 정정",
+        "Toggle (ref 잘못 사용) — state로 정정"
+      ],
+      "visual_hint": "Before/After 코드 비교 두 세트 — countRef→useState, isOnRef→useState 화살표",
+      "speaker_affect": "차분하게, 진단→수정 흐름을 또박또박"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 170,
+      "key_points": [
+        "리팩터링 대상: 디바운싱 버튼이 모듈 최상단에 `let timeoutID;`를 두고 모든 인스턴스가 공유 중",
+        "버그 재현: 버튼 A를 누른 직후 버튼 B를 누르면, 버튼 B가 시작한 timeout이 버튼 A의 ID를 덮어써 A의 cancel이 의도와 다르게 동작",
+        "리팩터링: 모듈 최상단의 `let timeoutID;` 제거 → 컴포넌트 본문 안에 `const timeoutRef = useRef(null);` 추가",
+        "코드 안의 `timeoutID =` 대입을 `timeoutRef.current =`로, `clearTimeout(timeoutID)`를 `clearTimeout(timeoutRef.current)`로 일괄 변경",
+        "결과: 각 인스턴스가 자기만의 `{ current }`를 가져 인스턴스별 격리 회복 — 화면에는 영향 없으니 state 아님이 정당화된다"
+      ],
+      "lo_ids": ["LO-S1.5"],
+      "examples": [
+        "DebouncedButton 리팩터링 — 모듈 전역 let timeoutID → useRef"
+      ],
+      "visual_hint": "리팩터링 다이어그램 — Before: 버튼 3개가 한 개의 공유 변수에 화살표를 그어 충돌. After: 버튼 3개가 각자 자기 ref 박스를 가져 격리",
+      "speaker_affect": "친근하게, 단계별 변환을 코치하듯"
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "duration_sec": 100,
+      "key_points": [
+        "스스로 진단해보기: 다음 코드 스니펫이 어떤 안티패턴인지 한 줄로 답해보세요",
+        "(a) `return <span>{positionRef.current.x}</span>` — 마우스 위치 표시 컴포넌트",
+        "(b) `if (modeRef.current === 'dark') return <Dark/>` — 렌더 함수 안 분기",
+        "(c) 모듈 전역 `let activeTimer;`로 여러 카드의 자동 닫힘 타이머 관리",
+        "각 케이스의 처방을 떠올려본다 — (a)(b)는 state로, (c)는 useRef로 리팩터링"
+      ],
+      "lo_ids": ["LO-S1.4", "LO-S1.5"],
+      "visual_hint": "퀴즈 카드 3장 — 각 카드 뒷면에 (a) stale 표시 → state, (b) 비결정적 렌더 → state, (c) 인스턴스 충돌 → useRef 정답",
+      "speaker_affect": "친근하게, 잠시 멈춰 생각해보라고 권유"
+    },
+    {
+      "id": "b6",
+      "type": "recap",
+      "duration_sec": 40,
+      "key_points": [
+        "안티패턴 식별 한 줄: 렌더 결과·렌더 분기에 ref.current를 쓰면 stale·비결정적 렌더가 난다",
+        "전역 변수 → useRef 리팩터링은 인스턴스별 격리를 회복시키는 표준 처방",
+        "다음 섹션에서는 같은 ref를 'DOM 노드'에 붙여 focus·scroll 같은 명령형 작업으로 확장한다"
+      ],
+      "lo_ids": ["LO-S1.4", "LO-S1.5"],
+      "visual_hint": "핵심 3카드 — 마지막에 다음 섹션(S2: DOM 조작) 예고 배지",
+      "speaker_affect": "차분하게, 섹션 마무리 + 다음 섹션 기대감"
+    }
+  ]
+}

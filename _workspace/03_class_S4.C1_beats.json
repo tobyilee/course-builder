@@ -1,0 +1,106 @@
+{
+  "class_id": "S4.C1",
+  "title": "Effect 안 써도 되는 경우 — 진단 프레임과 결정 트리",
+  "lo_ids": ["LO-S4.1"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "코드베이스에 흩어진 useEffect 70%는 실은 Effect가 아니어도 된다는 도발적 주장",
+        "fullName을 useState+useEffect로 동기화하던 흔한 코드 한 컷을 미끼로 보여주기",
+        "'외부 시스템이 없으면 Effect도 필요 없다'는 한 문장 원칙 예고"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "왼쪽: 빨간색 useEffect 코드 한 줄, 오른쪽: 초록색 한 줄 계산 — 대조 split view",
+      "speaker_affect": "호기심 유발, 도발적"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "Effect의 정의 복습: '외부 시스템과의 동기화 escape hatch'",
+        "외부 시스템이 없는 상황에서 Effect를 쓰면 발생하는 3가지 비용 — 불필요한 추가 렌더, dev 더블 마운트 시 두 번 실행, 의존성 트래킹 부담",
+        "이 섹션의 학습 목적: '쓰지 말아야 할 경우'를 패턴화해서 진단 능력을 기르기"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "Effect 정의 박스 + '외부 시스템' 예시 아이콘들(서버, DOM, 타이머)",
+      "speaker_affect": "차분하게, 또렷이"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 160,
+      "key_points": [
+        "12가지 안티패턴을 5개 그룹으로 묶는다",
+        "그룹 A — Derived state: #1 props/state 갱신, #2 비싼 계산 캐싱",
+        "그룹 B — State 리셋/조정: #3 전체 리셋, #4 부분 조정",
+        "그룹 C — 인터랙션 vs 표시: #5 핸들러 공유, #6 POST, #7 체인, #8 초기화, #9 부모 통지, #10 부모 데이터 전달",
+        "그룹 D — 외부 통합: #11 store 구독, #12 fetch race"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "12개 패턴을 5개 색상 그룹으로 묶은 카드 그리드",
+      "speaker_affect": "체계적으로, 안내자 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "결정 트리 첫 공개 — 5개 질문을 순서대로",
+        "Q1: render 중 계산 가능? → 그렇다면 state·Effect 둘 다 X",
+        "Q2: 비싼 계산? → useMemo",
+        "Q3: 사용자 인터랙션 결과? → 핸들러",
+        "Q4: prop 변경 시 리셋? → key prop",
+        "Q5: 외부 store? → useSyncExternalStore (마지막에 비로소 Effect)"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "위에서 아래로 흐르는 결정 트리 다이어그램, 각 분기 끝에 도구 이름",
+      "speaker_affect": "강조, 핵심 전달"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 80,
+      "key_points": [
+        "짧은 진단 미니 케이스 3개를 결정 트리로 흘려보내기",
+        "케이스1: 'firstName + lastName' → Q1에서 즉시 종료 (render 중 계산)",
+        "케이스2: '폼 제출 시 POST' → Q3에서 핸들러로",
+        "케이스3: 'navigator.onLine 구독' → Q5에서 useSyncExternalStore",
+        "이후 클래스가 각 가지를 채울 것임을 예고"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "결정 트리 위에 3개 케이스가 화살표로 다른 leaf로 떨어지는 애니메이션 컷",
+      "speaker_affect": "친근하게, 예시 안내"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 50,
+      "key_points": [
+        "자문자답: '검색어 입력에 따라 결과 목록을 갱신하려는 Effect는 어느 가지로 가야 할까?'",
+        "힌트: 검색어는 prop/state, 결과 목록은 derived하지만 fetch가 외부 시스템이라는 점",
+        "정답 미리보기는 S4.C5에서 — 지금은 결정 트리를 한 번 따라가 보는 것이 목적"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "결정 트리 옆에 학습자가 따라갈 수 있는 빈 경로 점선",
+      "speaker_affect": "도전 유도, 친근하게"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 20,
+      "key_points": [
+        "Effect는 외부 시스템 동기화 전용 — 그 외엔 다른 도구",
+        "12가지 안티패턴은 5그룹·5질문 결정 트리로 정리됨",
+        "다음 4개 클래스가 각 가지를 Before/After로 채움"
+      ],
+      "lo_ids": ["LO-S4.1"],
+      "visual_hint": "5질문이 적힌 결정 트리 요약 1장",
+      "speaker_affect": "마무리, 또렷이"
+    }
+  ]
+}

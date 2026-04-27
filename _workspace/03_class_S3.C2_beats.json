@@ -1,0 +1,134 @@
+{
+  "class_id": "S3.C2",
+  "title": "useEffect 시그니처, 의존성 배열, cleanup 패턴",
+  "lo_ids": ["LO-S3.2", "LO-S3.3"],
+  "target_duration_sec": 840,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "지난 시간: Effect는 '동기화'다 — 그럼 '언제, 얼마나 자주' 동기화할지는 누가 정하나?",
+        "정답: 두 번째 인자 — 의존성 배열. 이 한 줄이 매 렌더, 마운트 한 번, 또는 특정 값 변경 시점을 가른다",
+        "그리고 동기화의 다른 절반 — '이전 연결을 끊는' cleanup. 이게 빠지면 메모리 누수와 좀비 구독이 쌓인다"
+      ],
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "visual_hint": "useEffect(setup, deps) 시그니처를 크게 띄우고 deps 위치에 형광펜 강조 + return cleanup 부분도 강조",
+      "speaker_affect": "호기심 유발, 활기차게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "시그니처: useEffect(setup, deps?) — setup은 '동기화 시작', deps는 '언제 다시 실행할지'",
+        "deps 형태 1 — 생략: 매 렌더 후 실행 (대부분의 경우 잘못된 신호)",
+        "deps 형태 2 — []: 컴포넌트 마운트 시 1회 (개발 모드에선 2회로 보임, 다음 클래스 주제)",
+        "deps 형태 3 — [a, b]: 마운트 시 + a 또는 b가 Object.is 기준으로 바뀔 때마다",
+        "포인트: deps는 '내가 고르는 값'이 아니라 'Effect 안에서 읽는 reactive 값을 그대로 적은 것'"
+      ],
+      "lo_ids": ["LO-S3.2"],
+      "visual_hint": "표 3행: '생략 / [] / [a,b]' × '매 렌더 / 마운트 1회 / 변경 시' — 각 행에 1줄 코드 예",
+      "speaker_affect": "또박또박 정리"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "시연 코드: console.log를 useEffect 안에 둔 카운터 컴포넌트",
+        "deps 생략 → 버튼 누를 때마다 로그(매 렌더)",
+        "deps [] → 첫 진입 시만 로그(이후 클릭은 무반응)",
+        "deps [count] → count가 바뀔 때만 로그, 다른 state 바꿔도 무반응",
+        "이 차이를 '동기화 빈도 다이얼'처럼 머리에 새기면 의존성 직관이 잡힌다"
+      ],
+      "lo_ids": ["LO-S3.2"],
+      "visual_hint": "3분할 화면: 같은 코드 + deps만 다른 3가지 — 각 패널에 콘솔 로그 출력 결과 시각화",
+      "speaker_affect": "차분하게 시연"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 100,
+      "key_points": [
+        "이제 동기화의 나머지 절반 — cleanup. setup이 return하는 함수가 cleanup이 된다",
+        "언제 호출되나: ① 컴포넌트 unmount 시, ② 다음 setup 직전(deps가 바뀌어 재실행되기 전)",
+        "역할: '이전 동기화'가 만든 효과를 깨끗하게 거둬간다 — 안 그러면 '둘 다 살아있는 상태'가 됨",
+        "패턴은 항상 한 쌍: connect/disconnect, addEventListener/removeEventListener, startAnim/resetAnim, 시작/취소"
+      ],
+      "lo_ids": ["LO-S3.3"],
+      "visual_hint": "타임라인: setup → (deps 변경) → cleanup → setup → ... → unmount → cleanup. 각 박스 페어링 화살표",
+      "speaker_affect": "강조, 짝 패턴 부각"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 100,
+      "key_points": [
+        "패턴 1 — chat connection: const conn = createConnection(roomId); conn.connect(); return () => conn.disconnect();",
+        "deps에 [roomId] — 방을 옮기면 cleanup이 옛 방을 끊고 새 방을 연결",
+        "cleanup 빠지면? 방을 옮길 때마다 옛 연결이 살아남아 N개 방에 동시 접속(좀비 연결)",
+        "production 사고의 단골 원인 — 메시지가 자꾸 두 번씩 도착하는 그 버그"
+      ],
+      "lo_ids": ["LO-S3.3"],
+      "visual_hint": "코드 스니펫 옆에 방 A→B→C 전환 시 연결이 정확히 1개만 살아있는 다이어그램(cleanup 있을 때) vs 누적되는 다이어그램(없을 때)",
+      "speaker_affect": "사례 강조, 약간 경고 톤"
+    },
+    {
+      "id": "b6",
+      "type": "example",
+      "duration_sec": 100,
+      "key_points": [
+        "패턴 2 — scroll/resize 리스너: window.addEventListener('scroll', handler); return () => window.removeEventListener('scroll', handler);",
+        "removeEventListener는 '같은 함수 참조'여야 동작 — Effect 안에서 정의한 handler를 그대로 넘긴다",
+        "패턴 3 — animation reset: opacity = 1로 시작 → cleanup에선 opacity 원복(또는 cancelAnimationFrame)",
+        "공통: '시작한 효과를 정확히 같은 손으로 거둔다'"
+      ],
+      "lo_ids": ["LO-S3.3"],
+      "visual_hint": "두 칸 코드: 좌 addEventListener/removeEventListener 페어, 우 시작/리셋 애니메이션 페어 — 같은 함수 참조 화살표 강조",
+      "speaker_affect": "또박또박, 페어링 강조"
+    },
+    {
+      "id": "b7",
+      "type": "example",
+      "duration_sec": 100,
+      "key_points": [
+        "패턴 4 — fetch race condition: 검색어가 빠르게 바뀌면 늦은 응답이 빠른 응답을 덮어쓸 수 있다",
+        "처방: let ignore = false; fetch(...).then(r => { if (!ignore) setData(r); }); return () => { ignore = true; };",
+        "이전 query의 cleanup이 ignore=true로 만들어, 늦게 도착한 응답을 폐기",
+        "fetch 자체를 abort하는 AbortController 변형도 같은 의도 — '이전 동기화의 결과를 무시한다'"
+      ],
+      "lo_ids": ["LO-S3.3"],
+      "visual_hint": "타임라인: query 'a' fetch → query 'ab' fetch → 'a' 늦게 도착 → ignore 플래그가 막아냄(빨간 X)",
+      "speaker_affect": "사례 풀어 설명, 살짝 긴장감"
+    },
+    {
+      "id": "b8",
+      "type": "practice",
+      "duration_sec": 90,
+      "key_points": [
+        "자문자답 1: useEffect(() => { setInterval(tick, 1000); }, []) — 이 코드 어디가 잘못됐나? (cleanup에 clearInterval 없음)",
+        "자문자답 2: 같은 코드에 cleanup으로 clearInterval을 넣었다면 deps가 [tick]일 때 어떻게 되나? (tick이 바뀔 때마다 정리하고 재시작)",
+        "자문자답 3: 검색 자동완성에서 race condition을 막으려면 cleanup에 무엇을 둬야 하나? (ignore = true 또는 controller.abort())"
+      ],
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "visual_hint": "퀴즈 카드 3장 — 각 코드 스니펫 + '여기를 고쳐보세요' 강조",
+      "speaker_affect": "잠시 멈춤 유도, 친근하게"
+    },
+    {
+      "id": "b9",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "deps는 동기화 빈도의 다이얼: 생략 / [] / [a,b] = 매 렌더 / 마운트 1회 / 값 변경 시",
+        "cleanup은 동기화의 다른 절반 — '시작한 것을 정확히 같은 손으로 거둔다'",
+        "4가지 cleanup 패턴: connect/disconnect, add/removeEventListener, animation reset, fetch ignore-flag",
+        "다음 시간엔 dev에서 Effect가 두 번 실행돼 보이는 Strict Mode의 의도와, ref로 회피하면 왜 더 큰 사고로 번지는지 본다"
+      ],
+      "lo_ids": ["LO-S3.2", "LO-S3.3"],
+      "visual_hint": "요약 카드: 좌측 deps 표, 우측 4 cleanup 패턴 아이콘 — 하단에 다음 클래스 예고",
+      "speaker_affect": "정리 톤, 따뜻하게 마무리"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "section_id": "S9",
+  "classes": [
+    {
+      "id": "S9.C1",
+      "slug": "01-antipattern-diagnosis-clinic",
+      "title": "안티패턴 진단 클리닉 — 코드 6개, 어디가 잘못됐나",
+      "lo_ids": ["LO-S9.1"],
+      "duration_min": 12,
+      "depends_on": [],
+      "summary": "S1~S8에서 본 escape hatch 오용 패턴 6개(전역 timeout, 렌더 중 ref.current 읽기, derived state Effect, Effect chain, options 객체로 인한 무한 재연결, useMount lifecycle wrapper)를 짧은 스니펫으로 빠르게 진단한다. 각 케이스마다 '어떤 패턴인가 → 영향도 × 수정 난이도 → 어느 섹션 도구로 고치나'를 30초 안에 답하는 훈련. 마지막 5분은 영향도/난이도 매트릭스 위에 6개 케이스를 배치해 리팩터링 우선순위를 매긴다."
+    },
+    {
+      "id": "S9.C2",
+      "slug": "02-integrated-case-study-and-review",
+      "title": "통합 케이스 스터디 — 검색 채팅방을 처음부터 끝까지",
+      "lo_ids": ["LO-S9.2", "LO-S9.3"],
+      "duration_min": 13,
+      "depends_on": ["S9.C1"],
+      "summary": "검색 가능한 채팅방 앱(메시지 fetch with race-safe useData + useChatRoom 재연결 + 새 메시지 자동 스크롤 ref + flushSync 타이밍 + useOnlineStatus 배지 + 다크모드 토글)을 코스 결정 트리대로 단계 빌드한다. 빌드가 끝나면 review 모드로 전환 — 각 escape hatch 사용 지점마다 '왜 ref인가 / 왜 Effect인가 / 왜 useEffectEvent인가, 다른 선택지(useMemo, key, useSyncExternalStore)는 왜 탈락했나, 어떤 트레이드오프(가독성 vs 캡슐화 vs 마이그레이션 비용)를 받아들였나'를 동료 PR 코멘트 톤으로 정당화하며 코스를 마무리한다."
+    }
+  ]
+}

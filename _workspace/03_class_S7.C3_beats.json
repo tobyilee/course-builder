@@ -1,0 +1,121 @@
+{
+  "class_id": "S7.C3",
+  "title": "전략 4-6 — useEffectEvent · Effect 분리 · 객체 prop 분해",
+  "lo_ids": ["LO-S7.2", "LO-S7.4"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "Welcome 화면이 사용자 입력(slider)을 만질 때마다 페이드인이 처음부터 다시 시작된다면?",
+        "또는 부모가 리렌더할 때마다 채팅이 끊겼다 다시 붙는다면?",
+        "남은 3 전략으로 '읽고는 싶지만 반응시키고 싶지는 않은' 시나리오를 정복합니다"
+      ],
+      "lo_ids": ["LO-S7.2"],
+      "visual_hint": "두 개 스플릿 GIF: (1) slider 움직일 때마다 fade가 리셋되는 화면 (2) 부모 렌더마다 'connecting...' 메시지가 깜빡이는 화면",
+      "speaker_affect": "문제 공감, 가볍게 웃으며"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "전략 4: 비-반응형 로직은 useEffectEvent로 추출",
+        "Effect 안에서 '읽고 싶지만 변경에 반응하고 싶지는 않은' 값(isMuted, theme, duration 등)이 있을 때",
+        "useEffectEvent(handler)는 항상 최신 값을 보지만 reactive하지 않음 → deps에 넣지 않는다 (넣을 수도 없음)",
+        "제약: Effect 안에서만 호출, 다른 컴포넌트/Hook에 넘기지 말 것",
+        "적용 신호: '이 값이 바뀌어도 동기화는 다시 안 해도 돼'"
+      ],
+      "lo_ids": ["LO-S7.2"],
+      "visual_hint": "Effect 박스 안 두 영역: '반응형(roomId)'과 '비반응형(isMuted)'. 비반응형 영역을 점선 박스로 빼서 useEffectEvent 라벨",
+      "speaker_affect": "분명하게, 도구 소개 톤"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 170,
+      "key_points": [
+        "Welcome({ duration }) Animation 케이스",
+        "Before: useEffect(() => { const a = new FadeInAnimation(ref.current); a.start(duration); }, [duration]) — slider로 duration 바꿀 때마다 애니메이션 처음부터 다시",
+        "After: const onAppear = useEffectEvent(a => a.start(duration)); useEffect(() => { const a = new FadeInAnimation(ref.current); onAppear(a); }, [])",
+        "결과: mount 시 한 번만 시작. duration 변경은 다음 mount 때 반영(현재 진행 애니메이션은 안 끊김)",
+        "포인트: '값을 읽긴 했지만 재실행 트리거에선 빠진다' — 거울이 아닌 '거울 옆 메모지'"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.4"],
+      "visual_hint": "왼쪽 Before 타임라인: slider 이벤트마다 'fade restart' 화살표 다발 / 오른쪽 After 타임라인: 'fade start' 한 번만",
+      "speaker_affect": "흥미롭게, 'a-ha' 모먼트 유도"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "전략 5: 한 Effect에 묶인 무관한 동기화는 두 Effect로 분리",
+        "신호: deps가 [a, b]인데 a 바뀔 때 b 관련 동기화도 같이 재실행되는 게 어색할 때",
+        "country fetch + city fetch가 같은 Effect → city 변경 시 country fetch까지 재실행되는 비효율/버그",
+        "분리 후: 각 Effect의 deps가 깨끗해지고 재실행 트리거가 정확해진다",
+        "원칙: '하나의 Effect = 하나의 동기화 목적'"
+      ],
+      "lo_ids": ["LO-S7.2"],
+      "visual_hint": "Before: 큰 Effect 박스 하나에 두 fetch 화살표 / After: 작은 Effect 박스 두 개로 쪼개짐. deps도 [country], [city]로 분리",
+      "speaker_affect": "정돈하는 톤, '깨끗하게 갈라봅시다'"
+    },
+    {
+      "id": "b5",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "전략 6: 객체/함수 prop을 원시값으로 분해",
+        "부모가 <ChatRoom options={{ serverUrl, roomId }} />처럼 매 렌더 새 객체를 넘기면 자식 deps=[options]가 매번 달라짐",
+        "해결: <ChatRoom roomId={roomId} serverUrl={serverUrl} />로 평탄화, 자식은 deps=[roomId, serverUrl]",
+        "원시값(string/number/boolean)은 Object.is 비교에서 같은 값이면 안정",
+        "적용 신호: '부모가 리렌더만 해도 자식 Effect가 재실행된다'"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.4"],
+      "visual_hint": "부모-자식 트리 다이어그램. Before: options 객체 prop 한 개에 빨간 '새 참조' 표시 / After: roomId, serverUrl 두 prop으로 펼쳐진 화살표",
+      "speaker_affect": "안정감 있게"
+    },
+    {
+      "id": "b6",
+      "type": "example",
+      "duration_sec": 60,
+      "key_points": [
+        "ChatRoom 통합 정리: roomId/serverUrl 원시값 prop + Effect 안에서 options 생성 + deps=[roomId, serverUrl]",
+        "전략 2 + 전략 6 조합 — 객체 참조 문제는 보통 이 둘이 함께 등장",
+        "cleanup으로 disconnect도 잊지 말기"
+      ],
+      "lo_ids": ["LO-S7.4"],
+      "visual_hint": "최종 ChatRoom 코드 한 화면, 핵심 라인 하이라이트(원시값 prop, options Effect 안 생성, cleanup)",
+      "speaker_affect": "마무리하듯 단단하게"
+    },
+    {
+      "id": "b7",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "미니 자문자답: 적용 전략은?",
+        "(a) theme 토글마다 채팅이 재연결됨 (theme은 알림 색상에만 쓰임) → 전략 4 (useEffectEvent)",
+        "(b) Effect 하나가 socket 연결 + 분석 로깅을 같이 함 → 전략 5 (분리)",
+        "(c) 부모가 onChange={() => ...}로 인라인 함수 prop 넘김, 자식 deps=[onChange] → 전략 6 (또는 전략 2: Effect 안에서 정의)"
+      ],
+      "lo_ids": ["LO-S7.2"],
+      "visual_hint": "3 카드 형식 미니 퀴즈. 정답은 다음 슬라이드 X, 다음 class에서 종합 케이스로 확인",
+      "speaker_affect": "함께 풀어보자, 즐겁게"
+    },
+    {
+      "id": "b8",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "전략 4 — 비반응형 로직은 useEffectEvent로",
+        "전략 5 — 무관한 동기화는 Effect를 분리",
+        "전략 6 — 객체 prop은 원시값으로 분해 (또는 Effect 안에서 생성)"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.4"],
+      "visual_hint": "4-5-6 카드 + 이전 class의 1-2-3과 합쳐 전체 6 전략 라인업 미리보기",
+      "speaker_affect": "차분하게 정리"
+    }
+  ]
+}

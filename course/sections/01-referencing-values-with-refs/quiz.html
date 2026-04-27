@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ref로 값 참조하기 — 재렌더 없이 기억하기 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Ref로 값 참조하기 — 재렌더 없이 기억하기 · 퀴즈</h1>
+  <p class="meta">8 문항 · Bloom: Understand:2, Apply:2, Analyze:4</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 중 useRef가 반환하는 객체와 그 동작을 가장 정확하게 설명한 것은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. `{ value, setValue }` 튜플을 돌려주며, setValue 호출 시 재렌더가 발생한다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. `{ current }` 객체를 돌려주며, `ref.current = ...`로 직접 mutation해도 재렌더는 발생하지 않고 렌더 사이 같은 객체가 유지된다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. 매 렌더마다 새로운 `{ current }` 객체를 만들어 돌려주며, 이전 값은 React 내부 큐에 보관된다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. 원시값을 그대로 돌려주며, 값이 바뀌면 React가 자동으로 재렌더한다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>useRef는 `{ current }` 형태의 객체를 매 렌더마다 동일하게 돌려준다. 직접 mutation이 가능하고 setter는 없으며, 값이 바뀌어도 재렌더를 트리거하지 않는다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> setter가 있는 형태는 useState다. ref는 setter 없이 직접 대입한다.</li><li><strong>C.</strong> 흔한 오개념. ref 객체는 한 번 만들어진 뒤 렌더 사이 그대로 재사용된다.</li><li><strong>D.</strong> ref의 가장 중요한 성질(재렌더 미트리거)을 정반대로 설명한 것이다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>useState와 useRef를 비교한 다음 진술 중 옳은 것을 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q1" value="A"><span><strong>A.</strong> A. state는 mutation 시 재렌더를 트리거하지만 ref는 mutation해도 재렌더가 일어나지 않는다.</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="B"><span><strong>B.</strong> B. state는 setter를 통해 갱신해야 하지만 ref는 `ref.current = ...`로 직접 mutation한다.</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="C"><span><strong>C.</strong> C. 렌더 본문에서 안전하게 읽을 수 있는 쪽은 state이며, ref.current를 렌더 중 읽는 것은 권장되지 않는다.</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="D"><span><strong>D.</strong> D. 렌더 사이 값이 보존되는 쪽은 state뿐이고, ref는 매 렌더마다 초기값으로 리셋된다.</span></label>
+  <label class="choice"><input type="checkbox" name="q1" value="E"><span><strong>E.</strong> E. ref는 컴포넌트 인스턴스 간에 자동으로 공유된다.</span></label>
+  <div class="explain"><strong>정답: A, B, C</strong><br>state vs ref는 (1) 재렌더 트리거 여부, (2) mutation 방식, (3) 렌더 중 읽기 안전성 세 축으로 갈린다. A·B·C는 그 세 축을 정확히 기술한다.<br><strong>오답 해설:</strong><ul><li><strong>D.</strong> 둘 다 렌더 사이 값이 보존된다. 이는 공통점이지 차이점이 아니다.</li><li><strong>E.</strong> ref는 인스턴스마다 자기만의 `{ current }`를 가진다. 공유되는 것은 모듈 전역 변수다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>Stopwatch 컴포넌트에서 (1) 화면에 표시되는 경과 시간, (2) setInterval이 반환한 인터벌 ID, (3) 시작 시각을 보관하려고 한다. 각 데이터를 state와 ref 중 어디에 두는 것이 적합한가?</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> A. (1) state, (2) ref, (3) state</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> B. (1) ref, (2) state, (3) ref</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> C. (1) state, (2) state, (3) state</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> D. (1) ref, (2) ref, (3) ref</span></label>
+  <div class="explain"><strong>정답: A</strong><br>판별 규칙: 화면에 보이면 state, 영향 없으면 ref. 경과 시간과 시작 시각은 표시·계산에 쓰이므로 state, 인터벌 ID는 cancel용 핸들이라 화면과 무관하므로 ref다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 표시되는 값을 ref에 두면 클릭/tick에도 화면이 안 바뀐다(stale 표시).</li><li><strong>C.</strong> 인터벌 ID를 state에 두면 setter 호출이 또 다른 재렌더를 일으켜 비효율적이다.</li><li><strong>D.</strong> 표시 값까지 ref로 두면 화면이 갱신되지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드의 문제는 무엇인가?
+
+```js
+function Counter() {
+  const countRef = useRef(0);
+  function handleClick() { countRef.current++; }
+  return &lt;button onClick={handleClick}&gt;You clicked {countRef.current} times&lt;/button&gt;;
+}
+```</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> A. handleClick 안에서 ref를 mutation했기 때문에 React가 에러를 던진다.</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> B. ref.current를 렌더 결과에 사용했기 때문에 클릭해도 재렌더가 일어나지 않아 화면 숫자가 0에 멈춘다(stale 표시).</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> C. useRef의 초기값 0이 매 렌더마다 다시 적용되어 카운트가 누적되지 않는다.</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> D. countRef.current++는 React 18 strict mode에서 두 번 실행되어 숫자가 두 배로 증가한다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>ref는 mutation해도 재렌더를 트리거하지 않는다. 표시되는 값을 ref에 두면 클릭으로 값이 바뀌어도 화면은 갱신되지 않는 stale 표시 안티패턴이 된다. 처방은 useState로 옮기는 것.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 이벤트 핸들러에서 ref를 mutation하는 것은 정상적인 사용처다.</li><li><strong>C.</strong> useRef의 초기값은 최초 한 번만 적용된다. ref 객체는 렌더 사이 동일하게 유지된다.</li><li><strong>D.</strong> Strict mode는 컴포넌트 함수를 두 번 호출하지만, 이벤트 핸들러는 두 번 실행되지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 중 useRef가 적합한 시나리오로 가장 타당한 것은?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> A. 사용자가 입력한 검색어를 화면에 즉시 보여주고 필터링에 사용한다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> B. setTimeout이 반환한 ID를 보관해 나중에 clearTimeout으로 취소한다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> C. 현재 선택된 탭의 인덱스로 활성화 스타일을 적용한다.</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> D. 장바구니에 담긴 상품 개수를 헤더 뱃지에 표시한다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>timeout ID는 cancel용 핸들일 뿐 화면에 표시되지 않으므로 비-렌더 데이터다. 인스턴스별로 격리되어야 하고 렌더 사이 보존되어야 하므로 정확히 ref의 자리다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 검색어는 화면에 보이고 필터 결과를 다시 그려야 하므로 state다.</li><li><strong>C.</strong> 활성 탭 인덱스가 바뀌면 스타일이 다시 그려져야 하므로 state다.</li><li><strong>D.</strong> 뱃지 숫자는 표시 값이므로 state다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Understand</span>
+  <span class="tag">true_false</span>
+  <h3>비동기 콜백(예: setTimeout 콜백) 안에서 항상 최신 입력값을 읽으려면, state와 별도로 같은 값을 ref에 동기 유지(`textRef.current = e.target.value`)하는 패턴을 사용할 수 있다.</h3>
+  <label class="choice"><input type="radio" name="q5" value="T"><span>참 (True)</span></label>
+  <label class="choice"><input type="radio" name="q5" value="F"><span>거짓 (False)</span></label>
+  <div class="explain"><strong>정답: A</strong><br>state만 사용하면 setTimeout 콜백은 등록 시점의 클로저에 갇힌 옛 snapshot을 읽는다. setText와 함께 textRef.current에도 같은 값을 쓰면 콜백이 ref를 통해 최신 값을 볼 수 있다. 단, setter 호출과 ref 대입은 항상 짝으로 다녀야 한다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> 이 패턴은 클래스 노트 [S1.C2]에서 명시적으로 다룬 정당한 사용 사례다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Apply</span>
+  <span class="tag">short_answer</span>
+  <h3>다음 코드는 모든 인스턴스가 같은 timeout을 공유해 디바운싱이 충돌한다. 인스턴스별 격리를 회복하도록 useRef로 리팩터링한 코드를 작성하시오.
+
+```js
+let timeoutID;
+function DebouncedButton({ onClick, children }) {
+  return (
+    &lt;button onClick={() =&gt; {
+      clearTimeout(timeoutID);
+      timeoutID = setTimeout(onClick, 1000);
+    }}&gt;{children}&lt;/button&gt;
+  );
+}
+```</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain"><strong>정답: see rubric</strong><br>표준 처방: (1) 모듈 전역 `let timeoutID;` 제거, (2) 컴포넌트 본문 안에 `const timeoutRef = useRef(null);` 추가, (3) 모든 `timeoutID` 참조를 `timeoutRef.current`로 치환. 그러면 각 인스턴스가 자기 `{ current }`를 가져 cancel이 충돌하지 않는다.<strong>채점 기준:</strong><ul><li>full_credit</li><li>partial_credit</li><li>no_credit</li></ul></div>
+</div>
+<div class="q" id="q7">
+  <span class="tag">Q8</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드 조각에서 안티패턴을 가장 정확하게 지적한 것은?
+
+```js
+function ThemedView({ children }) {
+  const modeRef = useRef(&#x27;light&#x27;);
+  if (modeRef.current === &#x27;dark&#x27;) return &lt;DarkLayout&gt;{children}&lt;/DarkLayout&gt;;
+  return &lt;LightLayout&gt;{children}&lt;/LightLayout&gt;;
+}
+```</h3>
+  <label class="choice"><input type="radio" name="q7" value="A"><span><strong>A.</strong> A. useRef의 초기값으로 문자열을 전달했기 때문에 React가 string ref 경고를 던진다.</span></label>
+  <label class="choice"><input type="radio" name="q7" value="B"><span><strong>B.</strong> B. 렌더 함수 본문에서 ref.current로 분기했기 때문에 같은 입력에도 다른 출력이 나올 수 있는 비결정적 렌더 안티패턴이다. 이 값은 state로 옮겨야 한다.</span></label>
+  <label class="choice"><input type="radio" name="q7" value="C"><span><strong>C.</strong> C. DarkLayout과 LightLayout을 조건부 반환했기 때문에 React가 컴포넌트 트리를 재마운트한다.</span></label>
+  <label class="choice"><input type="radio" name="q7" value="D"><span><strong>D.</strong> D. modeRef를 useRef 대신 useMemo로 선언해야 한다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>렌더 본문에서 ref.current를 읽어 분기하면, ref가 mutable이라 React가 보장하는 결정성(같은 props·state면 같은 출력)이 깨진다. 화면 분기 기준이 되는 값은 state여야 한다(useRef → useState로 변경).<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> useRef의 초기값으로 문자열을 전달하는 것은 정상이다. string ref 경고는 별개 개념(legacy ref API)이다.</li><li><strong>C.</strong> 조건부 반환 자체는 React에서 정상적인 패턴이다. 문제는 조건의 출처가 ref라는 점이다.</li><li><strong>D.</strong> useMemo는 비싼 계산 결과를 메모하는 도구이지 mutable 보관소가 아니다. 처방은 useState다.</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S1.Q1", "type": "mcq_single", "stem": "다음 중 useRef가 반환하는 객체와 그 동작을 가장 정확하게 설명한 것은?", "choices": ["A. `{ value, setValue }` 튜플을 돌려주며, setValue 호출 시 재렌더가 발생한다.", "B. `{ current }` 객체를 돌려주며, `ref.current = ...`로 직접 mutation해도 재렌더는 발생하지 않고 렌더 사이 같은 객체가 유지된다.", "C. 매 렌더마다 새로운 `{ current }` 객체를 만들어 돌려주며, 이전 값은 React 내부 큐에 보관된다.", "D. 원시값을 그대로 돌려주며, 값이 바뀌면 React가 자동으로 재렌더한다."], "correct": ["B"], "explanation": "useRef는 `{ current }` 형태의 객체를 매 렌더마다 동일하게 돌려준다. 직접 mutation이 가능하고 setter는 없으며, 값이 바뀌어도 재렌더를 트리거하지 않는다.", "distractor_rationales": {"A": "setter가 있는 형태는 useState다. ref는 setter 없이 직접 대입한다.", "C": "흔한 오개념. ref 객체는 한 번 만들어진 뒤 렌더 사이 그대로 재사용된다.", "D": "ref의 가장 중요한 성질(재렌더 미트리거)을 정반대로 설명한 것이다."}, "lo_ids": ["LO-S1.1"], "bloom": "Understand", "difficulty": 2}, {"id": "S1.Q2", "type": "mcq_multi", "stem": "useState와 useRef를 비교한 다음 진술 중 옳은 것을 모두 고르시오. (정답 3개)", "choices": ["A. state는 mutation 시 재렌더를 트리거하지만 ref는 mutation해도 재렌더가 일어나지 않는다.", "B. state는 setter를 통해 갱신해야 하지만 ref는 `ref.current = ...`로 직접 mutation한다.", "C. 렌더 본문에서 안전하게 읽을 수 있는 쪽은 state이며, ref.current를 렌더 중 읽는 것은 권장되지 않는다.", "D. 렌더 사이 값이 보존되는 쪽은 state뿐이고, ref는 매 렌더마다 초기값으로 리셋된다.", "E. ref는 컴포넌트 인스턴스 간에 자동으로 공유된다."], "correct": ["A", "B", "C"], "explanation": "state vs ref는 (1) 재렌더 트리거 여부, (2) mutation 방식, (3) 렌더 중 읽기 안전성 세 축으로 갈린다. A·B·C는 그 세 축을 정확히 기술한다.", "distractor_rationales": {"D": "둘 다 렌더 사이 값이 보존된다. 이는 공통점이지 차이점이 아니다.", "E": "ref는 인스턴스마다 자기만의 `{ current }`를 가진다. 공유되는 것은 모듈 전역 변수다."}, "lo_ids": ["LO-S1.2"], "bloom": "Analyze", "difficulty": 3}, {"id": "S1.Q3", "type": "mcq_single", "stem": "Stopwatch 컴포넌트에서 (1) 화면에 표시되는 경과 시간, (2) setInterval이 반환한 인터벌 ID, (3) 시작 시각을 보관하려고 한다. 각 데이터를 state와 ref 중 어디에 두는 것이 적합한가?", "choices": ["A. (1) state, (2) ref, (3) state", "B. (1) ref, (2) state, (3) ref", "C. (1) state, (2) state, (3) state", "D. (1) ref, (2) ref, (3) ref"], "correct": ["A"], "explanation": "판별 규칙: 화면에 보이면 state, 영향 없으면 ref. 경과 시간과 시작 시각은 표시·계산에 쓰이므로 state, 인터벌 ID는 cancel용 핸들이라 화면과 무관하므로 ref다.", "distractor_rationales": {"B": "표시되는 값을 ref에 두면 클릭/tick에도 화면이 안 바뀐다(stale 표시).", "C": "인터벌 ID를 state에 두면 setter 호출이 또 다른 재렌더를 일으켜 비효율적이다.", "D": "표시 값까지 ref로 두면 화면이 갱신되지 않는다."}, "lo_ids": ["LO-S1.2", "LO-S1.3"], "bloom": "Analyze", "difficulty": 3}, {"id": "S1.Q4", "type": "mcq_single", "stem": "다음 코드의 문제는 무엇인가?\n\n```js\nfunction Counter() {\n  const countRef = useRef(0);\n  function handleClick() { countRef.current++; }\n  return <button onClick={handleClick}>You clicked {countRef.current} times</button>;\n}\n```", "choices": ["A. handleClick 안에서 ref를 mutation했기 때문에 React가 에러를 던진다.", "B. ref.current를 렌더 결과에 사용했기 때문에 클릭해도 재렌더가 일어나지 않아 화면 숫자가 0에 멈춘다(stale 표시).", "C. useRef의 초기값 0이 매 렌더마다 다시 적용되어 카운트가 누적되지 않는다.", "D. countRef.current++는 React 18 strict mode에서 두 번 실행되어 숫자가 두 배로 증가한다."], "correct": ["B"], "explanation": "ref는 mutation해도 재렌더를 트리거하지 않는다. 표시되는 값을 ref에 두면 클릭으로 값이 바뀌어도 화면은 갱신되지 않는 stale 표시 안티패턴이 된다. 처방은 useState로 옮기는 것.", "distractor_rationales": {"A": "이벤트 핸들러에서 ref를 mutation하는 것은 정상적인 사용처다.", "C": "useRef의 초기값은 최초 한 번만 적용된다. ref 객체는 렌더 사이 동일하게 유지된다.", "D": "Strict mode는 컴포넌트 함수를 두 번 호출하지만, 이벤트 핸들러는 두 번 실행되지 않는다."}, "lo_ids": ["LO-S1.4"], "bloom": "Analyze", "difficulty": 3}, {"id": "S1.Q5", "type": "mcq_single", "stem": "다음 중 useRef가 적합한 시나리오로 가장 타당한 것은?", "choices": ["A. 사용자가 입력한 검색어를 화면에 즉시 보여주고 필터링에 사용한다.", "B. setTimeout이 반환한 ID를 보관해 나중에 clearTimeout으로 취소한다.", "C. 현재 선택된 탭의 인덱스로 활성화 스타일을 적용한다.", "D. 장바구니에 담긴 상품 개수를 헤더 뱃지에 표시한다."], "correct": ["B"], "explanation": "timeout ID는 cancel용 핸들일 뿐 화면에 표시되지 않으므로 비-렌더 데이터다. 인스턴스별로 격리되어야 하고 렌더 사이 보존되어야 하므로 정확히 ref의 자리다.", "distractor_rationales": {"A": "검색어는 화면에 보이고 필터 결과를 다시 그려야 하므로 state다.", "C": "활성 탭 인덱스가 바뀌면 스타일이 다시 그려져야 하므로 state다.", "D": "뱃지 숫자는 표시 값이므로 state다."}, "lo_ids": ["LO-S1.3"], "bloom": "Apply", "difficulty": 2}, {"id": "S1.Q6", "type": "true_false", "stem": "비동기 콜백(예: setTimeout 콜백) 안에서 항상 최신 입력값을 읽으려면, state와 별도로 같은 값을 ref에 동기 유지(`textRef.current = e.target.value`)하는 패턴을 사용할 수 있다.", "choices": ["A. 참(True)", "B. 거짓(False)"], "correct": ["A"], "explanation": "state만 사용하면 setTimeout 콜백은 등록 시점의 클로저에 갇힌 옛 snapshot을 읽는다. setText와 함께 textRef.current에도 같은 값을 쓰면 콜백이 ref를 통해 최신 값을 볼 수 있다. 단, setter 호출과 ref 대입은 항상 짝으로 다녀야 한다.", "distractor_rationales": {"B": "이 패턴은 클래스 노트 [S1.C2]에서 명시적으로 다룬 정당한 사용 사례다."}, "lo_ids": ["LO-S1.3"], "bloom": "Understand", "difficulty": 2}, {"id": "S1.Q7", "type": "short_answer", "stem": "다음 코드는 모든 인스턴스가 같은 timeout을 공유해 디바운싱이 충돌한다. 인스턴스별 격리를 회복하도록 useRef로 리팩터링한 코드를 작성하시오.\n\n```js\nlet timeoutID;\nfunction DebouncedButton({ onClick, children }) {\n  return (\n    <button onClick={() => {\n      clearTimeout(timeoutID);\n      timeoutID = setTimeout(onClick, 1000);\n    }}>{children}</button>\n  );\n}\n```", "correct": ["see rubric"], "explanation": "표준 처방: (1) 모듈 전역 `let timeoutID;` 제거, (2) 컴포넌트 본문 안에 `const timeoutRef = useRef(null);` 추가, (3) 모든 `timeoutID` 참조를 `timeoutRef.current`로 치환. 그러면 각 인스턴스가 자기 `{ current }`를 가져 cancel이 충돌하지 않는다.", "rubric": {"full_credit": ["모듈 전역 `let timeoutID;`가 제거되었다.", "컴포넌트 본문 안에 `const timeoutRef = useRef(null);`(또는 동등한 형태)가 선언되었다.", "clearTimeout과 setTimeout 양쪽 모두 `timeoutRef.current`를 참조한다.", "useRef가 `import { useRef } from 'react'`로 import 되었음을 보였다."], "partial_credit": ["ref를 도입했지만 모듈 전역 변수를 같이 남겨둔 경우 부분 점수.", "ref를 컴포넌트 외부에 둔 경우(인스턴스 격리 미달) 부분 점수."], "no_credit": ["useState로 timeout을 관리한 경우 — setter 호출이 매 클릭마다 불필요한 재렌더를 일으키므로 부적절."]}, "lo_ids": ["LO-S1.5"], "bloom": "Apply", "difficulty": 3}, {"id": "S1.Q8", "type": "mcq_single", "stem": "다음 코드 조각에서 안티패턴을 가장 정확하게 지적한 것은?\n\n```js\nfunction ThemedView({ children }) {\n  const modeRef = useRef('light');\n  if (modeRef.current === 'dark') return <DarkLayout>{children}</DarkLayout>;\n  return <LightLayout>{children}</LightLayout>;\n}\n```", "choices": ["A. useRef의 초기값으로 문자열을 전달했기 때문에 React가 string ref 경고를 던진다.", "B. 렌더 함수 본문에서 ref.current로 분기했기 때문에 같은 입력에도 다른 출력이 나올 수 있는 비결정적 렌더 안티패턴이다. 이 값은 state로 옮겨야 한다.", "C. DarkLayout과 LightLayout을 조건부 반환했기 때문에 React가 컴포넌트 트리를 재마운트한다.", "D. modeRef를 useRef 대신 useMemo로 선언해야 한다."], "correct": ["B"], "explanation": "렌더 본문에서 ref.current를 읽어 분기하면, ref가 mutable이라 React가 보장하는 결정성(같은 props·state면 같은 출력)이 깨진다. 화면 분기 기준이 되는 값은 state여야 한다(useRef → useState로 변경).", "distractor_rationales": {"A": "useRef의 초기값으로 문자열을 전달하는 것은 정상이다. string ref 경고는 별개 개념(legacy ref API)이다.", "C": "조건부 반환 자체는 React에서 정상적인 패턴이다. 문제는 조건의 출처가 ref라는 점이다.", "D": "useMemo는 비싼 계산 결과를 메모하는 도구이지 mutable 보관소가 아니다. 처방은 useState다."}, "lo_ids": ["LO-S1.4"], "bloom": "Analyze", "difficulty": 3}];
+const NEXT_HREF = "../02-manipulating-dom-with-refs/classes/01-ref-to-dom-basics/player.html";
+const NEXT_TITLE = "ref={...}로 DOM 만지기 — focus·scroll·measure·play";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

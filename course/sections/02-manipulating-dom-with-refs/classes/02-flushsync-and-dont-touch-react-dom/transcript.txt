@@ -1,0 +1,126 @@
+[slide 1]
+이번 시간 주제는 두 개입니다.
+[pause:400]
+플러시싱크로 타이밍 맞추기, 그리고 React가 관리하는 DOM은 손대지 않기.
+
+[slide 2]
+todo-list 앱을 떠올려 볼게요.
+[pause:400]
+새 항목을 추가하면, 자동으로 맨 아래로 스크롤되길 원합니다.
+[pause:500]
+그래서 이렇게 짭니다.
+[pause:300]
+setTodos로 배열에 newTodo를 추가하고, 바로 다음 줄에서 listRef.current.lastChild.scrollIntoView를 호출.
+[pause:500]
+그런데, 어긋납니다.
+[pause:400]
+새 항목까지 가는 게 아니라, 이전의 마지막 항목까지만 스크롤돼요.
+[pause:500]
+왜일까요?
+[pause:400]
+state setter는 비동기 batch이기 때문입니다.
+[pause:300]
+이 한 줄이 오늘의 출발점이에요.
+
+[slide 3]
+원리를 정리해 보겠습니다.
+[pause:400]
+기본적으로 setState는 batched로 동작합니다.
+[pause:300]
+이벤트 핸들러가 끝난 뒤에야 한꺼번에 commit되는 거죠.
+[pause:500]
+그래서 setTodos를 호출하고 바로 다음 줄에서 lastChild를 읽으면, 아직 옛날 DOM의 마지막 자식을 보게 됩니다.
+[pause:500]
+여기서 등장하는 게 플러시싱크예요.
+[pause:400]
+플러시싱크는 콜백 안의 setter를 동기적으로, 즉시 commit하도록 강제합니다.
+[pause:500]
+그래서 플러시싱크 다음 줄에서는 새 DOM이 이미 반영돼 있고, lastChild가 새 항목을 정확히 가리킵니다.
+[pause:500]
+다만 남용은 절대 금지예요.
+[pause:300]
+매 setState마다 동기 commit을 하면 batching이 주는 성능 이점을 다 망칩니다.
+[pause:400]
+사용처는 좁아요.
+[pause:300]
+state 직후에 새 DOM을 즉시 측정하거나 스크롤해야 할 때, 그럴 때만 씁니다.
+
+[slide 4]
+실제 코드를 보겠습니다.
+[pause:400]
+import 문부터 주의하세요.
+[pause:300]
+플러시싱크는 react가 아니라 react-dom에서 가져옵니다.
+[pause:500]
+handleAdd 함수는 이렇게 생겼어요.
+[pause:300]
+새 todo 객체를 만들고, 플러시싱크 콜백 안에서 setText를 빈 문자열로, setTodos를 새 배열로 갱신합니다.
+[pause:500]
+그리고 콜백을 빠져나온 다음 줄에서, 이제 새 DOM이 보장된 상태로 listRef.current.lastChild.scrollIntoView를 호출하는 거죠.
+[pause:500]
+이 패턴은 자동 스크롤뿐 아니라, state 변경 직후에 새 DOM의 위치나 크기를 알아야 하는 모든 상황에 일반화됩니다.
+
+[slide 5]
+이제 두 번째 주제, React가 관리하는 DOM에 손대지 말라는 이야기입니다.
+[pause:500]
+이런 위험한 시나리오를 떠올려 보세요.
+[pause:400]
+ref.current.remove를 호출해서 노드를 직접 제거하고, 그 다음에 setShow(true)로 다시 보이려고 합니다.
+[pause:500]
+React state는 "그 노드는 있다"라고 믿고 있는데, 실제 DOM은 이미 사라져 있어요.
+[pause:500]
+다음 렌더에서 React가 그 노드를 갱신하려는 순간, 충돌이 일어나고 크래시가 납니다.
+[pause:600]
+원칙은 이렇습니다.
+[pause:300]
+React가 JSX로 그리는 노드는, React만 추가하고 React만 제거한다.
+[pause:400]
+우리는 읽기, 측정, 그리고 명령형 메서드 호출만 합니다.
+[pause:500]
+그렇다면 안전한 영역은 어디일까요?
+[pause:400]
+JSX 상에서 항상 비어있는 컨테이너, 그 안쪽이 안전 영역입니다.
+[pause:400]
+React가 그 안에는 손대지 않으니, third-party 라이브러리, 예를 들어 차트나 지도 같은 것들이 자식을 자유롭게 추가하고 제거해도 충돌이 없어요.
+
+[slide 6]
+자문자답으로 정리해 봅시다.
+[pause:400]
+첫째, setTodos 후에 새 노드의 위치를 알아야 한다면?
+[pause:400]
+플러시싱크 필요합니다.
+[pause:300]
+같은 핸들러 안에서 즉시 측정해야 하니까요.
+[pause:500]
+둘째, setTodos 후에 그냥 토스트 메시지만 띄운다면?
+[pause:400]
+플러시싱크 불필요해요.
+[pause:300]
+DOM을 즉시 측정하는 게 아니거든요.
+[pause:500]
+셋째, ref.current.remove로 제거된 항목을 다시 보이게 하려면?
+[pause:400]
+state로만 제어하세요.
+[pause:300]
+직접 remove를 호출하는 코드는 폐기합니다.
+[pause:500]
+넷째, D3 차트를 React 안에 끼우려면?
+[pause:400]
+JSX로는 빈 div와 ref만 두고, 그 안쪽 그리기는 D3에 위임합니다.
+[pause:300]
+이게 바로 안전 영역 패턴이에요.
+
+[slide 7]
+정리하겠습니다.
+[pause:400]
+플러시싱크는 setState batching을 깨고 즉시 commit을 강제한다.
+[pause:300]
+직후에 새 DOM 측정과 스크롤이 가능해진다.
+[pause:500]
+React가 관리하는 노드를 직접 추가하거나 제거하면 state와 DOM이 어긋나서 충돌이 난다.
+[pause:300]
+안전 영역은 JSX에서 늘 비어있는 컨테이너의 내부뿐이다.
+[pause:500]
+다음 시간에는 자식 컴포넌트에 ref를 어떻게 안전하게 넘기는지 봅니다.
+[pause:300]
+포워드레프, React 19의 ref-as-prop, 그리고 유즈임페러티브핸들이 차례로 등장합니다.

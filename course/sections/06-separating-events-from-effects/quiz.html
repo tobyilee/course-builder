@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event와 Effect 분리하기 — useEffectEvent · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Event와 Effect 분리하기 — useEffectEvent · 퀴즈</h1>
+  <p class="meta">7 문항 · Bloom: Understand:2, Apply:3, Analyze:1, Evaluate:1</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>동일한 `sendMessage(text)` 호출을 event handler에 둘지 Effect에 둘지 결정하는 가장 본질적인 질문은 무엇인가?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> A. 그 함수가 비동기인지 동기인지</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> B. 사용자가 그 액션을 했기 때문에 실행되는가, 컴포넌트가 화면에 있기 때문에 실행되는가?</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> C. 함수 내부에서 props/state를 읽는가, 읽지 않는가?</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> D. 함수가 외부 시스템(서버, DOM)을 건드리는가?</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S6.C1의 결정 질문은 &#x27;왜 실행돼야 하나?&#x27; — 인터랙션 응답이면 handler(non-reactive), 표시 중 동기화면 Effect(reactive). 이 한 줄이 위치 결정의 모든 것이다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 비동기 여부는 위치 결정의 기준이 아니다. fetch는 클릭 결과면 handler, 동기화면 Effect 어느 쪽에도 들어갈 수 있다.</li><li><strong>C.</strong> 두 곳 모두 reactive value를 읽을 수 있다. 위치는 &#x27;왜 실행되는가&#x27;에 따라 갈린다 — 핵심은 트리거의 본질이지 읽기 여부가 아니다.</li><li><strong>D.</strong> 외부 시스템 접근은 Effect의 정의 중 일부지만, handler도 외부 시스템을 호출한다(예: addToCart, sendMessage). 결정 기준은 트리거다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 중 Event handler가 아니라 Effect에 두는 것이 적절한 시나리오는?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> A. &#x27;Submit&#x27; 버튼 클릭 시 폼을 서버에 전송한다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> B. 검색창의 query state가 바뀔 때마다 자동완성 결과를 fetch 해 동기화한다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> C. &#x27;Buy&#x27; 버튼 클릭 시 장바구니에 아이템을 추가하고 토스트를 띄운다</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> D. 사용자가 &#x27;Logout&#x27;을 누르면 토큰을 삭제한다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>B만 &#x27;컴포넌트가 화면에 있는 동안 query에 동기화&#x27;되는 케이스 — query 변경에 자동 반응해야 하므로 Effect. 나머지는 모두 사용자 인터랙션 결과로 일어나는 일이라 handler.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> submit은 명백한 인터랙션. Effect로 옮기면 mount/deps 변경 때 의도 없이 발사된다.</li><li><strong>C.</strong> 클릭 결과로 일어나는 한 번의 부수효과 — handler가 정답.</li><li><strong>D.</strong> logout 버튼 누름이라는 인터랙션의 결과. Effect에 두면 의도하지 않은 시점에 토큰이 삭제될 수 있다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_multi</span>
+  <h3>react.dev 기준 useEffectEvent의 특성으로 옳은 것을 모두 고르시오. (정답 3개)</h3>
+  <label class="choice"><input type="checkbox" name="q2" value="A"><span><strong>A.</strong> A. wrap 된 함수는 항상 최신 props·state를 본다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="B"><span><strong>B.</strong> B. wrap 된 함수는 reactive 하지 않아 Effect의 deps에 올리지 않는다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="C"><span><strong>C.</strong> C. Effect 외부(예: onClick 핸들러 자리)에서도 자유롭게 호출할 수 있다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="D"><span><strong>D.</strong> D. 다른 컴포넌트나 Hook에 인자/prop으로 전달해 재사용해도 안전하다</span></label>
+  <label class="choice"><input type="checkbox" name="q2" value="E"><span><strong>E.</strong> E. React의 실험적(experimental) API이며 stable 출시 전에는 import 경로가 달라질 수 있다</span></label>
+  <div class="explain"><strong>정답: A, B, E</strong><br>useEffectEvent의 핵심 특성은 (1) 항상 최신 값, (2) non-reactive(deps 제외), (3) Effect 안에서만 호출, (4) 외부 전달 금지, 그리고 실험적 API라는 점. A·B·E가 옳다.<br><strong>오답 해설:</strong><ul><li><strong>C.</strong> 제약 1 — Effect 안에서만 호출. 평범한 핸들러 자리에는 그냥 함수를 쓰면 된다.</li><li><strong>D.</strong> 제약 2 — 다른 컴포넌트/Hook에 전달 금지. 넘기면 reactive 흐름에서 분리된 &#x27;섬&#x27;이 외부로 새어나가 추적 불가능해진다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 ChatRoom 코드는 다크/라이트 테마를 토글할 때마다 채팅이 끊겼다 다시 연결된다.
+
+```tsx
+function ChatRoom({ roomId, theme }) {
+  useEffect(() =&gt; {
+    const c = createConnection(roomId);
+    c.on(&#x27;connected&#x27;, () =&gt; showNotification(&#x27;Connected!&#x27;, theme));
+    c.connect();
+    return () =&gt; c.disconnect();
+  }, [roomId, theme]);
+}
+```
+
+가장 적절한 리팩터링은?</h3>
+  <label class="choice"><input type="radio" name="q3" value="A"><span><strong>A.</strong> A. deps에서 theme를 빼고 `// eslint-disable-next-line react-hooks/exhaustive-deps` 로 lint를 누른다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="B"><span><strong>B.</strong> B. `onConnected = useEffectEvent(() =&gt; showNotification(&#x27;Connected!&#x27;, theme))`로 추출하고 Effect 본체에서 호출, deps는 `[roomId]`만 남긴다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="C"><span><strong>C.</strong> C. theme를 useRef에 저장해 Effect 안에서 ref.current로 읽는다</span></label>
+  <label class="choice"><input type="radio" name="q3" value="D"><span><strong>D.</strong> D. theme이 바뀔 때마다 connection을 끊고 재연결하는 것이 정상 동작이므로 그대로 둔다</span></label>
+  <div class="explain"><strong>정답: B</strong><br>alert/notification 은 &#x27;theme를 읽는다 ≠ theme에 반응한다&#x27; — non-reactive 로직이다. useEffectEvent로 추출하면 항상 최신 theme로 알림이 뜨면서도 deps에는 빠져 재연결이 사라진다. S6.C2의 핵심 패턴.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> Lint suppress는 의미 분리가 아닌 우회 — stale closure 위험을 그대로 둔 채 경고만 가린다. &#x27;suppress 대신 useEffectEvent&#x27; 원칙 위반.</li><li><strong>C.</strong> ref 우회는 렌더 중 mutation/읽기 안티패턴이 될 수 있고, 의미를 코드로 표현하지 못한다. useEffectEvent가 정확히 이 문제를 위한 도구다.</li><li><strong>D.</strong> 사용자 의도는 &#x27;테마 토글로는 연결을 유지&#x27;다. 재연결을 정상 동작으로 받아들이면 UX가 망가진다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>Page 컴포넌트는 `url`이 바뀔 때만 방문 로그를 남기되, 로그에는 항상 최신 장바구니 개수(`numberOfItems`)를 함께 기록해야 한다. &#x27;재발화 조건은 의도대로 url에만, numberOfItems는 본체에서 직접&#x27; 패턴을 가장 정확히 구현한 코드는?</h3>
+  <label class="choice"><input type="radio" name="q4" value="A"><span><strong>A.</strong> A.
+```tsx
+const onVisit = useEffectEvent(visitedUrl =&gt; logVisit(visitedUrl, numberOfItems));
+useEffect(() =&gt; { onVisit(url); }, [url]);
+```</span></label>
+  <label class="choice"><input type="radio" name="q4" value="B"><span><strong>B.</strong> B.
+```tsx
+const onVisit = useEffectEvent(() =&gt; logVisit(url, numberOfItems));
+useEffect(() =&gt; { onVisit(); }, [url, numberOfItems]);
+```</span></label>
+  <label class="choice"><input type="radio" name="q4" value="C"><span><strong>C.</strong> C.
+```tsx
+useEffect(() =&gt; { logVisit(url, numberOfItems); }, [url]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+```</span></label>
+  <label class="choice"><input type="radio" name="q4" value="D"><span><strong>D.</strong> D.
+```tsx
+const onVisit = useEffectEvent(() =&gt; logVisit(url, numberOfItems));
+useEffect(() =&gt; { onVisit(); }, []);
+```</span></label>
+  <div class="explain"><strong>정답: A</strong><br>원칙: reactive 값(url)은 인자로 전달하고, non-reactive 값(numberOfItems)은 Effect Event 본체에서 직접 읽는다. deps는 재발화 조건인 [url]만. A가 정확히 이 패턴이다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> numberOfItems를 deps에 넣으면 카트 변경마다 재발화한다 — 의도와 정반대. 또한 url을 본체에서 직접 읽는 건 reactive 인자 패턴을 어긴다.</li><li><strong>C.</strong> lint suppress 우회 — stale closure로 numberOfItems가 옛 값으로 기록될 수 있고, 의미가 코드에 드러나지 않는다.</li><li><strong>D.</strong> deps `[]`는 mount 시 한 번만 — url 변경에 재발화하지 않으므로 요구사항 위반.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드의 가장 큰 문제와 올바른 처방을 고르시오.
+
+```tsx
+function Timer() {
+  const [count, setCount] = useState(0);
+  const onTick = useEffectEvent(() =&gt; setCount(c =&gt; c + 1));
+  useTimer(onTick, 1000); // 자식 Hook에 전달
+}
+```</h3>
+  <label class="choice"><input type="radio" name="q5" value="A"><span><strong>A.</strong> A. 문제 없음 — useEffectEvent의 일반적인 재사용 패턴이다</span></label>
+  <label class="choice"><input type="radio" name="q5" value="B"><span><strong>B.</strong> B. setCount는 이미 stable 하므로 useEffectEvent 자체가 불필요하고, useEffect로 그냥 setInterval을 걸면 된다</span></label>
+  <label class="choice"><input type="radio" name="q5" value="C"><span><strong>C.</strong> C. useEffectEvent를 다른 Hook에 인자로 전달하는 것은 제약 위반 — useTimer 내부에서 callback을 받아 그곳에서 `onTick = useEffectEvent(() =&gt; callback())`로 정의해야 한다</span></label>
+  <label class="choice"><input type="radio" name="q5" value="D"><span><strong>D.</strong> D. onTick의 이름이 라이프사이클 어휘라서 문제 — `onMount`로 바꾸면 해결된다</span></label>
+  <div class="explain"><strong>정답: C</strong><br>S6.C3 핵심 안티패턴 — &#x27;다른 Hook/컴포넌트에 인자로 전달 금지&#x27;. 처방은 &#x27;사용처 동거&#x27;: useEffectEvent를 그것이 호출되는 Hook(useTimer) 내부에서 정의한다. 그러면 Timer는 `useTimer(() =&gt; setCount(c =&gt; c+1), 1000)`로 깔끔해진다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 정확히 제약 2 위반. 자식 Hook은 onTick의 reactive 여부를 모르고 호출 시점이 부모 렌더와 어긋난다.</li><li><strong>B.</strong> setCount가 stable인 건 맞지만, 일반적으로 callback이 reactive 값을 읽는 경우를 다루는 구조 — 사용처-동거 원칙이 더 본질이다.</li><li><strong>D.</strong> onTick은 &#x27;on + 사건&#x27; 형의 좋은 이름이다. onMount는 오히려 라이프사이클 어휘로 회귀하는 잘못된 명명이다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Evaluate</span>
+  <span class="tag">mcq_multi</span>
+  <h3>팀 코드 리뷰에서 useEffectEvent 사용에 대한 다음 의견 중 옳은 것을 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q6" value="A"><span><strong>A.</strong> A. exhaustive-deps lint 경고를 끄지 않으려고 어떤 값이든 useEffectEvent로 감싸는 건 실질적으로 lint suppress와 같은 우회다 — 먼저 &#x27;이 값이 변했을 때 정말 재동기화가 필요 없는가?&#x27;를 물어야 한다</span></label>
+  <label class="choice"><input type="checkbox" name="q6" value="B"><span><strong>B.</strong> B. Effect Event의 이름은 `onMount`/`onUpdate`/`onAfterRender` 같은 라이프사이클 어휘를 권장한다 — 실행 시점을 명확히 알리기 때문이다</span></label>
+  <label class="choice"><input type="checkbox" name="q6" value="C"><span><strong>C.</strong> C. 도메인 사건명(`onConnected`, `onVisit`, `onTimerFinished`)을 쓰는 것이 권장된다 — 이름이 &#x27;무슨 사건이 일어났나&#x27;를 가리키도록 설계해야 한다</span></label>
+  <label class="choice"><input type="checkbox" name="q6" value="D"><span><strong>D.</strong> D. useEffectEvent는 stable API이므로 production에 자유롭게 도입해도 무방하다</span></label>
+  <label class="choice"><input type="checkbox" name="q6" value="E"><span><strong>E.</strong> E. 평범한 onClick 핸들러는 useEffectEvent로 감싸는 것이 항상 더 안전하다 — 항상 최신 값을 보장하기 때문이다</span></label>
+  <div class="explain"><strong>정답: A, C</strong><br>A는 &#x27;suppress 대신 useEffectEvent&#x27;의 정확한 해석 — 의미 판단이 먼저다. C는 react.dev의 명명 가이드. B는 라이프사이클 어휘로 회귀시키는 잘못된 명명, D는 사실 오류(실험적 API), E는 핸들러 자리에는 그냥 함수를 쓰면 되므로 과사용이다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> onMount/onUpdate는 Effect를 라이프사이클 훅으로 사고하게 만들어 멘탈 모델을 오염시킨다 — react.dev가 명시적으로 지양하는 명명.</li><li><strong>D.</strong> useEffectEvent는 React 실험적(experimental) API. stable 출시 전엔 시그니처/import 경로가 바뀔 수 있어 production 도입은 신중해야 한다.</li><li><strong>E.</strong> onClick 같은 핸들러는 이미 인터랙션 시점에만 실행되므로 stale 위험이 없다. useEffectEvent는 &#x27;Effect 내부의 non-reactive 조각&#x27; 전용 도구다.</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S6.Q1", "type": "mcq_single", "stem": "동일한 `sendMessage(text)` 호출을 event handler에 둘지 Effect에 둘지 결정하는 가장 본질적인 질문은 무엇인가?", "choices": ["A. 그 함수가 비동기인지 동기인지", "B. 사용자가 그 액션을 했기 때문에 실행되는가, 컴포넌트가 화면에 있기 때문에 실행되는가?", "C. 함수 내부에서 props/state를 읽는가, 읽지 않는가?", "D. 함수가 외부 시스템(서버, DOM)을 건드리는가?"], "correct": ["B"], "explanation": "S6.C1의 결정 질문은 '왜 실행돼야 하나?' — 인터랙션 응답이면 handler(non-reactive), 표시 중 동기화면 Effect(reactive). 이 한 줄이 위치 결정의 모든 것이다.", "distractor_rationales": {"A": "비동기 여부는 위치 결정의 기준이 아니다. fetch는 클릭 결과면 handler, 동기화면 Effect 어느 쪽에도 들어갈 수 있다.", "C": "두 곳 모두 reactive value를 읽을 수 있다. 위치는 '왜 실행되는가'에 따라 갈린다 — 핵심은 트리거의 본질이지 읽기 여부가 아니다.", "D": "외부 시스템 접근은 Effect의 정의 중 일부지만, handler도 외부 시스템을 호출한다(예: addToCart, sendMessage). 결정 기준은 트리거다."}, "lo_ids": ["LO-S6.1"], "bloom": "Understand", "difficulty": 2}, {"id": "S6.Q2", "type": "mcq_single", "stem": "다음 중 Event handler가 아니라 Effect에 두는 것이 적절한 시나리오는?", "choices": ["A. 'Submit' 버튼 클릭 시 폼을 서버에 전송한다", "B. 검색창의 query state가 바뀔 때마다 자동완성 결과를 fetch 해 동기화한다", "C. 'Buy' 버튼 클릭 시 장바구니에 아이템을 추가하고 토스트를 띄운다", "D. 사용자가 'Logout'을 누르면 토큰을 삭제한다"], "correct": ["B"], "explanation": "B만 '컴포넌트가 화면에 있는 동안 query에 동기화'되는 케이스 — query 변경에 자동 반응해야 하므로 Effect. 나머지는 모두 사용자 인터랙션 결과로 일어나는 일이라 handler.", "distractor_rationales": {"A": "submit은 명백한 인터랙션. Effect로 옮기면 mount/deps 변경 때 의도 없이 발사된다.", "C": "클릭 결과로 일어나는 한 번의 부수효과 — handler가 정답.", "D": "logout 버튼 누름이라는 인터랙션의 결과. Effect에 두면 의도하지 않은 시점에 토큰이 삭제될 수 있다."}, "lo_ids": ["LO-S6.1"], "bloom": "Apply", "difficulty": 3}, {"id": "S6.Q3", "type": "mcq_multi", "stem": "react.dev 기준 useEffectEvent의 특성으로 옳은 것을 모두 고르시오. (정답 3개)", "choices": ["A. wrap 된 함수는 항상 최신 props·state를 본다", "B. wrap 된 함수는 reactive 하지 않아 Effect의 deps에 올리지 않는다", "C. Effect 외부(예: onClick 핸들러 자리)에서도 자유롭게 호출할 수 있다", "D. 다른 컴포넌트나 Hook에 인자/prop으로 전달해 재사용해도 안전하다", "E. React의 실험적(experimental) API이며 stable 출시 전에는 import 경로가 달라질 수 있다"], "correct": ["A", "B", "E"], "explanation": "useEffectEvent의 핵심 특성은 (1) 항상 최신 값, (2) non-reactive(deps 제외), (3) Effect 안에서만 호출, (4) 외부 전달 금지, 그리고 실험적 API라는 점. A·B·E가 옳다.", "distractor_rationales": {"C": "제약 1 — Effect 안에서만 호출. 평범한 핸들러 자리에는 그냥 함수를 쓰면 된다.", "D": "제약 2 — 다른 컴포넌트/Hook에 전달 금지. 넘기면 reactive 흐름에서 분리된 '섬'이 외부로 새어나가 추적 불가능해진다."}, "lo_ids": ["LO-S6.2", "LO-S6.3"], "bloom": "Understand", "difficulty": 3}, {"id": "S6.Q4", "type": "mcq_single", "stem": "다음 ChatRoom 코드는 다크/라이트 테마를 토글할 때마다 채팅이 끊겼다 다시 연결된다.\n\n```tsx\nfunction ChatRoom({ roomId, theme }) {\n  useEffect(() => {\n    const c = createConnection(roomId);\n    c.on('connected', () => showNotification('Connected!', theme));\n    c.connect();\n    return () => c.disconnect();\n  }, [roomId, theme]);\n}\n```\n\n가장 적절한 리팩터링은?", "choices": ["A. deps에서 theme를 빼고 `// eslint-disable-next-line react-hooks/exhaustive-deps` 로 lint를 누른다", "B. `onConnected = useEffectEvent(() => showNotification('Connected!', theme))`로 추출하고 Effect 본체에서 호출, deps는 `[roomId]`만 남긴다", "C. theme를 useRef에 저장해 Effect 안에서 ref.current로 읽는다", "D. theme이 바뀔 때마다 connection을 끊고 재연결하는 것이 정상 동작이므로 그대로 둔다"], "correct": ["B"], "explanation": "alert/notification 은 'theme를 읽는다 ≠ theme에 반응한다' — non-reactive 로직이다. useEffectEvent로 추출하면 항상 최신 theme로 알림이 뜨면서도 deps에는 빠져 재연결이 사라진다. S6.C2의 핵심 패턴.", "distractor_rationales": {"A": "Lint suppress는 의미 분리가 아닌 우회 — stale closure 위험을 그대로 둔 채 경고만 가린다. 'suppress 대신 useEffectEvent' 원칙 위반.", "C": "ref 우회는 렌더 중 mutation/읽기 안티패턴이 될 수 있고, 의미를 코드로 표현하지 못한다. useEffectEvent가 정확히 이 문제를 위한 도구다.", "D": "사용자 의도는 '테마 토글로는 연결을 유지'다. 재연결을 정상 동작으로 받아들이면 UX가 망가진다."}, "lo_ids": ["LO-S6.2"], "bloom": "Apply", "difficulty": 3}, {"id": "S6.Q5", "type": "mcq_single", "stem": "Page 컴포넌트는 `url`이 바뀔 때만 방문 로그를 남기되, 로그에는 항상 최신 장바구니 개수(`numberOfItems`)를 함께 기록해야 한다. '재발화 조건은 의도대로 url에만, numberOfItems는 본체에서 직접' 패턴을 가장 정확히 구현한 코드는?", "choices": ["A.\n```tsx\nconst onVisit = useEffectEvent(visitedUrl => logVisit(visitedUrl, numberOfItems));\nuseEffect(() => { onVisit(url); }, [url]);\n```", "B.\n```tsx\nconst onVisit = useEffectEvent(() => logVisit(url, numberOfItems));\nuseEffect(() => { onVisit(); }, [url, numberOfItems]);\n```", "C.\n```tsx\nuseEffect(() => { logVisit(url, numberOfItems); }, [url]);\n// eslint-disable-next-line react-hooks/exhaustive-deps\n```", "D.\n```tsx\nconst onVisit = useEffectEvent(() => logVisit(url, numberOfItems));\nuseEffect(() => { onVisit(); }, []);\n```"], "correct": ["A"], "explanation": "원칙: reactive 값(url)은 인자로 전달하고, non-reactive 값(numberOfItems)은 Effect Event 본체에서 직접 읽는다. deps는 재발화 조건인 [url]만. A가 정확히 이 패턴이다.", "distractor_rationales": {"B": "numberOfItems를 deps에 넣으면 카트 변경마다 재발화한다 — 의도와 정반대. 또한 url을 본체에서 직접 읽는 건 reactive 인자 패턴을 어긴다.", "C": "lint suppress 우회 — stale closure로 numberOfItems가 옛 값으로 기록될 수 있고, 의미가 코드에 드러나지 않는다.", "D": "deps `[]`는 mount 시 한 번만 — url 변경에 재발화하지 않으므로 요구사항 위반."}, "lo_ids": ["LO-S6.4"], "bloom": "Apply", "difficulty": 4}, {"id": "S6.Q6", "type": "mcq_single", "stem": "다음 코드의 가장 큰 문제와 올바른 처방을 고르시오.\n\n```tsx\nfunction Timer() {\n  const [count, setCount] = useState(0);\n  const onTick = useEffectEvent(() => setCount(c => c + 1));\n  useTimer(onTick, 1000); // 자식 Hook에 전달\n}\n```", "choices": ["A. 문제 없음 — useEffectEvent의 일반적인 재사용 패턴이다", "B. setCount는 이미 stable 하므로 useEffectEvent 자체가 불필요하고, useEffect로 그냥 setInterval을 걸면 된다", "C. useEffectEvent를 다른 Hook에 인자로 전달하는 것은 제약 위반 — useTimer 내부에서 callback을 받아 그곳에서 `onTick = useEffectEvent(() => callback())`로 정의해야 한다", "D. onTick의 이름이 라이프사이클 어휘라서 문제 — `onMount`로 바꾸면 해결된다"], "correct": ["C"], "explanation": "S6.C3 핵심 안티패턴 — '다른 Hook/컴포넌트에 인자로 전달 금지'. 처방은 '사용처 동거': useEffectEvent를 그것이 호출되는 Hook(useTimer) 내부에서 정의한다. 그러면 Timer는 `useTimer(() => setCount(c => c+1), 1000)`로 깔끔해진다.", "distractor_rationales": {"A": "정확히 제약 2 위반. 자식 Hook은 onTick의 reactive 여부를 모르고 호출 시점이 부모 렌더와 어긋난다.", "B": "setCount가 stable인 건 맞지만, 일반적으로 callback이 reactive 값을 읽는 경우를 다루는 구조 — 사용처-동거 원칙이 더 본질이다.", "D": "onTick은 'on + 사건' 형의 좋은 이름이다. onMount는 오히려 라이프사이클 어휘로 회귀하는 잘못된 명명이다."}, "lo_ids": ["LO-S6.3"], "bloom": "Analyze", "difficulty": 4}, {"id": "S6.Q7", "type": "mcq_multi", "stem": "팀 코드 리뷰에서 useEffectEvent 사용에 대한 다음 의견 중 옳은 것을 모두 고르시오. (정답 2개)", "choices": ["A. exhaustive-deps lint 경고를 끄지 않으려고 어떤 값이든 useEffectEvent로 감싸는 건 실질적으로 lint suppress와 같은 우회다 — 먼저 '이 값이 변했을 때 정말 재동기화가 필요 없는가?'를 물어야 한다", "B. Effect Event의 이름은 `onMount`/`onUpdate`/`onAfterRender` 같은 라이프사이클 어휘를 권장한다 — 실행 시점을 명확히 알리기 때문이다", "C. 도메인 사건명(`onConnected`, `onVisit`, `onTimerFinished`)을 쓰는 것이 권장된다 — 이름이 '무슨 사건이 일어났나'를 가리키도록 설계해야 한다", "D. useEffectEvent는 stable API이므로 production에 자유롭게 도입해도 무방하다", "E. 평범한 onClick 핸들러는 useEffectEvent로 감싸는 것이 항상 더 안전하다 — 항상 최신 값을 보장하기 때문이다"], "correct": ["A", "C"], "explanation": "A는 'suppress 대신 useEffectEvent'의 정확한 해석 — 의미 판단이 먼저다. C는 react.dev의 명명 가이드. B는 라이프사이클 어휘로 회귀시키는 잘못된 명명, D는 사실 오류(실험적 API), E는 핸들러 자리에는 그냥 함수를 쓰면 되므로 과사용이다.", "distractor_rationales": {"B": "onMount/onUpdate는 Effect를 라이프사이클 훅으로 사고하게 만들어 멘탈 모델을 오염시킨다 — react.dev가 명시적으로 지양하는 명명.", "D": "useEffectEvent는 React 실험적(experimental) API. stable 출시 전엔 시그니처/import 경로가 바뀔 수 있어 production 도입은 신중해야 한다.", "E": "onClick 같은 핸들러는 이미 인터랙션 시점에만 실행되므로 stale 위험이 없다. useEffectEvent는 'Effect 내부의 non-reactive 조각' 전용 도구다."}, "lo_ids": ["LO-S6.3"], "bloom": "Evaluate", "difficulty": 4}];
+const NEXT_HREF = "../07-removing-effect-dependencies/classes/01-deps-mirror-code-no-suppress/player.html";
+const NEXT_TITLE = "deps는 코드의 거울 — linter suppress 절대 금지 원칙";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

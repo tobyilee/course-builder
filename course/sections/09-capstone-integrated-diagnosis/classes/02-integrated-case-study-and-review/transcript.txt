@@ -1,0 +1,539 @@
+[slide 1]
+드디어, 다 합쳐봅니다.
+[pause:500]
+이번이 코스의 마지막 빌드 클래스예요.
+[pause:300]
+한 화면에 다 들어 있는 작은 앱을 처음부터 끝까지 만들어 봅니다.
+[pause:600]
+어떤 앱인지 그려볼게요.
+[pause:400]
+검색창 하나가 상단에 있고, 입력하면 결과가 실시간으로 따라옵니다.
+[pause:300]
+중앙에는 채팅방 메시지 리스트.
+[pause:300]
+새 메시지가 도착하면 리스트가 자동으로 끝까지 스크롤돼요.
+[pause:300]
+우상단엔 다크모드 토글.
+[pause:300]
+좌상단엔 "connected" 배지.
+[pause:500]
+별거 아닌 것 같죠?
+[pause:300]
+근데 이 안에 이 코스의 거의 모든 기둥이 다 들어가 있습니다.
+[pause:600]
+이게 왜 통합이냐.
+[pause:400]
+하나씩 짚어볼게요.
+[pause:300]
+검색은 fetch race condition.
+[pause:300]
+채팅은 roomId 변경 시 재연결.
+[pause:300]
+스크롤은 ref 더하기 flushSync.
+[pause:300]
+다크모드 토글은 useEffectEvent.
+[pause:300]
+그리고 마지막에 useChatRoom과 useData로 추출하면서 마무리.
+[pause:600]
+오늘은 결정 트리를 코드 한 줄 한 줄에 적용하면서 빌드합니다.
+[pause:400]
+빌드 끝나면 바로 review 모드로 넘어가서 정당화해요.
+[pause:300]
+"왜 이렇게 짰지?" 라는 질문에 한 줄로 답하는 연습이에요.
+[pause:500]
+끝나면 "왜 ref인가, 왜 Effect인가, 왜 useEffectEvent인가"를 PR 코멘트 톤으로 답할 수 있게 됩니다.
+[pause:300]
+이게 오늘의 목표예요.
+[pause:400]
+사고의 흐름을 손에 익히는 시간입니다.
+[pause:600]
+
+[slide 2]
+빌드 순서는 결정 트리 순이에요.
+[pause:500]
+이게 굉장히 중요합니다.
+[pause:300]
+순서를 잘못 잡으면 추출부터 하다가 추상화가 다 깨지는 경우가 많아요.
+[pause:500]
+우리는 외부 시스템 동기화부터 시작해서 안쪽으로 들어갑니다.
+[pause:500]
+처음은 외부 시스템.
+[pause:300]
+S3 Effect로 시작합니다.
+[pause:300]
+서버, 브라우저 API, 채팅 connection 같은 외부 시스템과 동기화하는 코드부터 깔아요.
+[pause:300]
+이게 가장 위험하고 가장 중요한 부분이거든요.
+[pause:500]
+다음은 동기화 격리.
+[pause:300]
+S5와 S7에서 본 reactive 값과 deps 정리.
+[pause:300]
+어느 값이 reactive고 어느 값이 non-reactive인지 가르는 단계예요.
+[pause:500]
+그 다음 명령형 DOM, S2의 ref.
+[pause:300]
+React가 대체 못 하는 작업이 있을 때만 ref를 꺼냅니다.
+[pause:300]
+스크롤 위치 조정 같은 거요.
+[pause:500]
+마지막에 추출, S8 Custom Hook.
+[pause:300]
+"먼저 동작하는 코드를 만들고, 그 다음에 추출" 순서예요.
+[pause:300]
+인라인부터 잘 짜야 좋은 hook이 나옵니다.
+[pause:600]
+구체적으로 다섯 블록입니다.
+[pause:300]
+하나, useData로 검색 결과 fetch.
+[pause:300]
+둘, ChatRoom 연결.
+[pause:300]
+셋, 새 메시지 자동 스크롤.
+[pause:300]
+넷, 다크모드 토글이 재연결을 안 일으키게.
+[pause:300]
+다섯, useChatRoom과 useData로 추출.
+[pause:600]
+각 블록마다 빌드 후 즉시 review해요.
+[pause:300]
+다른 도구는 왜 탈락했는지 한 줄 정당화.
+[pause:500]
+S0부터 S8까지 다 봤으니 코드는 빠르게 갑니다.
+[pause:300]
+대신 결정 정당화에 시간을 씁니다.
+[pause:300]
+오늘은 코드 작성보다 사고 과정이 핵심이에요.
+[pause:600]
+
+[slide 3]
+블록 1, 검색창입니다.
+[pause:500]
+사용자가 검색창에 타이핑하면, query state가 바뀌고 그에 맞춰 서버에서 결과를 가져와야 해요.
+[pause:400]
+간단해 보이는데 함정이 두 개 있습니다.
+[pause:600]
+useEffect 안에 ignore 플래그를 false로 두고요.
+[pause:400]
+fetch 호출하고, 결과가 도착하면 ignore가 false일 때만 setResults.
+[pause:400]
+cleanup에서 ignore를 true로 만듭니다.
+[pause:400]
+deps는 query 하나.
+[pause:500]
+이렇게만 하면 race condition이 막힙니다.
+[pause:600]
+왜 Effect를 썼냐.
+[pause:300]
+서버라는 외부 시스템과의 동기화니까요.
+[pause:400]
+사용자가 클릭하거나 엔터를 쳐서 발생한 인터랙션 결과가 아니에요.
+[pause:300]
+URL로 진입해도, 뒤로가기로 돌아와도, query가 있으면 fetch가 일어나야 해요.
+[pause:300]
+주소창에 검색 결과 페이지를 직접 친 사용자도 있으니까요.
+[pause:400]
+그래서 Effect입니다.
+[pause:300]
+"이 코드는 query 표시 상태를 서버 데이터와 동기화한다" 이게 한 줄 정당화예요.
+[pause:600]
+왜 ignore 플래그냐.
+[pause:300]
+빠른 타이핑 시 race condition이 생겨요.
+[pause:400]
+사용자가 "rea"까지 치고 fetch가 발사되고, 곧바로 "react"까지 치면 두 번째 fetch가 또 발사됩니다.
+[pause:400]
+그런데 네트워크 사정에 따라 첫 번째 응답이 더 늦게 도착할 수도 있어요.
+[pause:400]
+그러면 화면은 "react" 검색 결과 위에 "rea" 결과를 덮어쓰게 돼요.
+[pause:300]
+사용자 입장에선 "내가 친 query랑 결과가 안 맞는데?" 라는 이상한 상태입니다.
+[pause:500]
+S3에서 본 race condition 패턴이고, ignore flag로 cleanup에서 무시 처리합니다.
+[pause:300]
+새 query가 오면 이전 Effect의 cleanup이 먼저 돌고 ignore가 true가 되니까요.
+[pause:400]
+늦게 도착한 응답은 그냥 버려져요.
+[pause:600]
+탈락한 선택지 짚고 갑니다.
+[pause:300]
+useMemo, 비동기 작업이 안 되니 탈락.
+[pause:300]
+event handler에 fetch를 두는 거, query는 표시 중 동기화이지 인터랙션 결과가 아니에요.
+[pause:300]
+URL 진입이나 뒤로가기에서도 fetch가 필요합니다.
+[pause:500]
+review 코멘트 미리 둡니다.
+[pause:300]
+이건 useData 커스텀 훅으로 빼면 깔끔하지만, 우선 인라인으로 패턴을 보이고 나중에 추출.
+[pause:300]
+S8.5의 composition 복선이에요.
+[pause:600]
+
+[slide 4]
+블록 2와 3 같이 갑니다.
+[pause:500]
+블록 2, ChatRoom 연결.
+[pause:400]
+useEffect 안에서 createConnection으로 c를 만들고, c.connect를 호출.
+[pause:400]
+cleanup에서 c.disconnect.
+[pause:300]
+deps는 serverUrl과 roomId.
+[pause:500]
+이게 표준 외부 시스템 동기화 패턴이에요.
+[pause:400]
+mount 때 connect, unmount 때 disconnect, deps 변경 시 cleanup 후 재실행.
+[pause:600]
+왜 cleanup이 필수냐.
+[pause:300]
+두 가지 이유예요.
+[pause:400]
+첫째, Strict Mode 더블 마운트로 cleanup 누락이 즉시 노출됩니다.
+[pause:300]
+mount, unmount, mount 순으로 React가 한 번 더 돌려보거든요.
+[pause:300]
+이때 cleanup이 없으면 connection이 두 개가 돼요.
+[pause:400]
+둘째, 실제로 roomId가 바뀔 때마다 깔끔히 끊고 다시 연결해야 해요.
+[pause:300]
+끊지 않으면 연결이 누적돼서 메시지가 중복으로 옵니다.
+[pause:400]
+사용자 입장에선 같은 메시지가 두세 번 떠요.
+[pause:600]
+왜 deps에 roomId냐.
+[pause:300]
+reactive 값이니까요.
+[pause:400]
+컴포넌트 바깥에서 정의된 게 아니라 props로 들어왔습니다.
+[pause:300]
+Object.is 비교로 변하면 cleanup하고 재실행해야 해요.
+[pause:300]
+S5.2에서 본 reactive 정의입니다.
+[pause:500]
+탈락 선택지 하나 짚고 갈게요.
+[pause:300]
+ref guard로 더블 호출을 회피하는 거.
+[pause:400]
+"if 처음 호출 아니면 return" 이런 패턴이요.
+[pause:300]
+이렇게 하면 Strict Mode 경고는 사라지지만, 진짜 unmount 때 cleanup이 누수돼요.
+[pause:300]
+S3.4에서 본 그 함정입니다.
+[pause:300]
+처방이 아닙니다, 증상만 가린 거예요.
+[pause:600]
+블록 3, 자동 스크롤.
+[pause:400]
+새 메시지가 도착하면 리스트가 끝까지 스크롤되어야 해요.
+[pause:300]
+이게 안 되면 사용자는 매번 직접 스크롤해야 합니다.
+[pause:500]
+flushSync로 setMessages를 감싸고요, 그 다음에 listRef의 scrollTo로 scrollHeight까지.
+[pause:500]
+왜 ref냐.
+[pause:300]
+DOM 명령형 작업입니다.
+[pause:300]
+React가 선언적으로 표현 못 하는 작업이에요.
+[pause:400]
+"스크롤을 끝까지 내려라" 이건 렌더 결과물이 아니라 DOM API 호출이거든요.
+[pause:500]
+왜 flushSync냐.
+[pause:300]
+기본 batching에선 setMessages 후에도 DOM이 아직 업데이트 전이에요.
+[pause:400]
+바로 scrollTo를 호출하면 새 메시지가 들어가기 전 scrollHeight를 보고 스크롤합니다.
+[pause:300]
+그러면 스크롤이 한 칸 모자라요.
+[pause:400]
+flushSync로 동기적으로 DOM을 업데이트한 다음 scrollTo를 호출해야 정확한 위치로 갑니다.
+[pause:300]
+S2.3의 핵심 타이밍이에요.
+[pause:600]
+
+[slide 5]
+블록 4, 다크모드 토글이에요.
+[pause:500]
+사용자가 우상단 토글을 누르면 light에서 dark로 바뀝니다.
+[pause:300]
+근데 토글마다 채팅이 재연결되면 곤란합니다.
+[pause:300]
+메시지가 끊기고 "Reconnecting…" 배지가 깜빡거려요.
+[pause:300]
+사용자 경험 망가집니다.
+[pause:600]
+naive 코드를 먼저 보세요.
+[pause:300]
+useEffect에서 connect를 호출하고, showToast로 "Connected in 어떤 theme" 알리고요.
+[pause:400]
+deps에 roomId랑 theme 둘 다 들어 있어요.
+[pause:400]
+왜 theme이 deps에 들어갔냐, Effect 안에서 theme을 읽기 때문입니다.
+[pause:300]
+linter가 자동으로 추가해줘요, exhaustive-deps 룰이 정확한 거예요.
+[pause:500]
+문제는 theme도 deps에 있으니까 토글마다 cleanup이 돌고 재연결됩니다.
+[pause:300]
+"theme 바뀐 거랑 채팅 연결이 무슨 상관이지?" 사용자는 모르죠.
+[pause:600]
+진단을 해볼게요.
+[pause:300]
+theme은 알림 메시지에만 쓰여요.
+[pause:300]
+연결 자체와는 무관합니다.
+[pause:400]
+"Effect는 동기화한다"는 관점에서 보면, theme은 연결 동기화에 속하지 않아요.
+[pause:300]
+non-reactive 의도예요.
+[pause:300]
+"toast 띄울 때 최신 theme을 읽고 싶지만, theme 변경 자체로는 재실행을 안 일으키고 싶다." 이게 정확한 표현이에요.
+[pause:500]
+처방은 useEffectEvent.
+[pause:400]
+onConnected라는 함수를 useEffectEvent로 감싸서, 그 안에서 showToast를 호출.
+[pause:400]
+그러면 onConnected는 reactive하지 않습니다.
+[pause:300]
+Effect deps에 추가할 필요가 없어요.
+[pause:300]
+linter도 추가하라고 안 해요.
+[pause:400]
+Effect deps는 roomId만 남습니다.
+[pause:300]
+이제 theme 토글에 채팅이 영향을 안 받아요.
+[pause:600]
+왜 useEffectEvent냐.
+[pause:300]
+Effect 안에서 최신 theme은 읽되, theme 변경 자체로는 Effect를 다시 실행시키지 않아요.
+[pause:400]
+S6.2에서 본 동작이에요.
+[pause:300]
+"reactive하지 않은 부분을 Effect 밖으로 추출" 그게 핵심입니다.
+[pause:500]
+탈락 선택지 두 개.
+[pause:300]
+첫째, theme을 ref에 동기화.
+[pause:400]
+가능은 한데 보일러플레이트가 많아져요.
+[pause:300]
+useRef + useEffect로 theme 추적하고, Effect에서 ref.current 읽고.
+[pause:300]
+useEffectEvent가 의도가 더 명시적입니다.
+[pause:400]
+둘째, linter suppress.
+[pause:300]
+"eslint-disable next-line" 한 줄로 막는 거.
+[pause:300]
+S7.1에서 본 금지 원칙이라 탈락이에요.
+[pause:300]
+원인을 가린 거지 고친 게 아닙니다.
+[pause:500]
+참고로 useEffectEvent는 실험적 API라서, 코스 caveat에 적힌 대로 stable이 아니면 ref와 layoutEffect 패턴이 fallback이에요.
+[pause:300]
+프로젝트 환경에 따라 선택하세요.
+[pause:600]
+
+[slide 6]
+블록 5, 추출입니다.
+[pause:500]
+이제 인라인으로 다 동작하는 코드를 깔끔한 hook으로 빼는 단계예요.
+[pause:300]
+순서가 중요합니다, 동작 먼저 추출은 나중.
+[pause:500]
+useChatRoom 함수를 만들어요.
+[pause:400]
+인자로 serverUrl, roomId, onMessage를 받습니다.
+[pause:400]
+함수 안에서 onMsg를 useEffectEvent로 감쌉니다.
+[pause:300]
+그리고 useEffect 안에서 createConnection으로 연결하고, 메시지 핸들러를 등록하고, cleanup에서 disconnect.
+[pause:400]
+deps는 serverUrl과 roomId.
+[pause:600]
+원칙 하나가 여기 있어요.
+[pause:300]
+reactive 값은 인자로 받고, 핸들러는 useEffectEvent로 wrap.
+[pause:400]
+이렇게 하면 deps 오염 없이 핸들러가 항상 최신 상태를 봅니다.
+[pause:300]
+호출처에서 onMessage가 매 렌더 새 함수여도, 안에서 useEffectEvent로 감싸니까 deps에 영향이 없어요.
+[pause:300]
+S8.3에서 본 패턴이에요.
+[pause:500]
+useData도 같이 추출해요.
+[pause:300]
+generic 형태로 url을 받고, 안에서 ignore flag 패턴을 캡슐화합니다.
+[pause:400]
+호출처는 그냥 const data = useData 호출 한 줄이면 끝이에요.
+[pause:300]
+race condition 처리는 hook 내부에 숨어 있고, 호출처는 결과만 받아요.
+[pause:600]
+왜 추출하냐.
+[pause:300]
+도메인 의미를 호출처에서 노이즈 없이 표현할 수 있어요.
+[pause:400]
+"채팅방 연결", "데이터 fetch" 이런 식으로 코드가 읽힙니다.
+[pause:300]
+컴포넌트 본문이 선언적으로 짧아져요.
+[pause:300]
+useEffect, cleanup, ignore flag 같은 메커니즘 디테일이 가려집니다.
+[pause:500]
+나중에 useSyncExternalStore로 내부 구현을 교체할 여지도 생깁니다.
+[pause:300]
+S8.5의 composition 관점이에요.
+[pause:300]
+hook의 입출력은 그대로 두고 내부만 바꾸면 호출처는 영향이 없어요.
+[pause:600]
+탈락 선택지 두 개.
+[pause:300]
+첫째, useMount나 useEffectOnce 같은 wrapper 추가.
+[pause:400]
+의도를 잃고 deps linter가 죽어요.
+[pause:300]
+S8.4에서 본 함정입니다.
+[pause:300]
+S9.C1에서도 봤죠, 같은 패턴이에요.
+[pause:500]
+둘째, 단일 사용처라서 추출 보류.
+[pause:400]
+이건 좀 가려야 해요.
+[pause:300]
+useData는 검색이랑 채팅 두 곳에서 fetch 패턴이 있으니 추출이 정당.
+[pause:400]
+useChatRoom은 단일 사용처지만 의도 캡슐화 가치가 큽니다.
+[pause:300]
+복잡한 동기화 로직을 컴포넌트 본문에서 빼는 것 자체가 가치예요.
+[pause:300]
+그래서 추출합니다.
+[pause:600]
+
+[slide 7]
+이제 review 모드예요.
+[pause:400]
+동료가 PR을 보고 묻습니다.
+[pause:300]
+한 줄로 답해보세요.
+[pause:500]
+실전에서 이런 질문을 받으면 한 박자 늦게 답하지 말고, 결정 트리로 바로 답할 수 있어야 합니다.
+[pause:300]
+그게 시니어와 주니어를 가르는 차이예요.
+[pause:600]
+첫 질문.
+[pause:300]
+"검색 결과를 useState로 두고 onChange에서 fetch하면 안 돼?"
+[pause:400]
+답은요, query는 표시 중 동기화입니다.
+[pause:300]
+URL로 진입했을 때, 뒤로가기로 돌아왔을 때도 fetch가 필요해요.
+[pause:300]
+인터랙션 결과가 아닙니다.
+[pause:400]
+"화면에 보여야 할 query 상태와 fetch 결과를 동기화하는 거"라고 답하세요.
+[pause:300]
+"onChange에 두면 URL 직접 진입한 사용자에겐 결과가 안 떠요." 이게 핵심 반증이에요.
+[pause:600]
+두 번째.
+[pause:300]
+"flushSync 없이 그냥 setMessages 후 scrollTo 하면 안 돼?"
+[pause:400]
+답은요, batching 때문에 DOM이 아직 새 메시지 반영 전이에요.
+[pause:300]
+scrollHeight가 stale입니다.
+[pause:300]
+스크롤이 한 칸 모자라게 가요.
+[pause:300]
+"새 DOM 측정 후 명령형 호출이 필요할 때만 flushSync." 이 원칙으로 답하세요.
+[pause:600]
+세 번째.
+[pause:300]
+"theme도 deps에 넣고 reconnect 받아들이면 안 돼?"
+[pause:400]
+답은요, 사용자 경험 손상이에요.
+[pause:300]
+메시지가 끊기고 "Reconnecting…" 깜빡거립니다.
+[pause:300]
+가독성 대 정확성에서 정확성이 이깁니다.
+[pause:400]
+"linter는 정확하지만, 정확한 deps가 의도와 다를 땐 useEffectEvent로 의도를 분리하라." 이게 답이에요.
+[pause:600]
+네 번째.
+[pause:300]
+"useChatRoom 단일 사용처인데 왜 뺐어?"
+[pause:400]
+답은요, 의도 캡슐화 더하기 테스트 가능성 더하기 미래의 useSyncExternalStore 교체 여지.
+[pause:300]
+세 가지 가치가 있을 때는 추출이 정당합니다.
+[pause:400]
+트레이드오프는 약간의 간접 지향, 하지만 그만한 가치가 있습니다.
+[pause:600]
+각 답변에서 "다른 선택지, 왜 탈락"을 꼭 포함하세요.
+[pause:400]
+"이 도구를 골랐고, 이 도구는 이 이유로 떨어졌다." 이 형식이에요.
+[pause:300]
+두 가지를 같이 적으면 리뷰가 토론으로 넘어가지 않고 정리됩니다.
+[pause:300]
+이게 LO-S9.3의 본질입니다.
+[pause:600]
+
+[slide 8]
+오늘 만든 앱을 한 번 더 짚고 마무리할게요.
+[pause:400]
+검색은 useData와 race 처리, S3.
+[pause:300]
+채팅은 useChatRoom과 재연결, S5.
+[pause:300]
+자동스크롤은 ref 더하기 flushSync, S2.
+[pause:300]
+다크모드는 useEffectEvent, S6.
+[pause:300]
+그리고 useChatRoom과 useData 추출이 S8.
+[pause:600]
+한 작은 앱에 코스의 모든 가지가 다 들어왔어요.
+[pause:300]
+S0 멘탈모델, S1 ref 격리, S2 DOM 조작, S3 동기화, S4 안 써도 되는 Effect, S5 reactive 라이프사이클, S6 useEffectEvent, S7 deps 줄이기, S8 Custom Hook.
+[pause:300]
+모든 섹션이 한 번씩 등장한 셈이에요.
+[pause:600]
+결정 트리는 코드 모든 줄에 적용했어요.
+[pause:400]
+왜 이 도구인가, 다른 건 왜 탈락인가, 어떤 트레이드오프인가.
+[pause:300]
+이 세 가지를 매번 입에 올리면 코드 리뷰의 격이 달라집니다.
+[pause:400]
+PR 코멘트가 단순한 지적이 아니라 작은 강의가 돼요.
+[pause:600]
+코스 전체를 관통한 원칙 하나로 마무리합니다.
+[pause:400]
+Escape Hatch는 마지막 수단이에요.
+[pause:300]
+React의 선언적 모델이 먼저고, 그 안에서 안 되는 부분에서만 ref, Effect, Custom Hook을 꺼냅니다.
+[pause:400]
+그러나 필요할 땐 정확히 씁니다.
+[pause:300]
+어설프게 피하면 더 큰 함정에 빠져요.
+[pause:300]
+escape hatch는 무서워서 안 쓰는 도구가 아니라, 알고 정확히 쓰는 도구입니다.
+[pause:600]
+S0 멘탈모델부터 여기까지, 한 바퀴 잘 돌아오셨습니다.
+[pause:400]
+Refs, Effects, Custom Hooks를 보는 눈이 처음과는 분명 달라졌을 거예요.
+[pause:400]
+처음에 막연했던 "언제 useEffect를 쓰지", "왜 cleanup이 필요하지", "왜 deps에 뭐가 들어가지" 같은 질문에 이제 결정 트리로 답할 수 있습니다.
+[pause:400]
+멘탈모델이 잡히면 코드가 짧아지고, 버그도 줄어들고, 리뷰도 빨라집니다.
+[pause:500]
+앞으로 본인 코드를 짤 때나 동료의 PR을 리뷰할 때, 오늘까지 본 결정 트리가 손에 익은 도구가 되길 바랍니다.
+[pause:400]
+코드 한 줄마다 "왜 이 도구인가" 물어보세요.
+[pause:300]
+그 질문이 쌓이면 시니어가 됩니다.
+[pause:500]
+긴 시간 함께해 주셔서 감사합니다.
+[pause:300]
+끝까지 따라와 주신 여러분 정말 수고하셨어요.
+[pause:300]
+React Escape Hatches 코스, 여기서 끝맺습니다.
+[pause:300]
+다음 코스에서 또 만나요.
+[pause:400]

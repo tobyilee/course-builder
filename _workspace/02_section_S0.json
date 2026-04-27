@@ -1,0 +1,23 @@
+{
+  "section_id": "S0",
+  "classes": [
+    {
+      "id": "S0.C1",
+      "slug": "01-why-escape-hatches",
+      "title": "왜 'Escape Hatch'인가 — React의 기본 흐름과 마지막 수단",
+      "lo_ids": ["LO-S0.1", "LO-S0.3"],
+      "duration_min": 10,
+      "depends_on": [],
+      "summary": "직전 'Managing State' 코스에서 익힌 React의 기본 흐름(선언형 렌더 + 순수 함수 + 단방향 props)을 짧게 회상한 뒤, Refs · Effects · Custom Hooks가 왜 이 흐름 '바깥'의 도구인지 프레이밍한다. 외부 시스템 동기화, 명령형 DOM 작업, 비-렌더 데이터 보관이라는 세 가지 escape 시나리오를 소개하고, '기본은 이 도구들을 쓰지 않는 것'이라는 코스의 핵심 자세를 예측 가능성·테스트 용이성·동기화 비용 관점에서 정당화한다."
+    },
+    {
+      "id": "S0.C2",
+      "slug": "02-escape-hatch-decision-tree",
+      "title": "결정 트리 — 지금 이 코드, Escape Hatch가 정말 필요한가?",
+      "lo_ids": ["LO-S0.2"],
+      "duration_min": 10,
+      "depends_on": ["S0.C1"],
+      "summary": "C1에서 잡은 멘탈모델을 행동 가능한 결정 트리로 옮긴다. '외부 시스템이 끼어 있는가? → 렌더 중 계산만으로 충분한가? → 사용자 인터랙션의 결과인가?' 세 분기로 요구사항을 판별하는 절차를 익히고, 짧은 시나리오 3~4개(파생 값, 입력 focus, 채팅 연결, timeout ID 보관)에 적용해본다. 마지막으로 S1~S9 로드맵을 이 결정 트리 위에 매핑해 코스 전체의 길잡이를 제공한다."
+    }
+  ]
+}

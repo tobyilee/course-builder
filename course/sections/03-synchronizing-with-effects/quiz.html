@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effect로 동기화하기 — 라이프사이클이 아닌 동기화 모델 · 퀴즈</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+  a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
+  h1{font-size:24px;margin:0 0 4px 0}
+  .meta{color:#8b95a7;margin-bottom:24px;font-size:14px}
+  .q{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}
+  .q .tag{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}
+  .q h3{margin:6px 0 14px 0;font-size:16px;line-height:1.5}
+  .choice{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}
+  .choice:hover{background:#202635}
+  .choice input{margin-top:4px}
+  .choice.correct{border-color:#3a8a4f;background:#1a2a1e}
+  .choice.wrong{border-color:#aa4141;background:#2a1a1a}
+  textarea{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}
+  .submit{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+  .submit:hover{background:#3578e5}
+  .explain{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}
+  .explain.show{display:block}
+  .score{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}
+  .nav{margin-bottom:16px}
+  ul{margin:6px 0 0 18px;padding:0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="../../index.html">← 목차</a></div>
+  <h1>Effect로 동기화하기 — 라이프사이클이 아닌 동기화 모델 · 퀴즈</h1>
+  <p class="meta">7 문항 · Bloom: Understand:3, Apply:2, Analyze:2</p>
+  <div class="score" id="score" style="display:none"></div>
+  <form id="quiz">
+<div class="q" id="q0">
+  <span class="tag">Q1</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>이 섹션은 useEffect를 &#x27;mount/update/unmount 라이프사이클 훅&#x27;이 아니라 &#x27;외부 시스템과의 동기화 도구&#x27;로 재정의했다. 이 재프레이밍을 가장 잘 설명하는 문장은?</h3>
+  <label class="choice"><input type="radio" name="q0" value="A"><span><strong>A.</strong> Effect는 메시지를 한 번 보내는 이벤트와 같아서, 사용자의 클릭에 응답하는 명령형 작업에 적합하다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="B"><span><strong>B.</strong> Effect는 컴포넌트가 살아있는 동안 React state와 외부 세계(DOM·서버·브라우저 API)의 연결을 유지하기 위한 도구다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="C"><span><strong>C.</strong> Effect는 React가 렌더 직후 한 번만 실행하는 콜백으로, 이후에는 다시 실행되지 않는다.</span></label>
+  <label class="choice"><input type="radio" name="q0" value="D"><span><strong>D.</strong> Effect는 라이프사이클 훅의 다른 이름이며, componentDidMount/Update/Unmount가 합쳐진 단축 API다.</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S3.C1의 핵심 프레이밍이다. Effect의 의미는 &#x27;시점(언제)&#x27;이 아니라 &#x27;관계(무엇과 무엇을 일치시키는가)&#x27;에 있다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 메시지 한 번 보내기는 이벤트(handler)에 해당한다. Effect는 &#x27;연결 유지&#x27;다.</li><li><strong>C.</strong> deps에 따라 cleanup → 재실행이 반복될 수 있으므로 &#x27;한 번만&#x27;은 틀리다.</li><li><strong>D.</strong> 이것이 바로 이 섹션이 버리라고 한 라이프사이클 멘탈모델이다.</li></ul></div>
+</div>
+<div class="q" id="q1">
+  <span class="tag">Q2</span>
+  <span class="tag">Understand</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 useEffect 의존성 배열 형태와 콜백 실행 시점을 올바르게 짝지은 것은?</h3>
+  <label class="choice"><input type="radio" name="q1" value="A"><span><strong>A.</strong> deps 생략 → 마운트 1회 / [] → 매 렌더 / [a,b] → a,b 변경 시</span></label>
+  <label class="choice"><input type="radio" name="q1" value="B"><span><strong>B.</strong> deps 생략 → 매 렌더 / [] → 마운트 1회(+ unmount cleanup) / [a,b] → a 또는 b가 이전과 다를 때</span></label>
+  <label class="choice"><input type="radio" name="q1" value="C"><span><strong>C.</strong> deps 생략 → 매 렌더 / [] → 절대 실행 안 됨 / [a,b] → a와 b가 동시에 바뀔 때만</span></label>
+  <label class="choice"><input type="radio" name="q1" value="D"><span><strong>D.</strong> deps 생략 → 마운트 1회 / [] → 매 렌더 / [a,b] → a,b가 모두 truthy일 때</span></label>
+  <div class="explain"><strong>정답: B</strong><br>S3.C2 시연 그대로다. React는 deps 각 항목을 Object.is로 이전 렌더와 비교한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> 생략과 []의 의미가 정반대로 뒤바뀌었다.</li><li><strong>C.</strong> []도 마운트 시 1회 실행되며, [a,b]는 둘 중 하나만 바뀌어도 재실행된다.</li><li><strong>D.</strong> deps는 boolean 조건이 아니라 변경 감지 키다.</li></ul></div>
+</div>
+<div class="q" id="q2">
+  <span class="tag">Q3</span>
+  <span class="tag">Apply</span>
+  <span class="tag">mcq_single</span>
+  <h3>다음 코드를 fetch race condition으로부터 안전하게 만들기 위해 빈 칸 (1)(2)에 들어갈 코드는?
+
+```js
+useEffect(() =&gt; {
+  let ignore = false;
+  fetchResults(query, page).then(json =&gt; {
+    if (___(1)___) {
+      setResults(json);
+    }
+  });
+  return () =&gt; { ___(2)___ };
+}, [query, page]);
+```</h3>
+  <label class="choice"><input type="radio" name="q2" value="A"><span><strong>A.</strong> (1) ignore === true   (2) ignore = false;</span></label>
+  <label class="choice"><input type="radio" name="q2" value="B"><span><strong>B.</strong> (1) !ignore           (2) ignore = true;</span></label>
+  <label class="choice"><input type="radio" name="q2" value="C"><span><strong>C.</strong> (1) !ignore           (2) ignore = false;</span></label>
+  <label class="choice"><input type="radio" name="q2" value="D"><span><strong>D.</strong> (1) ignore            (2) ignore = true;</span></label>
+  <div class="explain"><strong>정답: B</strong><br>ignore는 false로 시작하고, deps 변경/unmount 시 cleanup이 ignore = true로 바꾸면 늦게 도착한 이전 fetch의 응답이 setResults를 호출하지 못하게 막는다. 즉 setResults는 !ignore일 때만 적용한다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> (1)이 `ignore === true`면 무시되어야 할 응답에만 적용하는 셈이라 의미가 정반대다.</li><li><strong>C.</strong> cleanup에서 ignore를 false로 두면 플래그가 한 번도 켜지지 않아 race를 막지 못한다.</li><li><strong>D.</strong> (1)이 `ignore`면 무시 대상 응답을 채택하는 꼴이라 race 보호 방향이 거꾸로다.</li></ul></div>
+</div>
+<div class="q" id="q3">
+  <span class="tag">Q4</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_multi</span>
+  <h3>cleanup 함수를 올바르게 작성한 Effect를 모두 고르시오. (정답 2개)</h3>
+  <label class="choice"><input type="checkbox" name="q3" value="A"><span><strong>A.</strong> ```js
+useEffect(() =&gt; {
+  const conn = createConnection(roomId);
+  conn.connect();
+  return () =&gt; conn.disconnect();
+}, [roomId]);
+```</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="B"><span><strong>B.</strong> ```js
+useEffect(() =&gt; {
+  window.addEventListener(&#x27;scroll&#x27;, onScroll);
+}, []);
+```</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="C"><span><strong>C.</strong> ```js
+useEffect(() =&gt; {
+  const id = setInterval(tick, 1000);
+  return () =&gt; clearInterval(id);
+}, []);
+```</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="D"><span><strong>D.</strong> ```js
+useEffect(() =&gt; {
+  fetch(url).then(r =&gt; r.json()).then(setData);
+}, [url]);
+```</span></label>
+  <label class="choice"><input type="checkbox" name="q3" value="E"><span><strong>E.</strong> ```js
+useEffect(() =&gt; {
+  const conn = createConnection(roomId);
+  conn.connect();
+}, [roomId]);
+```</span></label>
+  <div class="explain"><strong>정답: A, C</strong><br>A는 connect/disconnect 한 쌍, C는 setInterval/clearInterval 한 쌍이 갖춰져 있다. &#x27;연결 → 끊기&#x27;가 짝을 이뤄야 동기화가 닫힌다.<br><strong>오답 해설:</strong><ul><li><strong>B.</strong> addEventListener가 있는데 removeEventListener가 없어 누수가 발생한다.</li><li><strong>D.</strong> url이 바뀌면 이전 fetch의 응답이 늦게 도착해 race condition이 생긴다 — ignore flag가 필요.</li><li><strong>E.</strong> connect만 하고 disconnect 없음 → roomId 변경 시 좀비 연결이 누적된다.</li></ul></div>
+</div>
+<div class="q" id="q4">
+  <span class="tag">Q5</span>
+  <span class="tag">Understand</span>
+  <span class="tag">true_false</span>
+  <h3>참/거짓: 개발 모드에서 Strict Mode가 Effect를 두 번 실행해 chat connection이 두 번 연결되는 로그가 보이는 것은 React의 버그이며, 프로덕션에서도 동일한 문제가 발생한다.</h3>
+  <label class="choice"><input type="radio" name="q4" value="T"><span>참 (True)</span></label>
+  <label class="choice"><input type="radio" name="q4" value="F"><span>거짓 (False)</span></label>
+  <div class="explain"><strong>정답: B</strong><br>거짓이다. Strict Mode의 dev 더블 마운트는 &#x27;cleanup이 정확한지 자동 검증&#x27;하는 의도된 동작으로, 프로덕션에서는 한 번만 실행된다. 두 번 연결처럼 보인다면 그것은 cleanup이 부실하다는 신호다.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> dev 더블 마운트는 의도된 검증 장치이며 프로덕션에는 적용되지 않는다.</li></ul></div>
+</div>
+<div class="q" id="q5">
+  <span class="tag">Q6</span>
+  <span class="tag">Analyze</span>
+  <span class="tag">mcq_single</span>
+  <h3>한 개발자가 dev에서 Effect가 두 번 실행되는 것이 보기 싫어 다음과 같이 ref guard로 막았다. 이 처방의 가장 큰 문제는?
+
+```js
+const didMount = useRef(false);
+useEffect(() =&gt; {
+  if (didMount.current) return;
+  didMount.current = true;
+  connection.connect();
+  return () =&gt; connection.disconnect();
+}, []);
+```</h3>
+  <label class="choice"><input type="radio" name="q5" value="A"><span><strong>A.</strong> didMount.current 할당이 렌더 중에 일어나서 비결정적 렌더를 만든다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="B"><span><strong>B.</strong> useRef 대신 useState를 써야 한다 — ref는 재렌더를 트리거하지 않으므로 guard 용도로 부적합하다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="C"><span><strong>C.</strong> 실제로 컴포넌트가 unmount(탭 전환·route 복귀)됐다가 다시 mount될 때, didMount가 이미 true라 재연결되지 않거나 cleanup이 어긋나 좀비 연결·누수가 남는다.</span></label>
+  <label class="choice"><input type="radio" name="q5" value="D"><span><strong>D.</strong> Strict Mode가 꺼진 프로덕션에서 connect가 아예 호출되지 않는다.</span></label>
+  <div class="explain"><strong>정답: C</strong><br>S3.C3의 핵심이다. ref guard는 dev 로그의 증상만 가리고, 진짜 unmount/remount 시나리오에서 cleanup의 정확성을 검증할 기회를 잃게 만들어 실제 누수를 숨긴다. 옳은 처방은 cleanup을 견고하게 만드는 것.<br><strong>오답 해설:</strong><ul><li><strong>A.</strong> ref 할당은 Effect 안에서 일어나고 있어 렌더 중 mutation은 아니다.</li><li><strong>B.</strong> Guard 자체에는 useRef가 적절하다 — 문제는 guard라는 접근법 자체다.</li><li><strong>D.</strong> Strict Mode와 무관하게 mount 시 connect는 한 번 실행된다.</li></ul></div>
+</div>
+<div class="q" id="q6">
+  <span class="tag">Q7</span>
+  <span class="tag">Apply</span>
+  <span class="tag">short_answer</span>
+  <h3>다음 Effect의 문제점을 두 가지 짚고, deps와 cleanup을 어떻게 고쳐야 하는지 1~2줄로 설명하시오.
+
+```js
+useEffect(() =&gt; {
+  const conn = createConnection(serverUrl, roomId);
+  conn.connect();
+}, []);
+```</h3>
+  <textarea placeholder="답변을 입력하세요..."></textarea>
+  <div class="explain">모범 답안 요지: (1) deps에 [serverUrl, roomId]가 빠져 roomId/serverUrl이 바뀌어도 재동기화되지 않는다(stale 연결). (2) cleanup이 없어 unmount/재실행 시 conn.disconnect()가 호출되지 않아 좀비 연결·중복 구독이 누적된다. 수정: `return () =&gt; conn.disconnect();`를 추가하고 deps를 `[serverUrl, roomId]`로 바꾼다.<strong>채점 기준:</strong><ul><li>full_credit</li><li>partial_credit</li><li>no_credit</li></ul></div>
+</div>
+    <button type="button" class="submit" id="submit-btn">제출하고 채점하기</button>
+  </form>
+  <div id="next-step" style="display:none;margin-top:24px;text-align:center"></div>
+</div>
+<script>
+const ITEMS = [{"id": "S3.Q1", "type": "mcq_single", "stem": "이 섹션은 useEffect를 'mount/update/unmount 라이프사이클 훅'이 아니라 '외부 시스템과의 동기화 도구'로 재정의했다. 이 재프레이밍을 가장 잘 설명하는 문장은?", "choices": ["Effect는 메시지를 한 번 보내는 이벤트와 같아서, 사용자의 클릭에 응답하는 명령형 작업에 적합하다.", "Effect는 컴포넌트가 살아있는 동안 React state와 외부 세계(DOM·서버·브라우저 API)의 연결을 유지하기 위한 도구다.", "Effect는 React가 렌더 직후 한 번만 실행하는 콜백으로, 이후에는 다시 실행되지 않는다.", "Effect는 라이프사이클 훅의 다른 이름이며, componentDidMount/Update/Unmount가 합쳐진 단축 API다."], "correct": ["B"], "explanation": "S3.C1의 핵심 프레이밍이다. Effect의 의미는 '시점(언제)'이 아니라 '관계(무엇과 무엇을 일치시키는가)'에 있다.", "distractor_rationales": {"A": "메시지 한 번 보내기는 이벤트(handler)에 해당한다. Effect는 '연결 유지'다.", "C": "deps에 따라 cleanup → 재실행이 반복될 수 있으므로 '한 번만'은 틀리다.", "D": "이것이 바로 이 섹션이 버리라고 한 라이프사이클 멘탈모델이다."}, "lo_ids": ["LO-S3.1"], "bloom": "Understand", "difficulty": 2}, {"id": "S3.Q2", "type": "mcq_single", "stem": "다음 useEffect 의존성 배열 형태와 콜백 실행 시점을 올바르게 짝지은 것은?", "choices": ["deps 생략 → 마운트 1회 / [] → 매 렌더 / [a,b] → a,b 변경 시", "deps 생략 → 매 렌더 / [] → 마운트 1회(+ unmount cleanup) / [a,b] → a 또는 b가 이전과 다를 때", "deps 생략 → 매 렌더 / [] → 절대 실행 안 됨 / [a,b] → a와 b가 동시에 바뀔 때만", "deps 생략 → 마운트 1회 / [] → 매 렌더 / [a,b] → a,b가 모두 truthy일 때"], "correct": ["B"], "explanation": "S3.C2 시연 그대로다. React는 deps 각 항목을 Object.is로 이전 렌더와 비교한다.", "distractor_rationales": {"A": "생략과 []의 의미가 정반대로 뒤바뀌었다.", "C": "[]도 마운트 시 1회 실행되며, [a,b]는 둘 중 하나만 바뀌어도 재실행된다.", "D": "deps는 boolean 조건이 아니라 변경 감지 키다."}, "lo_ids": ["LO-S3.2"], "bloom": "Understand", "difficulty": 2}, {"id": "S3.Q3", "type": "mcq_single", "stem": "다음 코드를 fetch race condition으로부터 안전하게 만들기 위해 빈 칸 (1)(2)에 들어갈 코드는?\n\n```js\nuseEffect(() => {\n  let ignore = false;\n  fetchResults(query, page).then(json => {\n    if (___(1)___) {\n      setResults(json);\n    }\n  });\n  return () => { ___(2)___ };\n}, [query, page]);\n```", "choices": ["(1) ignore === true   (2) ignore = false;", "(1) !ignore           (2) ignore = true;", "(1) !ignore           (2) ignore = false;", "(1) ignore            (2) ignore = true;"], "correct": ["B"], "explanation": "ignore는 false로 시작하고, deps 변경/unmount 시 cleanup이 ignore = true로 바꾸면 늦게 도착한 이전 fetch의 응답이 setResults를 호출하지 못하게 막는다. 즉 setResults는 !ignore일 때만 적용한다.", "distractor_rationales": {"A": "(1)이 `ignore === true`면 무시되어야 할 응답에만 적용하는 셈이라 의미가 정반대다.", "C": "cleanup에서 ignore를 false로 두면 플래그가 한 번도 켜지지 않아 race를 막지 못한다.", "D": "(1)이 `ignore`면 무시 대상 응답을 채택하는 꼴이라 race 보호 방향이 거꾸로다."}, "lo_ids": ["LO-S3.3"], "bloom": "Apply", "difficulty": 4}, {"id": "S3.Q4", "type": "mcq_multi", "stem": "cleanup 함수를 올바르게 작성한 Effect를 모두 고르시오. (정답 2개)", "choices": ["```js\nuseEffect(() => {\n  const conn = createConnection(roomId);\n  conn.connect();\n  return () => conn.disconnect();\n}, [roomId]);\n```", "```js\nuseEffect(() => {\n  window.addEventListener('scroll', onScroll);\n}, []);\n```", "```js\nuseEffect(() => {\n  const id = setInterval(tick, 1000);\n  return () => clearInterval(id);\n}, []);\n```", "```js\nuseEffect(() => {\n  fetch(url).then(r => r.json()).then(setData);\n}, [url]);\n```", "```js\nuseEffect(() => {\n  const conn = createConnection(roomId);\n  conn.connect();\n}, [roomId]);\n```"], "correct": ["A", "C"], "explanation": "A는 connect/disconnect 한 쌍, C는 setInterval/clearInterval 한 쌍이 갖춰져 있다. '연결 → 끊기'가 짝을 이뤄야 동기화가 닫힌다.", "distractor_rationales": {"B": "addEventListener가 있는데 removeEventListener가 없어 누수가 발생한다.", "D": "url이 바뀌면 이전 fetch의 응답이 늦게 도착해 race condition이 생긴다 — ignore flag가 필요.", "E": "connect만 하고 disconnect 없음 → roomId 변경 시 좀비 연결이 누적된다."}, "lo_ids": ["LO-S3.3"], "bloom": "Analyze", "difficulty": 3}, {"id": "S3.Q5", "type": "true_false", "stem": "참/거짓: 개발 모드에서 Strict Mode가 Effect를 두 번 실행해 chat connection이 두 번 연결되는 로그가 보이는 것은 React의 버그이며, 프로덕션에서도 동일한 문제가 발생한다.", "choices": ["참", "거짓"], "correct": ["B"], "explanation": "거짓이다. Strict Mode의 dev 더블 마운트는 'cleanup이 정확한지 자동 검증'하는 의도된 동작으로, 프로덕션에서는 한 번만 실행된다. 두 번 연결처럼 보인다면 그것은 cleanup이 부실하다는 신호다.", "distractor_rationales": {"A": "dev 더블 마운트는 의도된 검증 장치이며 프로덕션에는 적용되지 않는다."}, "lo_ids": ["LO-S3.4"], "bloom": "Understand", "difficulty": 2}, {"id": "S3.Q6", "type": "mcq_single", "stem": "한 개발자가 dev에서 Effect가 두 번 실행되는 것이 보기 싫어 다음과 같이 ref guard로 막았다. 이 처방의 가장 큰 문제는?\n\n```js\nconst didMount = useRef(false);\nuseEffect(() => {\n  if (didMount.current) return;\n  didMount.current = true;\n  connection.connect();\n  return () => connection.disconnect();\n}, []);\n```", "choices": ["didMount.current 할당이 렌더 중에 일어나서 비결정적 렌더를 만든다.", "useRef 대신 useState를 써야 한다 — ref는 재렌더를 트리거하지 않으므로 guard 용도로 부적합하다.", "실제로 컴포넌트가 unmount(탭 전환·route 복귀)됐다가 다시 mount될 때, didMount가 이미 true라 재연결되지 않거나 cleanup이 어긋나 좀비 연결·누수가 남는다.", "Strict Mode가 꺼진 프로덕션에서 connect가 아예 호출되지 않는다."], "correct": ["C"], "explanation": "S3.C3의 핵심이다. ref guard는 dev 로그의 증상만 가리고, 진짜 unmount/remount 시나리오에서 cleanup의 정확성을 검증할 기회를 잃게 만들어 실제 누수를 숨긴다. 옳은 처방은 cleanup을 견고하게 만드는 것.", "distractor_rationales": {"A": "ref 할당은 Effect 안에서 일어나고 있어 렌더 중 mutation은 아니다.", "B": "Guard 자체에는 useRef가 적절하다 — 문제는 guard라는 접근법 자체다.", "D": "Strict Mode와 무관하게 mount 시 connect는 한 번 실행된다."}, "lo_ids": ["LO-S3.4"], "bloom": "Analyze", "difficulty": 4}, {"id": "S3.Q7", "type": "short_answer", "stem": "다음 Effect의 문제점을 두 가지 짚고, deps와 cleanup을 어떻게 고쳐야 하는지 1~2줄로 설명하시오.\n\n```js\nuseEffect(() => {\n  const conn = createConnection(serverUrl, roomId);\n  conn.connect();\n}, []);\n```", "choices": [], "correct": [], "explanation": "모범 답안 요지: (1) deps에 [serverUrl, roomId]가 빠져 roomId/serverUrl이 바뀌어도 재동기화되지 않는다(stale 연결). (2) cleanup이 없어 unmount/재실행 시 conn.disconnect()가 호출되지 않아 좀비 연결·중복 구독이 누적된다. 수정: `return () => conn.disconnect();`를 추가하고 deps를 `[serverUrl, roomId]`로 바꾼다.", "distractor_rationales": {}, "lo_ids": ["LO-S3.2", "LO-S3.3"], "bloom": "Apply", "difficulty": 3, "rubric": {"full_credit": "두 문제(빠진 deps, 빠진 cleanup)를 모두 식별하고, deps에 [serverUrl, roomId] 추가 + return () => conn.disconnect() cleanup 추가를 제시.", "partial_credit": "둘 중 하나만 정확히 식별하고 수정 제시.", "no_credit": "라이프사이클 표현으로만 설명하거나, ref guard·전역 플래그 같은 안티패턴으로 해결을 제시."}}];
+const NEXT_HREF = "../04-you-might-not-need-an-effect/classes/01-diagnosis-frame-and-decision-tree/player.html";
+const NEXT_TITLE = "Effect 안 써도 되는 경우 — 진단 프레임과 결정 트리";
+const BACK_HREF = "../../index.html";
+const scoreEl = document.getElementById('score');
+
+document.getElementById('submit-btn').onclick = () => {
+  let correct = 0;
+  ITEMS.forEach((item, idx) => {
+    const q = document.getElementById('q' + idx);
+    const exp = q.querySelector('.explain');
+    if (['mcq_single','mcq_multi','true_false'].includes(item.type)) {
+      const picked = [...q.querySelectorAll('input:checked')].map(i => i.value).sort();
+      const ans = [...item.correct].sort();
+      const ok = JSON.stringify(picked) === JSON.stringify(ans);
+      if (ok) correct++;
+      q.querySelectorAll('.choice').forEach(c => {
+        const v = c.querySelector('input').value;
+        if (ans.includes(v)) c.classList.add('correct');
+        else if (picked.includes(v)) c.classList.add('wrong');
+      });
+    }
+    exp.classList.add('show');
+  });
+  const gradable = ITEMS.filter(i => i.type !== 'short_answer').length;
+  scoreEl.style.display = 'block';
+  scoreEl.innerHTML = '<strong>' + correct + ' / ' + gradable + '</strong> 맞혔습니다.' +
+    (gradable < ITEMS.length ? ' (서술형 ' + (ITEMS.length - gradable) + '문항은 rubric 자가채점)' : '');
+
+  const nextStep = document.getElementById('next-step');
+  let html = '';
+  if (NEXT_HREF) {
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ 다음: ' + NEXT_TITLE + '</a>';
+  }
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">목차로</a>';
+  nextStep.innerHTML = html;
+  nextStep.style.display = 'block';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+</script>
+</body>
+</html>

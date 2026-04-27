@@ -1,0 +1,111 @@
+{
+  "class_id": "S8.C2",
+  "title": "실전 추출 — useFormInput, useChatRoom과 useEffectEvent wrap",
+  "lo_ids": ["LO-S8.2", "LO-S8.3"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "지난 시간엔 '왜 Custom Hook인가'를 봤다. 오늘은 '어떻게 만드는가'를 손으로 따라간다",
+        "세 가지 실전 케이스: useOnlineStatus는 인자 없는 가장 단순한 형태, useFormInput은 인자 + 반환 객체, useChatRoom은 reactive 값 + 핸들러까지 받는 끝판",
+        "마지막에 함정 하나: 핸들러를 그냥 deps에 넣으면 매 렌더마다 채팅방이 끊겼다 다시 연결됨 → useEffectEvent로 풀기",
+        "오늘 끝나면 도메인 의미 있는 Hook을 직접 설계할 수 있게 된다"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S8.3"],
+      "visual_hint": "세 개의 카드(useOnlineStatus / useFormInput / useChatRoom)가 난이도 사다리처럼 점점 커지는 일러스트",
+      "speaker_affect": "기대감 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "example",
+      "duration_sec": 140,
+      "key_points": [
+        "useFormInput 정의: function useFormInput(initial) { const [value, setValue] = useState(initial); return { value, onChange: e => setValue(e.target.value) }; }",
+        "사용처: const firstName = useFormInput('Mary'); <input {...firstName} /> — 스프레드로 value/onChange를 한 번에 input에 꽂음",
+        "이 패턴의 가치: 같은 form에 5개 input이 있어도 useState + onChange 핸들러를 5번 쓰지 않고 한 줄씩으로 압축",
+        "반환을 객체로 한 이유: 호출처에서 firstName.value, firstName.onChange를 따로 쓰거나 {...firstName}으로 펼치거나 둘 다 가능",
+        "다시 강조: firstName과 lastName은 각자 독립된 useState slot — 한 input에 타이핑한다고 다른 input이 갱신되지 않음 (지난 시간 원칙 그대로)"
+      ],
+      "lo_ids": ["LO-S8.2"],
+      "visual_hint": "왼쪽: Hook 정의 코드(8줄) / 오른쪽: 두 input이 독립적으로 타이핑되는 GIF 느낌의 일러스트, 각 input 옆에 자기 useState 박스",
+      "speaker_affect": "친근하게, 코드 한 줄씩 읽어주듯"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 120,
+      "key_points": [
+        "useChatRoom의 요구사항 정리: roomId가 바뀌면 재연결, serverUrl이 바뀌어도 재연결, 그러나 onReceiveMessage 핸들러는 매 렌더마다 새 함수여도 재연결되면 안 됨",
+        "왜? 부모가 리렌더할 때마다 화살표 함수로 만든 onReceiveMessage는 새 참조 → 만약 deps에 넣으면 매 렌더마다 connect/disconnect 폭주",
+        "그렇다고 deps에서 빼면 ESLint exhaustive-deps가 경고 + stale closure로 옛날 핸들러를 호출할 위험",
+        "해법: '핸들러는 reactive하지 않다'는 의도를 React에 알려주는 도구 = useEffectEvent — Effect 안에서만 호출하는, 항상 최신을 보는 함수로 wrap",
+        "S6에서 배운 useEffectEvent를 이번엔 Custom Hook 안에서 쓴다 — 사용처가 아니라 Hook 정의 안에 위치시키는 게 핵심"
+      ],
+      "lo_ids": ["LO-S8.3"],
+      "visual_hint": "재연결 폭주 다이어그램(빨간 화살표가 매 렌더마다 connect→disconnect 반복) → useEffectEvent로 wrap한 후 깔끔히 roomId/serverUrl 변경 시에만 재연결되는 모습",
+      "speaker_affect": "차분하게, 문제→해법 흐름으로"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "useChatRoom 코드 walkthrough: function useChatRoom({ serverUrl, roomId, onReceiveMessage }) { const onMessage = useEffectEvent(onReceiveMessage); useEffect(() => { ... }, [roomId, serverUrl]); }",
+        "Effect 본체: const options = { serverUrl, roomId }; const c = createConnection(options); c.connect(); c.on('message', m => onMessage(m)); return () => c.disconnect();",
+        "deps 배열에 [roomId, serverUrl]만 — onReceiveMessage는 들어가지 않음 (useEffectEvent로 감쌌으니까)",
+        "사용처: useChatRoom({ roomId, serverUrl, onReceiveMessage(msg) { showNotification('New: ' + msg); } }); — 호출하는 컴포넌트는 useEffectEvent의 존재를 몰라도 됨, 캡슐화됨",
+        "검증 시나리오: 부모가 무관한 state를 100번 set해도 connect는 한 번. roomId가 'general'→'random'으로 바뀌면 cleanup 후 재연결. 정확히 의도한 시점만 재동기화",
+        "한 줄 정리: reactive 값은 인자 → deps로, 핸들러는 인자 → useEffectEvent로 wrap"
+      ],
+      "lo_ids": ["LO-S8.3"],
+      "visual_hint": "useChatRoom 전체 코드(왼쪽) + 타임라인(오른쪽): 부모 렌더 N회 vs 실제 connect/disconnect 발생 시점이 roomId 변경 순간에만 마커",
+      "speaker_affect": "꼼꼼하게, 한 줄씩 짚어가며"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 120,
+      "key_points": [
+        "보너스 useOnlineStatus 재방문: 인자 없음, 반환은 boolean — 가장 단순한 형태도 같은 패턴(useState+useEffect+cleanup)을 따름",
+        "세 Hook 비교 표: 인자 / 반환 / Effect / 핸들러 wrap 여부",
+        "useOnlineStatus: () → boolean / useEffect 있음 / 핸들러 없음",
+        "useFormInput: (initial) → {value, onChange} / Effect 없음 / 핸들러 없음",
+        "useChatRoom: ({serverUrl, roomId, onReceiveMessage}) → void / Effect 있음 / useEffectEvent 사용",
+        "패턴이 보인다: '필요한 만큼만, 도메인이 요구하는 모양으로' 인자/반환을 설계"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S8.3"],
+      "visual_hint": "3행 비교 테이블(Hook 이름 / 인자 / 반환 / Effect / EffectEvent) — 컬럼이 채워지는 모습",
+      "speaker_affect": "정리하듯, 친근하게"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 100,
+      "key_points": [
+        "자문자답 1: useChatRoom의 deps에 onReceiveMessage를 넣으면 어떤 증상이 보이나? → 부모가 리렌더할 때마다 채팅 끊겼다 다시 연결, 새 메시지 누락 가능",
+        "자문자답 2: useEffectEvent로 감싼 onMessage를 deps에 넣어도 되나? → 안 됨. Effect Event는 deps에 등장 금지가 규칙. linter가 막아줌",
+        "자문자답 3: useFormInput처럼 Effect 없는 Hook은 그냥 일반 함수로 만들어도 되지 않나? → useState를 호출하므로 반드시 Hook이어야 함. use 접두사 정당",
+        "자문자답 4: useChatRoom 안에서 useEffectEvent 대신 useCallback을 쓰면? → useCallback은 deps가 같을 때만 같은 참조를 보장하므로, 핸들러가 의존하는 값이 바뀌면 여전히 deps 오염. 의도가 다름"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S8.3"],
+      "visual_hint": "Q&A 카드 4장 — 답이 가려졌다가 펼쳐지는 형태",
+      "speaker_affect": "초대하듯, 잠깐 멈추라고"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 50,
+      "key_points": [
+        "1) useFormInput처럼 도메인 의미 있는 Hook은 호출처를 한 줄로 줄여준다",
+        "2) reactive 값(roomId, serverUrl)은 인자→deps로 흐르고, 핸들러는 인자→useEffectEvent로 wrap",
+        "3) useEffectEvent는 호출하는 컴포넌트가 모르는 채로 Hook 안에 캡슐화 — 사용처는 평범한 콜백만 넘기면 끝"
+      ],
+      "lo_ids": ["LO-S8.2", "LO-S8.3"],
+      "visual_hint": "3줄 요약, 'reactive 값 / 핸들러 / 캡슐화' 키워드 강조",
+      "speaker_affect": "정리, 만족스럽게"
+    }
+  ]
+}

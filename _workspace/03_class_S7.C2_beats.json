@@ -1,0 +1,107 @@
+{
+  "class_id": "S7.C2",
+  "title": "전략 1-3 — 정적값 외부화 · 객체/함수 안에서 생성 · updater",
+  "lo_ids": ["LO-S7.2", "LO-S7.3"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "타이머가 1초마다 멈췄다 다시 시작하는 깜빡임 — 본 적 있으세요?",
+        "원인은 setInterval이 매 tick마다 재생성되고 있다는 것",
+        "이번 class의 3 전략으로 깔끔히 해결됨"
+      ],
+      "lo_ids": ["LO-S7.3"],
+      "visual_hint": "흔들리는 타이머 GIF 또는 'cleanup → setInterval → cleanup → setInterval' 무한 루프 다이어그램",
+      "speaker_affect": "공감 유도, '저도 겪어봤어요' 톤"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "전략 1: 진짜 상수(serverUrl 'https://...', roomId 'music' 같은 모듈 레벨 값)는 컴포넌트 밖으로 옮긴다",
+        "컴포넌트 밖 값은 reactive가 아님 → linter가 deps에 요구하지 않음",
+        "적용 신호: '이 값은 절대 바뀌지 않는데 왜 deps에 있지?'",
+        "주의: prop이나 state는 절대 컴포넌트 밖으로 옮길 수 없음 (이건 진짜 상수가 아님)"
+      ],
+      "lo_ids": ["LO-S7.2"],
+      "visual_hint": "왼쪽: 컴포넌트 안 const options (deps에 들어감) / 오른쪽: 컴포넌트 밖 const options (deps=[]). 'module scope' 라벨 강조",
+      "speaker_affect": "친근하게, '쉬운 것부터 가요' 톤"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "전략 2: 매 렌더 새로 생기는 객체/함수는 Effect 안에서 만든다",
+        "ChatRoom({ roomId }): const options = { serverUrl, roomId }을 컴포넌트 본문에 두면 매 렌더 새 참조 → deps=[options]가 매번 달라져 재연결 폭주",
+        "해결: useEffect(() => { const options = { serverUrl, roomId }; createConnection(options); }, [roomId])",
+        "원시값 roomId만 deps에 — Object.is 비교에서 안정됨",
+        "적용 신호: 객체/함수 deps 때문에 무한 재실행"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.4"],
+      "visual_hint": "Before/After 코드 슬라이드. Before에는 빨간 화살표로 'options가 매 렌더 새 참조'. After는 Effect 박스 안에 options를 넣고 deps에는 roomId 원시값만",
+      "speaker_affect": "단계별로 또박또박"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 100,
+      "key_points": [
+        "전략 3: state를 '읽기만' 한다면 updater 함수로 의존성 자체를 끊는다",
+        "setX(prev => next) 형태는 React가 최신 state를 인자로 넣어줌 → Effect가 state를 직접 읽을 필요 없음",
+        "messages 의존을 끊는 예: c.on('message', m => setMessages(prev => [...prev, m]))",
+        "적용 신호: state를 '쓰기 위해 읽는' 패턴 (누적, 토글, 카운트업)"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.3"],
+      "visual_hint": "setMessages([...messages, m]) 위에 빨간 X, setMessages(prev => [...prev, m]) 위에 초록 체크. deps 배열에서 messages가 사라지는 애니메이션 힌트",
+      "speaker_affect": "확신 있는 톤, '이 한 줄이 다 해결합니다'"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 200,
+      "key_points": [
+        "타이머 Before: useEffect(() => { const id = setInterval(() => setCount(count + 1), 1000); return () => clearInterval(id); }, [count])",
+        "문제 추적: count 변경 → Effect 재실행 → cleanup으로 interval 해제 → 새 interval 등록 → 매 초마다 폐기/재생성 반복",
+        "타이머 After: setCount(c => c + 1)로 바꾸고 deps=[]",
+        "결과: interval은 mount 시 한 번만 등록, count는 항상 최신 — 매 tick c가 최신값으로 들어옴",
+        "한 줄 변경의 위력: closure 캡처 문제 + 재생성 문제 동시 해결"
+      ],
+      "lo_ids": ["LO-S7.3"],
+      "visual_hint": "라이브 리팩터링 스타일. 좌측 Before 코드에 'count' 토큰 강조, 우측 After 코드에 'c =>' 강조. 하단에 타임라인: Before는 cleanup-mount 반복, After는 mount 한 번",
+      "speaker_affect": "성취감 있게, '봐요, 이렇게 깔끔해집니다' 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 95,
+      "key_points": [
+        "미니 연습: 다음 코드의 적용 전략을 고르세요",
+        "(a) const config = { apiKey: 'fixed-string' }을 컴포넌트 안에 정의해 deps에 넣었다 → 전략 1 (밖으로)",
+        "(b) useEffect deps=[onClick]인데 onClick은 부모가 매 렌더 새로 만든 함수 → 전략 2 (Effect 안에서 만들거나 원시값으로)",
+        "(c) setScore(score + bonus) 때문에 score가 deps에 — 매 호출마다 재실행 → 전략 3 (updater)",
+        "스스로 답해보고 다음 class에서 4-6 전략으로 넘어갑니다"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.3"],
+      "visual_hint": "3개 짧은 코드 스니펫 카드와 옆에 빈 '전략 ?' 라벨",
+      "speaker_affect": "같이 풀어보자, 친근한 코칭 톤"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 60,
+      "key_points": [
+        "전략 1 — 진짜 상수는 컴포넌트 밖으로",
+        "전략 2 — 객체/함수는 Effect 안에서 만들고 원시값만 deps",
+        "전략 3 — state 읽기만이면 updater(prev => ...)로 의존성을 끊는다"
+      ],
+      "lo_ids": ["LO-S7.2", "LO-S7.3"],
+      "visual_hint": "3 전략을 1-2-3 번호 카드로 나란히. 각각 핵심 키워드(밖 / 안 / updater)",
+      "speaker_affect": "정리, 깔끔하게"
+    }
+  ]
+}

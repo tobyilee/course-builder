@@ -1,0 +1,107 @@
+{
+  "class_id": "S0.C1",
+  "title": "왜 'Escape Hatch'인가 — React의 기본 흐름과 마지막 수단",
+  "lo_ids": ["LO-S0.1", "LO-S0.3"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "직전 'Managing State' 코스에서는 useState/lifting/key/useReducer/context로 거의 모든 UI 상태를 다뤘다",
+        "그런데 실무에서는 'input에 focus 주기', '타이머 ID 보관', '채팅 서버 연결' 같이 그 도구로는 안 풀리는 순간이 온다",
+        "이 순간 손이 가는 도구가 useRef · useEffect · Custom Hook — 즉 '비상구(Escape Hatch)'다",
+        "오늘은 왜 React가 이걸 굳이 '비상구'라고 부르는지부터 짚는다"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "왼쪽: 'Managing State 도구 박스(useState, key, context)' / 오른쪽: 'Escape Hatch 박스(useRef, useEffect, Custom Hook)' 두 영역을 가르는 점선",
+      "speaker_affect": "호기심 유발, 친근하게"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "React의 기본 흐름 3요소 복습: 선언형 렌더(상태 → UI), 순수 함수형 컴포넌트, 단방향 props",
+        "이 흐름의 미덕: 같은 state면 같은 UI — 예측 가능, 테스트 쉬움, 디버깅 동선이 짧음",
+        "이전 코스의 '90% 케이스'는 이 흐름 안에서 해결된다 — UI 상태는 useState, 부모-자식 공유는 lifting, 인스턴스 분리는 key, 트리 전파는 context",
+        "달리 말해: '렌더 입력 → 렌더 출력' 한 줄로 설명되는 코드가 좋은 코드다"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "선언형 흐름 다이어그램: state → render → UI (단방향 화살표). 옆에 'Managing State에서 익숙한 영역'이라는 캡션",
+      "speaker_affect": "차분하게, 복습 톤"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "그런데 React 바깥의 세계가 있다 — 브라우저 DOM API, 타이머, 네트워크 소켓, 서드파티 라이브러리",
+        "Escape Hatch가 등장하는 세 가지 시나리오: ① 외부 시스템 동기화(서버 연결, 구독), ② 명령형 DOM 조작(focus, scroll, play), ③ 비-렌더 데이터 보관(timeout ID, 디바운서 인스턴스)",
+        "각 시나리오는 '렌더 결과로 표현 못 하는 일'이 공통점 — UI에 그려지지 않는 부수효과거나, React가 추상화하지 못하는 명령형 호출이다",
+        "이 세 시나리오를 푸는 도구가 차례로 useEffect / DOM ref / value ref이며, 재사용 단위로 묶으면 Custom Hook이 된다"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "3분할 카드: '외부 시스템 동기화 / 명령형 DOM / 비-렌더 데이터' 각각 아이콘과 한 줄 예시. 하단에 '→ Effects / Refs / Refs' 매핑",
+      "speaker_affect": "또렷하게, 분류하듯"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 130,
+      "key_points": [
+        "예시 1: '검색 input에 마운트 시 focus' — useState로는 표현 불가. DOM 노드에 직접 .focus() 호출이 필요하므로 ref 사용",
+        "예시 2: '디바운스 타이머 ID 저장' — state에 넣으면 매 입력마다 재렌더 폭증. ref에 두면 렌더 무관하게 mutate 가능",
+        "예시 3: '채팅방 roomId 바뀔 때 서버 재연결' — 외부 시스템과의 동기화. useEffect의 cleanup으로 이전 연결을 안전하게 끊음",
+        "세 예시 모두 '렌더 함수만으로 표현 안 되는 부분'이 본질 — 그래서 React 흐름을 잠깐 빠져나간다"
+      ],
+      "lo_ids": ["LO-S0.1"],
+      "visual_hint": "코드 스니펫 3개를 카드로 나열: focus 예제, debounce ref 예제, chat connect/disconnect Effect 예제. 각 카드 상단에 시나리오 라벨",
+      "speaker_affect": "구체적으로, 예시 설명 톤"
+    },
+    {
+      "id": "b5",
+      "type": "teach",
+      "duration_sec": 100,
+      "key_points": [
+        "그렇다면 왜 '마지막 수단'이라고 부를까? 세 가지 비용 때문이다",
+        "예측 가능성 비용: ref/effect는 렌더 결과 바깥에서 동작 → 코드만 보고 결과를 추론하기 어려워짐",
+        "테스트 용이성 비용: 외부 시스템(타이머, 네트워크, DOM)이 끼면 단위 테스트가 통합 테스트가 된다",
+        "동기화 비용: Effect는 '언제 다시 실행되는가'를 의존성 배열로 계속 관리해줘야 함 — 까먹으면 stale 또는 무한 재실행",
+        "그래서 '되도록 안 쓰는 것'이 기본자세 — 쓸 때는 정당한 이유가 있어야 한다"
+      ],
+      "lo_ids": ["LO-S0.3"],
+      "visual_hint": "저울 다이어그램: 왼쪽 '얻는 것: 외부 시스템 연결 가능' / 오른쪽 '잃는 것: 예측 가능성, 테스트 용이성, 동기화 비용'",
+      "speaker_affect": "강조, 신중한 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 50,
+      "key_points": [
+        "잠깐 멈추고 자문해보자: 다음 중 Escape Hatch가 필요한 경우는?",
+        "(a) 입력창의 글자 수를 화면에 보여주기 (b) 입력 후 500ms 기다렸다 검색 호출하기 (c) 두 컴포넌트가 같은 카운터 값을 공유하기",
+        "정답 힌트: (a)는 derived 값, (c)는 lifting — 둘 다 기본 흐름. (b)는 타이머 ID 보관 + 외부 타이머라 ref/effect 필요",
+        "핵심 질문: '렌더 결과만으로 설명되나? 외부 시스템이 끼어 있나?'"
+      ],
+      "lo_ids": ["LO-S0.1", "LO-S0.3"],
+      "visual_hint": "퀴즈 카드 (a)(b)(c) 세 박스. 정답 (b)만 강조 색. 하단에 핵심 질문 한 줄",
+      "speaker_affect": "친근하게, 잠깐 생각해보세요"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "기본 흐름 = 선언형 렌더 + 순수 함수 + 단방향 props — 90% 사례는 여기서 해결",
+        "Escape Hatch 시나리오 3종 = 외부 동기화 / 명령형 DOM / 비-렌더 데이터",
+        "쓸 땐 비용 3가지(예측·테스트·동기화)를 의식 — '기본은 안 쓰는 것'이 코스 전체 자세",
+        "다음 클래스에서 이 자세를 '결정 트리'로 행동화한다"
+      ],
+      "lo_ids": ["LO-S0.1", "LO-S0.3"],
+      "visual_hint": "3-bullet 요약 슬라이드 + '다음 시간: 결정 트리' 티저",
+      "speaker_affect": "정리하듯, 따뜻하게"
+    }
+  ]
+}

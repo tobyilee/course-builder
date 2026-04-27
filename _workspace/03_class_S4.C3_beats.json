@@ -1,0 +1,102 @@
+{
+  "class_id": "S4.C3",
+  "title": "State 리셋과 조정 — key prop과 state-during-render",
+  "lo_ids": ["LO-S4.3"],
+  "target_duration_sec": 600,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "Profile 페이지에서 userId가 바뀌면 댓글 입력이 그대로 남아 다른 사용자에게 보내질 뻔한 버그",
+        "흔한 처방: useEffect(() => setComment(''), [userId])",
+        "이 처방의 진짜 문제 — 한 번 깜빡임, dev 더블 마운트, 새 state가 늘어날 때마다 리셋 누락 위험"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "Profile 화면 모형 + 빨간 깜빡임 화살표로 'state stale' 표시",
+      "speaker_affect": "호기심 유발, 살짝 위기감"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 110,
+      "key_points": [
+        "안티패턴 #3: prop 변경 시 컴포넌트의 모든 state를 리셋",
+        "더 깔끔한 답: key prop으로 컴포넌트 인스턴스를 통째로 갈아끼움",
+        "<Profile userId={userId} key={userId} /> — React 입장에서 다른 컴포넌트로 인식, 모든 state가 자연스럽게 초기값으로",
+        "장점: 어떤 state를 추가해도 자동 리셋, 깜빡임 없음, dev 더블 마운트 영향 없음"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "key가 바뀌면 컴포넌트 트리에서 노드가 제거되고 새 노드가 생기는 다이어그램",
+      "speaker_affect": "또렷이, 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 90,
+      "key_points": [
+        "Before: function Profile({ userId }) { const [comment, setComment] = useState(''); useEffect(() => setComment(''), [userId]); ... }",
+        "After: 부모에서 <Profile userId={userId} key={userId} />, 자식의 useEffect는 통째로 삭제",
+        "리팩터링 단계: useEffect 제거 → 부모로 가서 key 추가 → 자식 코드 짧아짐"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "Before/After 코드 — 자식의 useEffect 5줄이 부모의 key 한 단어로 대체",
+      "speaker_affect": "친근하게, 안내자 톤"
+    },
+    {
+      "id": "b4",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "안티패턴 #4: prop 변경 시 일부 state만 조정 — 전체 리셋이 과한 경우",
+        "1순위 답: derived value로 바꿀 수 있다면 그게 최선 (selection을 state가 아니라 items.find로 매번 도출)",
+        "2순위 답: state-during-render — 렌더 중 prevItems 비교 후 setSelection(null) 호출",
+        "이 패턴이 React에서 합법인 이유: setState in render는 같은 렌더 안에서 즉시 다시 렌더, 자식 영향 없음, Effect보다 한 번의 페인트 비용 절약"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "두 답안 카드 — '1순위: derived', '2순위: state-during-render', 위계 표시",
+      "speaker_affect": "체계적으로, 강조"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "시나리오: items 리스트 + 선택된 selectedId — items가 바뀌면 선택 무효화",
+        "Before(Effect): useEffect(() => setSelection(null), [items])",
+        "After(state-during-render): const [prevItems, setPrevItems] = useState(items); if (items !== prevItems) { setPrevItems(items); setSelection(null); }",
+        "After(derived, 더 좋음): const selection = items.find(i => i.id === selectedId) ?? null — selection을 state에서 제거"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "3단 비교 — Effect / state-during-render / derived, 라인 수와 렌더 횟수 표시",
+      "speaker_affect": "친근하게, 시연 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "자문자답: 모달이 열릴 때마다 폼 입력을 빈 값으로 — 전체 리셋인가 부분 조정인가?",
+        "힌트: 모달 안의 모든 입력을 초기화하고 싶다면 모달 컴포넌트에 key={openId} 추가",
+        "자문자답2: 정렬 기준이 바뀔 때 페이지 번호만 1로 — 부분 조정 → derived 가능? 어렵다면 state-during-render"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "두 시나리오 카드 + 결정 규칙 미니 박스",
+      "speaker_affect": "도전 유도, 친근하게"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 35,
+      "key_points": [
+        "전체 리셋 → key prop 한 줄",
+        "부분 조정 → derived value 우선, 안 되면 state-during-render",
+        "Effect로 setState 처방은 깜빡임·이중 호출·확장성 문제로 마지막 후보"
+      ],
+      "lo_ids": ["LO-S4.3"],
+      "visual_hint": "결정 트리 Q4(리셋) 가지 강조 + 두 분기 표시",
+      "speaker_affect": "마무리, 또렷이"
+    }
+  ]
+}

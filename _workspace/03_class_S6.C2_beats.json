@@ -1,0 +1,112 @@
+{
+  "class_id": "S6.C2",
+  "title": "useEffectEvent로 non-reactive 추출 — theme/roomId 패턴",
+  "lo_ids": ["LO-S6.2", "LO-S6.4"],
+  "target_duration_sec": 780,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 50,
+      "key_points": [
+        "다크/라이트 테마 토글했을 뿐인데 채팅이 끊기는 황당한 시나리오",
+        "사용자 입장에서 '왜 끊기지?' — 개발자도 처음엔 의아하다",
+        "원인: theme이 deps에 들어가 있어 토글마다 disconnect → reconnect",
+        "오늘 배울 도구 한 줄 예고: useEffectEvent로 non-reactive 부분만 잘라내기"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "visual_hint": "테마 토글 애니메이션 위에 'Disconnected... Reconnecting...' 토스트가 반복",
+      "speaker_affect": "약간 과장된 당황, 호기심 유발"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 130,
+      "key_points": [
+        "Before 코드 분석: useEffect deps가 [roomId, theme] — exhaustive-deps 룰을 따른 결과",
+        "Effect 안에서 showNotification('Connected!', theme)을 호출하니 theme도 deps에",
+        "'올바른 deps'는 맞지만 '올바른 동작'은 아닌 모순 상황",
+        "근본 원인: 알림은 theme을 읽지만, 그 때문에 재연결될 이유는 없다 — non-reactive 로직",
+        "Effect 안에 reactive와 non-reactive가 섞여 있다는 진단"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "visual_hint": "Before 코드 — theme를 빨간 박스로 강조, deps 라인에도 빨간 밑줄",
+      "speaker_affect": "차분하게, 진단하는 톤"
+    },
+    {
+      "id": "b3",
+      "type": "teach",
+      "duration_sec": 150,
+      "key_points": [
+        "useEffectEvent 도입 — react.dev 기준 `import { useEffectEvent } from 'react'`",
+        "특성 4가지: Event handler처럼 non-reactive / 항상 최신 props·state / Effect 안에서만 호출 / deps에 올리지 않음",
+        "'Effect 안에 끼워 넣는 작은 event handler' 라는 멘탈 모델",
+        "linter가 deps에 추가하라고 시키지 않음 (반응형 아님)",
+        "주의: 실험적(experimental) API — 이 강의는 react.dev 기준 패턴으로 다룸"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "visual_hint": "useEffectEvent의 4가지 속성을 카드 4장으로, 우측 상단에 'experimental' 배지",
+      "speaker_affect": "강조, 또박또박"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 170,
+      "key_points": [
+        "After 코드: onConnected = useEffectEvent(() => showNotification('Connected!', theme))",
+        "useEffect 본체에서 c.on('connected', () => onConnected()) 으로 호출",
+        "deps는 [roomId]만 — theme는 빠짐, 그래도 항상 최신 theme로 알림",
+        "동작 시연: 테마 토글해도 연결 유지, roomId 바꾸면 재연결",
+        "핵심 통찰: 'theme를 읽는다 ≠ theme에 반응한다' — useEffectEvent가 그 경계를 만든다"
+      ],
+      "lo_ids": ["LO-S6.2"],
+      "visual_hint": "Before/After 코드 좌우 비교 + deps 변경 부분 하이라이트, 실행 타임라인 다이어그램",
+      "speaker_affect": "시범 보이는 톤, 신나게"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 170,
+      "key_points": [
+        "두 번째 시나리오: Page 컴포넌트가 url 방문 시 logVisit 호출",
+        "logVisit(url, numberOfItems) — numberOfItems는 ShoppingCartContext 카트 길이",
+        "원하는 동작: url 변경에만 재발화, 카트 변경에는 재발화하지 않기",
+        "패턴 적용: onVisit = useEffectEvent(visitedUrl => logVisit(visitedUrl, numberOfItems))",
+        "useEffect(() => onVisit(url), [url]) — url은 인자로 전달 (reactive), numberOfItems는 본체에서 직접 (non-reactive)",
+        "원칙 정리: reactive 값은 인자로, non-reactive는 Effect Event 본체에서 직접"
+      ],
+      "lo_ids": ["LO-S6.4"],
+      "visual_hint": "Page 코드 + 화살표 다이어그램: url(reactive) → 인자 / numberOfItems(non-reactive) → 본체",
+      "speaker_affect": "차분하게, 패턴화하는 톤"
+    },
+    {
+      "id": "b6",
+      "type": "practice",
+      "duration_sec": 80,
+      "key_points": [
+        "미니 자문자답: theme + roomId Effect에서 만약 roomId도 알림 메시지에 넣고 싶다면?",
+        "결정: roomId는 reactive(재연결 트리거여야 함) → 인자로 전달",
+        "theme은 여전히 non-reactive → Effect Event 본체에서 직접",
+        "'재발화 조건은 무엇인가?'를 먼저 정하고 reactive/non-reactive를 가르는 사고 순서",
+        "실습 권유: react.dev 예제에서 직접 toggle 해보기"
+      ],
+      "lo_ids": ["LO-S6.2", "LO-S6.4"],
+      "visual_hint": "체크리스트: '재발화 조건이 뭔가? → 그 값만 인자/deps로'",
+      "speaker_affect": "초대하는 톤, 부드럽게"
+    },
+    {
+      "id": "b7",
+      "type": "recap",
+      "duration_sec": 30,
+      "key_points": [
+        "useEffectEvent = Effect 안에 끼우는 non-reactive 핸들러",
+        "theme 같은 non-reactive는 추출, roomId 같은 reactive만 deps에",
+        "원칙: reactive → 인자, non-reactive → 본체 직접",
+        "실험적 API라는 주의 — 다음 시간엔 제약과 안티패턴"
+      ],
+      "lo_ids": ["LO-S6.2", "LO-S6.4"],
+      "visual_hint": "핵심 3원칙 카드 + 다음 시간 티저",
+      "speaker_affect": "정리하는 톤, 단단하게"
+    }
+  ]
+}

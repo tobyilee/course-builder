@@ -1,0 +1,35 @@
+{
+  "section_id": "S5",
+  "section_slug": "05-lifecycle-of-reactive-effects",
+  "section_title": "반응형 Effect의 라이프사이클",
+  "duration_min": 40,
+  "classes": [
+    {
+      "id": "S5.C1",
+      "slug": "01-component-vs-effect-lifecycle",
+      "title": "컴포넌트 라이프사이클 vs Effect 라이프사이클 — 매 렌더가 자기 closure",
+      "lo_ids": ["LO-S5.1"],
+      "duration_min": 13,
+      "depends_on": [],
+      "summary": "Effect를 mount/update/unmount 훅으로 보지 말자는 멘탈모델 전환을 다룬다. 컴포넌트는 마운트→업데이트→언마운트의 일생을 살지만, Effect는 그 안에서 '동기화 시작 ↔ 동기화 중지'라는 독립적인 사이클을 반복한다. 채팅방 ChatRoom 컴포넌트가 한 번 마운트된 동안에도 roomId가 바뀌면 Effect는 여러 번 connect/disconnect를 겪는다는 점을 시각화한다. 또한 매 렌더가 새로운 props/state 스냅샷과 그것을 캡처한 자체 closure를 만들기 때문에, Effect 본문에 적힌 roomId는 '그 렌더 시점의 roomId'라는 점을 코드로 확인한다."
+    },
+    {
+      "id": "S5.C2",
+      "slug": "02-reactive-values-and-rerun-flow",
+      "title": "Reactive vs Non-reactive 값 — Object.is로 판정되는 재실행 흐름",
+      "lo_ids": ["LO-S5.2", "LO-S5.3"],
+      "duration_min": 14,
+      "depends_on": ["S5.C1"],
+      "summary": "Effect 안에서 쓰는 식별자를 reactive(props/state/그로부터 파생된 변수)와 non-reactive(모듈 상수, ref.current, 외부 mutable global, 컴포넌트 밖에서 정의된 함수)로 가르는 기준을 세운다. ChatRoom의 roomId(reactive)와 serverUrl(모듈 상수, non-reactive)을 대비시키며 deps 배열에 무엇이 들어가야 하는지 분류한다. 이어 roomId가 바뀌었을 때 React가 이전 deps와 새 deps를 Object.is로 비교해 cleanup → 재실행을 결정하는 단계를 한 컷씩 따라가고, 빈 [] deps가 '재동기화가 필요 없다'는 주장이지 '한 번만 실행'이 아님을 명확히 한다."
+    },
+    {
+      "id": "S5.C3",
+      "slug": "03-exhaustive-deps-and-effect-splitting",
+      "title": "exhaustive-deps 해결 3가지 옵션과 Effect 분리 원칙",
+      "lo_ids": ["LO-S5.4", "LO-S5.5"],
+      "duration_min": 13,
+      "depends_on": ["S5.C2"],
+      "summary": "ESLint react-hooks/exhaustive-deps 경고를 // eslint-disable로 덮지 않고 코드를 바꿔 해결하는 세 가지 길 — (1) 진짜 reactive면 deps에 추가, (2) 사실 non-reactive면 컴포넌트 밖으로 옮기거나 Effect 안에서 생성, (3) 최신 값이 필요하지만 재동기화는 싫으면 useEffectEvent로 추출 — 을 의사결정 기준과 함께 비교한다. 이어 한 Effect 안에 채팅 연결 + 방문 분석 로깅처럼 무관한 동기화가 묶여 있을 때, 둘을 별도 Effect로 쪼개 각자의 deps와 cleanup을 갖게 하는 리팩터링을 채팅방 예제에 적용한다."
+    }
+  ]
+}

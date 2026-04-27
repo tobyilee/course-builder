@@ -1,0 +1,188 @@
+[slide 1]
+이번 클래스는 이펙트 이벤트의 제약과 안티패턴입니다.
+[pause:400]
+한 줄로 말하면, 외부에 노출하지 마라.
+[pause:400]
+강력한 만큼 사용처가 좁아요.
+[pause:600]
+
+[slide 2]
+지난 시간에 배운 유즈이펙트이벤트, 너무 편해서 아무 데나 쓰고 싶어집니다.
+[pause:500]
+그런데 잘못 쓰면 어떻게 되냐면요.
+[pause:400]
+오히려 React가 추적하지 못하는 코드가 돼요.
+[pause:500]
+흔한 시도가 하나 있어요.
+[pause:400]
+useTimer 훅에 onTick을 인자로 넘기는 거예요.
+[pause:400]
+얼핏 자연스러워 보이는데, 왜 위험한지 오늘 알게 되실 거예요.
+[pause:500]
+오늘 목표는 명확합니다.
+[pause:300]
+"쓰지 말아야 할 곳"을 또렷하게 긋는 거예요.
+[pause:600]
+
+[slide 3]
+제약은 세 가지예요.
+[pause:400]
+첫째, 이펙트 안에서만 호출합니다.
+[pause:400]
+렌더 중이나 일반 핸들러에서 호출하면 안 돼요.
+[pause:500]
+둘째, 다른 컴포넌트나 훅에 인자로 전달하지 않습니다.
+[pause:500]
+셋째, 이펙트 deps에 포함하지 않아요.
+[pause:400]
+deps에 올리면 어차피 매 렌더마다 새로 만들어지니까, 무한 재실행만 유발합니다.
+[pause:500]
+이유를 한 줄로 정리하면요.
+[pause:400]
+이펙트 이벤트는 리액티브 흐름에서 분리된 섬이에요.
+[pause:400]
+외부로 새어나가는 순간 추적 불가가 됩니다.
+[pause:500]
+원칙은 사용처 동거예요.
+[pause:300]
+이펙트 이벤트는, 정의한 바로 그 자리에서만 씁니다.
+[pause:600]
+
+[slide 4]
+대표 안티패턴, Timer 예제로 가 봅시다.
+[pause:400]
+Before 코드를 봅시다.
+[pause:400]
+Timer 컴포넌트 안에 count, setCount가 있고요.
+[pause:400]
+onTick을 useEffectEvent로 정의해서, 안에서 setCount를 c 더하기 1로 부릅니다.
+[pause:500]
+그리고 useTimer onTick, 1000을 호출해요.
+[pause:400]
+바로 이 줄이 위반입니다.
+[pause:400]
+다른 훅에 onTick을 인자로 넘긴 거예요.
+[pause:500]
+왜 잘못이냐면요.
+[pause:300]
+useTimer 입장에선 onTick의 리액티브 여부를 알 수가 없어요.
+[pause:400]
+정의와 사용처가 분리돼버린 거죠.
+[pause:500]
+이제 리팩터링 After를 봅시다.
+[pause:400]
+useTimer 훅이 callback과 delay를 받습니다.
+[pause:400]
+훅 내부에서 onTick을 useEffectEvent로 만들어요. 안에선 callback을 호출합니다.
+[pause:500]
+useEffect 안에서 setInterval을 onTick과 delay로 걸고요.
+[pause:400]
+cleanup에선 clearInterval을 합니다.
+[pause:400]
+deps는 delay 하나뿐이에요. onTick은 deps에 안 들어가요.
+[pause:500]
+이러면 Timer 컴포넌트는 정말 깔끔해집니다.
+[pause:400]
+useTimer에 setCount c 더하기 1 콜백과 1000을 그냥 넘기면 끝이에요.
+[pause:500]
+정리하면, 사용처인 useTimer 훅 안에 useEffectEvent를 동거시키니까, 추적이 다시 가능해진 겁니다.
+[pause:600]
+
+[slide 5]
+또 다른 안티패턴이 하나 더 있어요.
+[pause:400]
+린터 suppress입니다.
+[pause:400]
+eslint-disable로 익조스티브 deps를 꺼버리고, deps를 누락하는 패턴이요.
+[pause:500]
+원칙은 이거예요.
+[pause:300]
+suppress 대신 유즈이펙트이벤트.
+[pause:400]
+논 리액티브로 만들어야 할 부분이라면, 명시적으로 추출하세요.
+[pause:500]
+다음은 네이밍 가이드예요.
+[pause:400]
+형식은 "on 더하기 발생한 일"입니다.
+[pause:500]
+권장하는 이름들 보세요.
+[pause:300]
+onMessage, onTick, onVisit, onConnected.
+[pause:400]
+모두 "무슨 사건이 일어났나"를 가리키죠.
+[pause:500]
+지양할 이름들도 있어요.
+[pause:400]
+onMount, onUpdate, onAfterRender 같은 라이프사이클 어휘예요.
+[pause:500]
+왜 지양하냐면, 이런 이름은 잘못된 멘탈 모델을 유도해요.
+[pause:400]
+이펙트 이벤트는 라이프사이클 훅이 아니라 사건 핸들러니까요.
+[pause:600]
+
+[slide 6]
+자문자답으로 점검해 봅시다.
+[pause:400]
+어떤 컴포넌트가 onSearch라는 콜백을 prop으로 받습니다.
+[pause:400]
+그걸 부모에서 useEffectEvent로 감싸서 자식 훅에 넘기려고 해요.
+[pause:500]
+어디가 잘못일까요?
+[pause:500]
+진단은 명확합니다.
+[pause:300]
+"다른 훅에 인자로 전달" 제약을 위반한 거예요.
+[pause:500]
+수정 방향은 이거예요.
+[pause:400]
+자식 훅 시그니처를 useChild onSearch로 두고요.
+[pause:400]
+자식 훅 내부에서 onSearchEvent를 useEffectEvent로 감쌉니다.
+[pause:400]
+사용처 동거 원칙을 그대로 적용한 거죠.
+[pause:500]
+추가 점검 항목도 챙겨봅시다.
+[pause:300]
+이름이 onMount나 onUpdate 같은 라이프사이클 형이면, 다시 짓습니다.
+[pause:500]
+체크리스트 네 줄 기억하세요.
+[pause:400]
+첫째, 이펙트 안에서만 호출했나?
+[pause:400]
+둘째, 외부로 전달하지 않았나?
+[pause:400]
+셋째, deps에서 뺐나?
+[pause:400]
+넷째, 이름이 사건 형인가?
+[pause:600]
+
+[slide 7]
+정리합니다.
+[pause:400]
+제약 세 가지, 다시 한 번이요.
+[pause:400]
+이펙트 안에서만 호출. 외부 전달 금지. deps에 안 넣기.
+[pause:500]
+처방은 사용처 동거예요.
+[pause:400]
+훅 내부에 useEffectEvent를 함께 둡니다.
+[pause:500]
+네이밍은 "on 더하기 사건" 형식 권장.
+[pause:400]
+라이프사이클 어휘는 지양.
+[pause:500]
+한 번 더 강조할게요.
+[pause:400]
+유즈이펙트이벤트는 React 실험적 API예요. experimental.
+[pause:400]
+스테이블 출시 전엔 프로덕션 사용에 신중하시고요.
+[pause:400]
+채택 시점에 따라 import 경로가 달라질 수 있다는 점도 기억해 주세요.
+[pause:500]
+S6 전체 흐름을 한 줄로 묶으면요.
+[pause:400]
+결정 질문, 그다음 유즈이펙트이벤트로 추출, 그리고 제약 준수.
+[pause:400]
+이 세 단계로 이벤트와 이펙트를 깔끔하게 분리할 수 있어요.
+[pause:500]
+S6 마무리하겠습니다. 수고하셨어요.

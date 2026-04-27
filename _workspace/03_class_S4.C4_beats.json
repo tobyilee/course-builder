@@ -1,0 +1,131 @@
+{
+  "class_id": "S4.C4",
+  "title": "인터랙션 vs 표시 — 핸들러로 옮겨야 할 6가지",
+  "lo_ids": ["LO-S4.4"],
+  "target_duration_sec": 720,
+  "beats": [
+    {
+      "id": "b1",
+      "type": "hook",
+      "duration_sec": 45,
+      "key_points": [
+        "장바구니에 담을 때 알림이 떴다 — 그런데 페이지를 새로고침했더니 알림이 또 떴다",
+        "Effect가 'product가 변하면' 발화하기 때문에 발생한 황당한 버그",
+        "이 클래스의 한 줄 질문: '왜 이 코드가 실행돼야 하는가?'"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "리로드된 페이지에서 '추가됨!' 알림이 잘못 뜨는 GIF 같은 정지컷",
+      "speaker_affect": "호기심 유발, 살짝 황당"
+    },
+    {
+      "id": "b2",
+      "type": "teach",
+      "duration_sec": 100,
+      "key_points": [
+        "핵심 분기 질문: '사용자가 클릭했기 때문에' 실행되는가, '컴포넌트가 표시되었기 때문에' 실행되는가?",
+        "전자 → 핸들러, 후자 → Effect (외부 시스템 동기화일 때만)",
+        "안티패턴 #5~#10은 모두 전자인데 후자처럼 Effect에 들어가 있는 케이스"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "Y/N 분기 다이어그램 — 클릭? → 핸들러 / 표시? → Effect",
+      "speaker_affect": "또렷이, 강조"
+    },
+    {
+      "id": "b3",
+      "type": "example",
+      "duration_sec": 110,
+      "key_points": [
+        "#5 핸들러 간 로직 공유 — 'buy'와 'addToCart' 양쪽에서 알림을 띄우고 싶을 때",
+        "Before: useEffect(() => { if (product.isInCart) showNotification(...) }, [product]) — 리로드/마운트마다 발화",
+        "After: function buyProduct() { addToCart(product); showNotification(...) } 같은 공유 함수를 만들어 두 핸들러에서 호출",
+        "교훈: 트리거가 '클릭'이면 그 클릭 안에서 모두 처리"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "두 버튼이 같은 함수를 호출하는 화살표 다이어그램",
+      "speaker_affect": "친근하게, 시연 톤"
+    },
+    {
+      "id": "b4",
+      "type": "example",
+      "duration_sec": 80,
+      "key_points": [
+        "#6 POST 요청 — 분석 로깅 vs 폼 제출",
+        "분석/방문 로깅 = '컴포넌트가 표시됐기 때문' → Effect (mount-only, deps [])",
+        "폼 제출 = '사용자가 Submit 눌렀기 때문' → 핸들러",
+        "같은 fetch도 트리거가 다르면 위치가 다르다"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "두 POST 카드 — 분석(mount 아이콘), 제출(클릭 아이콘)",
+      "speaker_affect": "체계적으로"
+    },
+    {
+      "id": "b5",
+      "type": "example",
+      "duration_sec": 120,
+      "key_points": [
+        "#7 계산 체인 — 카드 게임에서 'card 변경 → goldCount 갱신 → round 갱신'을 Effect 3개로 연결",
+        "Before: 캐스케이딩 재렌더 — 한 인터랙션이 3번의 렌더로 펼쳐짐",
+        "After: handlePlaceCard 한 핸들러에서 setCard, setGoldCount, setRound을 직접 계산해 호출",
+        "장점: 1회 렌더, 디버깅 용이, dev 더블 마운트 안전"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "3단 캐스케이드 화살표 vs 단일 핸들러 박스",
+      "speaker_affect": "강조, 또렷이"
+    },
+    {
+      "id": "b6",
+      "type": "example",
+      "duration_sec": 90,
+      "key_points": [
+        "#8 앱 초기화 — useEffect(() => { loadDataFromLocalStorage(); checkAuthToken(); }, [])",
+        "문제: dev Strict Mode에서 두 번 실행, 토큰 더블 검사 등 부작용",
+        "해결1 (개선): let didInit = false; if (!didInit) { didInit = true; ... } guard",
+        "해결2 (가장 깔끔): 모듈 레벨에서 if (typeof window !== 'undefined') { ... } — 컴포넌트와 무관한 일은 컴포넌트 밖으로"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "코드 위치 비유 — '컴포넌트 안 vs 모듈 레벨'을 박스로 구분",
+      "speaker_affect": "친근하게"
+    },
+    {
+      "id": "b7",
+      "type": "example",
+      "duration_sec": 100,
+      "key_points": [
+        "#9 부모에 state 변경 통지 — useEffect(() => onChange(isOn), [isOn, onChange])",
+        "After: function updateToggle(next) { setIsOn(next); onChange(next); } — 같은 핸들러에서 둘 다",
+        "#10 부모로 데이터 전달 — 자식이 fetch해서 onFetched로 부모에 올려보내는 안티패턴",
+        "After: 부모가 useSomeAPI()로 직접 가져와 자식에 prop으로 — 또는 fully controlled로 부모가 state 소유",
+        "공통 교훈: state 흐름은 상향 콜백+동기 호출이 명료하다"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "데이터/콜백 흐름 화살표 비교 — Effect 우회 vs 직접 전달",
+      "speaker_affect": "체계적으로, 강조"
+    },
+    {
+      "id": "b8",
+      "type": "practice",
+      "duration_sec": 55,
+      "key_points": [
+        "자문자답: '메뉴 항목을 클릭하면 라우트를 바꾸고 분석 이벤트를 보낸다' — 둘 다 어디로?",
+        "힌트1: 라우트 변경은 클릭 트리거 → 핸들러",
+        "힌트2: 분석 로깅은 클릭 트리거이므로 같은 핸들러에서 함께 (페이지 표시 기반이면 Effect)"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "메뉴 클릭 → 두 동작 화살표",
+      "speaker_affect": "도전 유도"
+    },
+    {
+      "id": "b9",
+      "type": "recap",
+      "duration_sec": 20,
+      "key_points": [
+        "분기 질문 하나: 클릭 때문인가, 표시 때문인가",
+        "#5~#10은 전부 클릭 때문 — 핸들러로 모은다",
+        "체인은 합치고, 초기화는 모듈 레벨로, 통지는 같은 핸들러에서"
+      ],
+      "lo_ids": ["LO-S4.4"],
+      "visual_hint": "결정 트리 Q3(인터랙션) 가지 강조",
+      "speaker_affect": "마무리, 또렷이"
+    }
+  ]
+}

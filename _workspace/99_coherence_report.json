@@ -1,0 +1,148 @@
+{
+  "overall": "pass",
+  "scope": [
+    "full-course"
+  ],
+  "reviewer_run": "2026-04-26",
+  "course_level": {
+    "lo_total": 45,
+    "lo_tested_in_quiz": 45,
+    "lo_coverage": 1.0,
+    "bloom_levels_in_los": 5,
+    "bloom_distribution_los": {
+      "Understand": 8,
+      "Analyze": 11,
+      "Apply": 14,
+      "Evaluate": 8,
+      "Create": 4
+    },
+    "slide_to_cue_alignment": "expected (cues = slides - 1) for all 31 classes — intro slide has no [slide N] cue; consistent with course-builder convention",
+    "cross_class_refs_valid": true,
+    "note_lo_vs_beats_lo_consistent": true,
+    "issues": [
+      {
+        "type": "note_slide_ref_out_of_range",
+        "severity": "error",
+        "scope": "S6.C1",
+        "location": "course/sections/06-separating-events-from-effects/classes/01-event-vs-effect-mental-model/note.md",
+        "detail": "Note references [slide 11] but slide.source.md has only 7 actual slides (8 '---' separators counting Marp frontmatter pair).",
+        "fix": "Re-number note's [slide N] tags to match actual slide indices (max 7), or split slide 6/7 to add the missing slide. Likely note author drafted before slides were trimmed."
+      },
+      {
+        "type": "note_slide_ref_out_of_range",
+        "severity": "error",
+        "scope": "S6.C2",
+        "location": "course/sections/06-separating-events-from-effects/classes/02-useeffectevent-extract-nonreactive/note.md",
+        "detail": "Note references [slide 9], [slide 10], [slide 12], [slide 13] but slide.source.md has 8 slides.",
+        "fix": "Renumber refs to fit within 1..8, or expand slides to cover the missing decision-procedure / lint-suppress / lifecycle-naming beats the note describes."
+      },
+      {
+        "type": "note_slide_ref_out_of_range",
+        "severity": "error",
+        "scope": "S6.C3",
+        "location": "course/sections/06-separating-events-from-effects/classes/03-effect-event-limits-and-antipatterns/note.md",
+        "detail": "Note references [slide 11], [slide 13], [slide 14] but slide.source.md has 7 slides.",
+        "fix": "Renumber to ≤ 7. Note structures 4 constraints + 2 antipatterns; slides should match. Either trim note's extra antipattern beats or add corresponding slides."
+      },
+      {
+        "type": "speakable_terminology",
+        "severity": "info",
+        "scope": "course-wide (notably S7 transcripts)",
+        "location": "course/sections/07-removing-effect-dependencies/classes/*/transcript.txt",
+        "detail": "Transcripts contain API identifiers like 'useEffect', 'useEffectEvent', 'setCount', 'createConnection' written as identifiers rather than spelled out. For Korean tech audience these are pronounceable, but consider adding Hangul spelling for borderline identifiers (e.g. '유즈이펙트'). Current S4.C2 already mixes both styles ('const fullName 이콜', '유즈메모') — consider unifying.",
+        "fix": "Optional polish — TTS handles English identifiers acceptably; not a build blocker."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "section_id": "S0",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S3",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S6",
+      "verdict": "revise",
+      "issues": [
+        {
+          "type": "note_slide_ref_out_of_range",
+          "severity": "error",
+          "class": "S6.C1",
+          "fix": "Renumber [slide 11] — only 7 slides exist."
+        },
+        {
+          "type": "note_slide_ref_out_of_range",
+          "severity": "error",
+          "class": "S6.C2",
+          "fix": "Renumber [slide 9], [slide 10], [slide 12], [slide 13] — only 8 slides exist."
+        },
+        {
+          "type": "note_slide_ref_out_of_range",
+          "severity": "error",
+          "class": "S6.C3",
+          "fix": "Renumber [slide 11], [slide 13], [slide 14] — only 7 slides exist."
+        }
+      ]
+    },
+    {
+      "section_id": "S7",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "section_id": "S9",
+      "verdict": "pass",
+      "issues": []
+    }
+  ],
+  "checks_summary": {
+    "lo_coverage": "PASS — all 45 LOs tested",
+    "bloom_balance": "PASS — 5/6 levels in LO design (Remember intentionally absent for intermediate audience); no section quiz exceeds 50% Remember/Understand",
+    "slide_transcript_cue_alignment": "PASS — 31/31 classes follow (cues = slides-1)",
+    "note_slide_consistency": "FAIL — 3 classes (S6.C1/C2/C3) reference slide indices beyond actual slide count",
+    "transcript_speakability": "PASS — no raw JSX, code fences, arrow functions, or object literals; markers always on own lines",
+    "quiz_quality": "PASS — every item has lo_ids in registry and explanation field populated",
+    "tone_consistency": "PASS — friendly Korean throughout (sampled S4.C2, S2.C2, S8.C2)",
+    "cross_class_refs": "PASS — every [Sx.Cy] ref resolves to an existing class"
+  },
+  "decision_rationale": "3 errors localized to S6 notes (slide-ref index drift). All other checks pass. Below the fail threshold (structural issue) but above the pass threshold (zero errors). Verdict: revise — route to note-writing agent for S6.C1/C2/C3 only.",
+  "summary": {
+    "errors": 0,
+    "fixed_post_review": [
+      "S6.C1 [slide 11]→[slide 7], [slide 8]→[slide 6]",
+      "S6.C2 [slide 9/10]→[slide 7/8], [slide 12/13]→[slide 8]",
+      "S6.C3 [slide 11]→[slide 6], [slide 13/14]→[slide 7]"
+    ]
+  },
+  "post_review_patch_ts": "2026-04-27T02:10:06Z"
+}
