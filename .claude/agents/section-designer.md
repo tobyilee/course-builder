@@ -60,8 +60,20 @@ Course Spec의 각 섹션을 받아 **class 단위로 분해**한다. 섹션 LO�
 - LO가 너무 적으면(섹션 전체 1 LO): architect에게 추가 LO 요청
 
 ## 재호출 지침
-- class id 재번호 금지
-- 기존 파일 있으면 diff로 변경 사항만 기록
+
+### Full re-run
+- 새 architect 출력에 맞춰 class를 새로 분할. id 신규 생성.
+
+### Partial re-run (scope)
+오케스트레이터가 scope(예: `S2`, `S1.C2`, `S1.C2.tone=formal`)를 전달하면:
+1. 기존 `_workspace/02_section_<sid>.json` 을 input으로 **반드시** 읽는다.
+2. **scope 외 section 은 건드리지 않는다** — 파일 자체를 열지도 말 것 (mtime 보존).
+3. scope 안 section 의 수정은:
+   - **class id 보존 절대원칙** — `S1.C1`, `S1.C2`... 기존 id 는 그대로. 새 class 추가 시 최대 id + 1.
+   - **삭제된 class id 재사용 금지** — 하류 (slide/note/script/quiz) cross-ref 깨짐 방지.
+   - 단순 속성(tone) 교체면 class 트리 자체는 byte-identical 유지하고 해당 필드만 Edit.
+4. **도구 선택 규정**: scope 내 일부 class만 변경할 때는 **반드시 `Edit`** 으로 변경 대상만 치환. `Write` 로 전체 JSON 재직렬화 금지 (들여쓰기·키 순서 drift 가 byte-identity 깨뜨림).
+5. **Diff-before-claim 규정**: 완료 보고 시 각 class 의 disposition (preserved / reworked id-preserved / added / removed)을 input vs output 실제 diff 기반으로 기재. 기억 의존 금지.
 
 ## 사용 스킬
 `curriculum-design` — LO-class 매핑 규칙, duration 배분.

@@ -52,16 +52,27 @@ bash .claude/skills/tts-synthesis/scripts/run.sh \
 
 ## 에이전트/오케스트레이터 연결
 
-현재는 오케스트레이터 Phase 5(asset-builder) 직후 사용자가 수동 호출. Phase 7 이후 **Phase 5.5**로 편입 후보:
+이 스킬은 **`tts-synthesizer` 에이전트**의 단일 책임 스킬. course-builder 오케스트레이터 Phase 5의 **step 4** 로 통합되어 있으며, `asset-builder` 가 `build-bundle.sh` 안에서 자동 위임 호출한다:
+
 ```
-... → Phase 5 (asset-builder: bundle.zip)
-    → Phase 5.5 (tts-synthesis: per-class audio)
-    → manifest 갱신 + 재빌드
+Phase 5 (build):
+  step 1 gate (asset-builder)
+  step 2 Marp HTML (asset-builder)
+  step 3 Marp PNG (asset-builder, SKIP_PLAYER 가능)
+  step 4 TTS 합성 ← tts-synthesizer (이 스킬), per-class
+  step 5 manifest (asset-builder)
+  step 6 player HTML (asset-builder, SKIP_PLAYER 가능)
+  step 7 SSML 검증 (asset-builder)
+  step 8 bundle.zip (asset-builder)
 ```
 
-편입 조건:
-- `coherence_report.overall == "pass"` (slide↔script cue 정합 확인)
-- `OPENAI_API_KEY` 존재 (없으면 edge로 자동 폴백)
+자동 호출 조건 (모두 충족):
+- `coherence_report.overall == "pass"` — gate 통과
+- `OPENAI_API_KEY` 존재 (없으면 edge-tts 폴백)
+- `SKIP_TTS != 1`
+- `audio/full.mp3` 미존재 또는 `FORCE_TTS=1`
+
+standalone 호출(빌드 외부 사용자 트리거)도 지원 — `tts-synthesizer` 에이전트를 직접 invoke.
 
 ## 품질 규칙
 

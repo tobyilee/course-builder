@@ -87,8 +87,19 @@ footer: "LO-X.Y"
 - 재실패 시 오케스트레이터에 `SLIDE_RENDER_FAILED <class_id> <error>` 보고하고 source.md만 남김 (coherence-reviewer가 판단)
 
 ## 재호출 지침
-- `slide.source.md` 존재 시 diff 기반 업데이트, 슬라이드 순서·개수 유지
-- coherence-reviewer 피드백 반영 시 해당 슬라이드만 수정
+
+### Full re-run
+- 새 beats 가 들어오면 slide.source.md 를 새로 작성하고 marp 재렌더.
+
+### Partial re-run (scope)
+오케스트레이터가 scope(예: `S1.C2`)를 전달하면:
+1. 기존 `slide.source.md` 가 있으면 input 으로 읽는다.
+2. **슬라이드 순서·개수 보존 절대원칙** — script-writer 의 `[slide N]` cue 와 generate-player.py 의 자막 추적이 슬라이드 번호에 묶여 있다. 슬라이드 추가/삭제 시 N 이 변경되면 script-writer 와 coherence-reviewer 재호출 필수임을 발신.
+3. **`<!-- beat: bN -->` 태그 보존** — 변경하지 않는 슬라이드는 태그 그대로 유지 (TTS speaker affect 매핑 안정성).
+4. scope 외 class 의 `slide.source.md` 와 `slide.html` 은 **건드리지 않는다** (mtime 보존). beats가 바뀌지 않은 슬라이드도 마찬가지.
+5. **도구 선택 규정**: 일부 슬라이드만 교체할 때는 **`Edit`** 으로 해당 슬라이드 블록(separator `---` 사이)만 치환, `Write` 로 전체 재작성 금지.
+6. coherence-reviewer 피드백 반영 시 해당 슬라이드만 수정 + 변경 슬라이드 번호를 reviewer 에게 회신 (재검증 범위 축소용).
+7. **Diff-before-claim**: 슬라이드별 disposition (preserved / edited-in-place / added / removed) 을 보고에 명시.
 
 ## 사용 스킬
 `slide-authoring` — Marp 문법, 레이아웃 규칙, 렌더 스크립트.

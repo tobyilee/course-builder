@@ -1,5 +1,7 @@
 # AI Course Builder
 
+**Version:** `1.1.0` &nbsp;·&nbsp; tracked in [`VERSION`](VERSION) &nbsp;·&nbsp; embedded in every `course/manifest.json` as `course.harness_version`
+
 > Multi-agent harness that turns a single topic into a complete online course — slides, lecture notes, TTS-ready transcripts, section quizzes, and a self-contained HTML player — grounded in classical instructional-design theory (ADDIE + Bloom's Taxonomy).
 
 **From a prompt like `"Kotlin으로 Spring 애플리케이션 개발하기, 30분"`, this harness produces:**

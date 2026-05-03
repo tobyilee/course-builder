@@ -52,15 +52,28 @@ if command -v jq >/dev/null 2>&1; then
   fi
 fi
 
-# ── Tool checks ────────────────────────────────────────────────────────
-command -v marp   >/dev/null 2>&1 || { log "ERROR: marp missing";   exit 20; }
-command -v zip    >/dev/null 2>&1 || { log "ERROR: zip missing";    exit 21; }
-command -v ffmpeg >/dev/null 2>&1 || { log "ERROR: ffmpeg missing"; exit 22; }
+# ── Tool checks (always required) ──────────────────────────────────────
+command -v marp >/dev/null 2>&1 || { log "ERROR: marp missing"; exit 20; }
+command -v zip  >/dev/null 2>&1 || { log "ERROR: zip missing";  exit 21; }
 
-# Load env for TTS
+# Load env for TTS (must come before TTS gate so OPENAI_API_KEY is visible)
 if [ -f "$ROOT_DIR/.env" ]; then
   # shellcheck disable=SC1091
   source "$ROOT_DIR/.env"
+fi
+
+# ── Conditional tool check: ffmpeg only needed for TTS concat ─────────
+# Skip ffmpeg requirement when TTS won't run (slides-only builds).
+TTS_WRAP="$ROOT_DIR/.claude/skills/tts-synthesis/scripts/run.sh"
+TTS_WILL_RUN=0
+if [ -n "${OPENAI_API_KEY:-}" ] && [ "${SKIP_TTS:-0}" != "1" ] && [ -x "$TTS_WRAP" ]; then
+  TTS_WILL_RUN=1
+fi
+if [ "$TTS_WILL_RUN" = "1" ]; then
+  command -v ffmpeg >/dev/null 2>&1 || {
+    log "ERROR: ffmpeg missing (required by TTS concat). Skip with SKIP_TTS=1 for slides-only build."
+    exit 22
+  }
 fi
 
 log "BUILD START"
@@ -85,11 +98,11 @@ while IFS= read -r -d '' f; do
 done < <(find "$COURSE_ROOT/sections" -name 'slide.source.md' -print0)
 log "Marp HTML: $OK_HTML/$((OK_HTML+FAIL_HTML)) · PNG: $OK_PNG/$((OK_PNG+FAIL_PNG))"
 
-# ── Step 3: TTS synthesis ──────────────────────────────────────────────
-TTS_WRAP="$ROOT_DIR/.claude/skills/tts-synthesis/scripts/run.sh"
-# Read language from Course Spec for language-aware TTS defaults
+# ── Step 3: TTS synthesis (delegated to tts-synthesizer) ──────────────
+# TTS_WRAP and TTS_WILL_RUN are computed at the top of the script.
+# Read language from Course Spec for language-aware TTS defaults.
 COURSE_LANG=$(jq -r '.language // "ko"' "$WORKSPACE/01_architect_course_spec.json" 2>/dev/null || echo "ko")
-if [ -n "${OPENAI_API_KEY:-}" ] && [ "${SKIP_TTS:-0}" != "1" ] && [ -x "$TTS_WRAP" ]; then
+if [ "$TTS_WILL_RUN" = "1" ]; then
   OK_TTS=0; SKIP_TTS_CNT=0; FAIL_TTS=0
   while IFS= read -r -d '' t; do
     cls_dir=$(dirname "$t")

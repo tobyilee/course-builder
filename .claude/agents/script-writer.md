@@ -69,8 +69,19 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 - SSML 검증 실패 시 txt만 저장하고 `SSML_INVALID <class_id>` 경고
 
 ## 재호출 지침
-- 슬라이드 번호 변경되면 [slide N] cue 재매핑
-- 톤 변경 요청 시 전체 재작성 (부분 톤 교체는 위화감)
+
+### Full re-run
+- 톤 변경 또는 사용자 명시 요청 시 전체 재작성 (부분 톤 교체는 위화감).
+
+### Partial re-run (scope)
+오케스트레이터가 scope(예: `S1.C2`)를 전달하면:
+1. 기존 `transcript.txt` 가 있으면 input 으로 읽는다.
+2. **`[slide N]` cue 보존 절대원칙** — TTS 합성기(`tts-synthesizer`)가 cue 로 오디오 구간을 분할하고, generate-player.py 가 cue 로 자막을 추적한다. cue 순서/번호가 바뀌면 audio/full.mp3 와 자막이 어긋난다.
+3. **Line layout 보존** — 한 슬라이드 내레이션을 한 줄에 몰아쓰지 말 것 (subtitle-sync 추적 단위). `[pause:NNN]`/`[slide N]` 마커는 각자 단독 줄. 부분 수정 후에도 이 규칙 위반 없는지 자가 검사.
+4. slide-author 가 슬라이드 수를 바꿨으면 (slide-author 의 보고로 감지) 전체 cue 재매핑 후 보고. 부분 수정으로 처리 금지.
+5. scope 외 class 의 `transcript.txt` 와 `transcript.ssml` 은 **건드리지 않는다** (mtime 보존). `tts-synthesizer` 의 audio cache hit 가 깨지지 않도록.
+6. **도구 선택 규정**: 일부 슬라이드 영역만 교체할 때는 **`Edit`** 으로 해당 `[slide N]` 블록만 치환. 전체 `Write` 는 톤 변경/full re-run 시만.
+7. **Diff-before-claim**: 슬라이드별 disposition (preserved / reworded / cue-remapped / replaced) 을 보고에 명시. cue 변경 시 영향 범위(TTS 재합성 필요 class id)도 함께 발신.
 
 ## 사용 스킬
 `script-writing` — speakable 변환 규칙, SSML 템플릿, 검증 스크립트.

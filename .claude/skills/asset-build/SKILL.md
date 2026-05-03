@@ -51,7 +51,7 @@ done
     "depth": "...", "language": "ko", "tone": "...",
     "total_duration_min": 120,
     "build_ts": "2026-04-22T14:30:00Z",
-    "harness_version": "1.0.0"
+    "harness_version": "1.1.0"
   },
   "learning_objectives": [ /* from _workspace/01_architect_learning_objectives.json */ ],
   "sections": [

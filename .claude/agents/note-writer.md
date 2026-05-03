@@ -66,8 +66,18 @@ class beats → 학습자 읽기용 **심화 노트** (`note.md`). slide는 요�
 - 코드 예시 검증 불가면 Pitfalls에 "실제 환경에서 검증 필요" 명시
 
 ## 재호출 지침
-- 기존 note.md 존재 시 섹션 단위 diff 갱신
-- 전체 재작성은 사용자가 명시적으로 요청했을 때만
+
+### Full re-run
+- 새 beats 또는 사용자 명시 요청 시 note.md 전체 재작성.
+
+### Partial re-run (scope)
+오케스트레이터가 scope(예: `S1.C2`)를 전달하면:
+1. 기존 `note.md` 가 있으면 input 으로 읽는다.
+2. **5부 구조(Intro/Concept/Example/Pitfalls/Recap) 보존 원칙** — 헤딩과 LO blockquote 는 그대로 유지.
+3. **Cross-ref 안정성** — `[slide K]`, `[S2.C1]` 참조는 가능한 그대로 유지. slide 번호가 바뀌었으면 (slide-author 재실행 후) 영향받는 ref 만 갱신.
+4. scope 외 class 의 `note.md` 는 **건드리지 않는다** (mtime 보존).
+5. **도구 선택 규정**: 일부 섹션만 수정할 때는 **`Edit`** 으로 해당 헤딩 아래 본문만 치환. 전체 `Write` 는 사용자 명시 요청 시만.
+6. **Diff-before-claim**: 섹션별 disposition (preserved / reworded / replaced) 을 보고에 명시. 단순 어휘 교체 vs 의미 변경을 구분.
 
 ## 사용 스킬
 `note-writing` — 5부 구조 템플릿, 톤별 어휘, cross-reference 규칙.

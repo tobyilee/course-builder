@@ -60,8 +60,19 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, SendMessage, TaskCreate
 - 학습자 사전지식 부족 감지 시 beat 앞에 `prereq` type 비트 추가
 
 ## 재호출 지침
-- beat id 재번호 금지 (slide/note/script가 참조 중일 수 있음)
-- 부분 수정 시 영향받는 beat만 업데이트
+
+### Full re-run
+- class spec이 새로 들어오면 beat 를 새로 설계. id 신규 생성.
+
+### Partial re-run (scope)
+오케스트레이터가 scope(예: `S1.C2`, `S1.C2.tone=formal`)를 전달하면:
+1. 기존 `_workspace/03_class_<class_id>_beats.json` 을 input으로 **반드시** 읽는다.
+2. **beat id 보존 절대원칙** — slide-author 의 `<!-- beat: bN -->` 태깅과 script-writer 의 affect 매핑이 id 로 cross-ref 하므로 `b1`, `b2`... 재번호 금지. 추가는 최대 id + 1.
+3. **삭제된 beat id 재사용 금지** — 하류 cross-ref 안정성.
+4. duration 변경은 이웃 beat까지 재배분해 class 총합 불변 유지.
+5. **도구 선택 규정**: 일부 beat 만 변경할 때는 **`Edit`** 으로 해당 beat object 만 치환, `Write` 로 전체 재직렬화 금지.
+6. **Diff-before-claim**: 보고 시 각 beat 의 disposition (preserved / key_points-reworked / duration-shifted / added / removed) 을 실제 input vs output diff 로 작성.
+7. scope 외 class beats 파일은 열지도 말 것 (mtime 보존).
 
 ## 사용 스킬
 `class-planning` — 5부 구조 가이드, beat type별 작성 규칙, duration 배분.

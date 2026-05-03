@@ -15,6 +15,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+# Single source of truth for harness version (read from project root VERSION file).
+def _read_harness_version() -> str:
+    try:
+        return (Path(__file__).resolve().parent.parent / "VERSION").read_text().strip()
+    except OSError:
+        return "unknown"
+
+
+HARNESS_VERSION = _read_harness_version()
+
+
 def mp3_duration(path: Path) -> float:
     if not path.exists():
         return 0.0
@@ -187,7 +198,7 @@ def main():
             "tone": spec["tone"],
             "total_duration_min": spec.get("total_duration_min"),
             "build_ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "harness_version": "1.1.0",
+            "harness_version": HARNESS_VERSION,
         },
         "learning_objectives": los,
         "sections": sections_out,

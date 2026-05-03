@@ -62,6 +62,29 @@ else:
 ### 0-3. HITL 플래그
 사용자가 "자동으로 끝까지"라고 하면 `hitl=false`, "중간에 확인하고 싶어"라면 `hitl=true`. 기본값은 `hitl=true`.
 
+### 0-4. HITL 체크포인트 메커니즘 (표준)
+
+`hitl=true` 일 때 Phase 1(#1), Phase 2(#2), Phase 4(#3) 마지막 산출물 시점에 사용자 동의를 받는다. 메커니즘은 다음 4단계로 표준화한다:
+
+1. **요약 제시** — 핵심 산출물의 **사람이 읽을 수 있는** 요약을 사용자에게 출력. 형식:
+   - 체크포인트 #1 (Course Spec): 섹션 목록(id, title, duration), LO 총수, Bloom 분포
+   - 체크포인트 #2 (첫 class 3종 자산): slide.source.md 발췌 + note.md 첫 200자 + transcript.txt 첫 200자
+   - 체크포인트 #3 (Coherence Report): `99_coherence_report.md` 의 `## VERDICT:` 섹션 + 상위 5개 이슈
+2. **결정 질문** — 다음 3지선다로만 묻는다 (자유 응답이면 의도 추정 안전):
+   - `yes` (또는 "진행", "go") → 다음 Phase 진행
+   - `edit: <자유 텍스트 수정 지침>` → 해당 Phase 의 1차 책임 에이전트(architect / 첫 class 의 3저자 / coherence-reviewer) 에 수정 지시 메시지 전달 후 같은 체크포인트 재집행
+   - `regen` → 같은 입력으로 해당 Phase 전체 재실행 (random seed 가 다르면 결과 변동 기대)
+3. **응답 기록** — 사용자 응답을 `_workspace/97_hitl_log.md` 에 append 한다. 형식:
+   ```
+   ## checkpoint #N · <iso8601>
+   verdict: yes | edit | regen
+   instructions: <사용자 자유 텍스트 또는 빈 줄>
+   acted_on: <변경된 파일 목록 또는 "none">
+   ```
+4. **타임아웃 정책** — 사용자 미응답 시 자동 진행 금지. 명시 응답 받을 때까지 대기. (사용자가 처음에 `hitl=false` 로 시작했으면 이 단계 자체를 건너뜀.)
+
+`hitl=false` 일 때는 위 4단계 모두 건너뛰고 자동 진행하되, 각 Phase 종료 시점에 1줄 진행 보고만 출력한다 (사용자가 진행 상황 추적용).
+
 ## Phase 1: Design (Team A — 순차 파이프라인)
 
 **실행 모드:** 에이전트 팀 (A = `curriculum-architect` + `section-designer` + `class-planner`)
@@ -130,27 +153,43 @@ TeamCreate(team_name="qa-loop", members=[coherence-reviewer, slide-author, note-
 
 Phase 4 완료 후 `TeamDelete("qa-loop")`.
 
-## Phase 5: Build (asset-builder 단독) — one-shot 확장
+## Phase 5: Build (asset-builder 가 조율, tts-synthesizer 위임)
 
-**실행 모드:** 서브 에이전트
+**실행 모드:** 하이브리드
+- 메인: `Agent(subagent_type="asset-builder", model="opus")` 가 `build-bundle.sh` 를 호출해 빌드 파이프라인을 조율
+- 위임: TTS 단계는 `asset-builder` 가 빌드 스크립트 안에서 `tts-synthesizer` 가 책임지는 `tts-synthesis/scripts/run.sh` 를 호출 — TTS 실패는 `tts-synthesizer` 가 보고하고 `asset-builder` 가 manifest.asset_errors 로 집계
 
-`Agent(subagent_type="asset-builder", model="opus")` 로 빌드 실행. 이 에이전트는 아래 모든 단계를 `build-bundle.sh` 하나로 수행한다:
+### 5-1. 빌드 단계 (build-bundle.sh 의 7 step과 동기화)
 
-1. Marp HTML render (기존) — 슬라이드 뷰용
-2. Marp PNG render (Phase 7 추가, 1920×1080) — 플레이어 슬라이드용
-3. TTS 합성 (Phase 7 추가, 조건부) — `OPENAI_API_KEY` 있고 `SKIP_TTS!=1`일 때 `tts-synthesis/scripts/run.sh` 호출. audio/full.mp3 이미 있으면 skip (`FORCE_TTS=1`로 재합성).
-4. Manifest 합성 — `scripts/synth-manifest.py`가 spec + 실제 자산 스캔하여 갱신
-5. Player HTML 생성 (Phase 7 추가) — `scripts/generate-player.py`로 `course/index.html` + per-class `player.html` + per-section `quiz.html`
-6. SSML 검증 (기존)
-7. `course/build/bundle.zip` 패키징
+| Step | 책임자 | 작업 | 실패 모드 |
+|---|---|---|---|
+| 1 | asset-builder | gate: `coherence_report.overall == "pass"` 확인 (실패 시 `BUILD_REFUSED`) | hard fail |
+| 2 | asset-builder | Marp HTML 재렌더 (모든 `slide.source.md` → `slide.html`) | per-class soft fail (`asset_errors`) |
+| 3 | asset-builder | Marp PNG 렌더 (player 용) — `SKIP_PLAYER=1` 또는 player 미사용 시 skip 가능 | per-class soft fail |
+| 4 | **tts-synthesizer** (위임) | per-class TTS 합성 — `OPENAI_API_KEY` 있고 `SKIP_TTS!=1`일 때만. audio/full.mp3 캐시 hit 시 skip | per-class soft fail (보고 `TTS_FAILED <cls>`) |
+| 5 | asset-builder | Manifest 합성 (`scripts/synth-manifest.py`) | hard fail |
+| 6 | asset-builder | Player HTML 생성 (`scripts/generate-player.py`) — `SKIP_PLAYER=1`이면 skip | warn only |
+| 7 | asset-builder | SSML 검증 (있을 때) | warn only |
+| 8 | asset-builder | `course/build/bundle.zip` 패키징 | hard fail |
 
 - 입력 조건: `coherence_report.overall == "pass"`
 - 출력: `course/manifest.json`, `course/index.html` (learner entry), `course/build/bundle.zip`
 
-### 선택적 환경변수
-- `SKIP_TTS=1` — TTS 생략 (슬라이드/노트/트랜스크립트만 필요할 때)
-- `FORCE_TTS=1` — 기존 audio 무시하고 재합성
-- `SKIP_PLAYER=1` — 플레이어 HTML 생략 (raw 파일만)
+### 5-2. 선택적 환경변수
+| 변수 | 효과 | 의존 도구 우회 |
+|---|---|---|
+| `SKIP_TTS=1` | TTS step 4 생략 (슬라이드/노트/트랜스크립트만) | `OPENAI_API_KEY` 불요 |
+| `FORCE_TTS=1` | 기존 audio 무시하고 재합성 | — |
+| `SKIP_PLAYER=1` | step 3(PNG) + step 6(player HTML) 동시 생략 — slides-only 사용 사례 | ffmpeg 의존 일부 우회 |
+
+### 5-3. TTS 위임 호출 규약
+`asset-builder` 는 빌드 중 각 class 의 transcript.txt 를 발견할 때마다 `tts-synthesizer` 의 표준 호출을 트리거한다. 표준 인자:
+- transcript path, audio out_dir
+- `--language <ko|en>` (course_spec 에서 추출)
+- `--beats <path>` (있을 때) — speaker affect overlay
+- `--slide-source <path>` (beats 가 있을 때 동반) — 정확 매핑
+
+전체 위임 흐름·재시도·분류 책임은 `tts-synthesizer.md` 와 `tts-synthesis/SKILL.md` 가 단일 진실원.
 
 ## 데이터 전달
 

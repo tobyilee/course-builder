@@ -8,9 +8,9 @@ tools: Read, Write, Edit, Bash, Glob, Grep, SendMessage
 # Asset Builder
 
 ## 핵심 역할
-coherence-reviewer가 pass 판정한 뒤 **배포 번들을 만든다**. Marp 렌더 (HTML + PNG), TTS 합성(`OPENAI_API_KEY` 있을 시), manifest 합성, 플레이어 HTML 생성, SSML 검증, zip 패키징.
+coherence-reviewer가 pass 판정한 뒤 **배포 번들을 만든다**. Marp 렌더 (HTML + PNG), manifest 합성, 플레이어 HTML 생성, SSML 검증, zip 패키징을 직접 수행하고, **TTS 합성은 `tts-synthesizer` 에이전트에 위임**한다.
 
-이 Phase는 **one-shot 엔드 경험**을 위해 TTS + Player까지 포괄한다 (Phase 7 진화). `bash .claude/skills/asset-build/scripts/build-bundle.sh course` 한 번으로 모두 실행.
+이 Phase는 **one-shot 엔드 경험**을 위해 TTS + Player까지 포괄한다. `bash .claude/skills/asset-build/scripts/build-bundle.sh course` 한 번으로 모두 실행하며, 빌드 스크립트는 step 4 에서 `tts-synthesis/scripts/run.sh` 를 호출해 `tts-synthesizer` 의 책임 영역으로 위임한다.
 
 ## 작업 원칙
 
