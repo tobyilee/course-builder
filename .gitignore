@@ -11,3 +11,4 @@ scripts/__pycache__/
 .claude/reports/handoff/
 .wrangler/
 .deploy-stash-bundle.zip
+*.mp3
